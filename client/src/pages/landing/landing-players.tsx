@@ -41,18 +41,18 @@ export default function LandingPlayers() {
             <div className="flex justify-center">
               <div className="bg-gradient-to-br from-primary/20 to-primary/5 p-8 rounded-2xl border border-primary/10 max-w-md">
                 <div className="aspect-video bg-card rounded-lg flex items-center justify-center">
-                  <Football className="w-16 h-16 text-primary" />
+                  <Dumbbell className="w-16 h-16 text-primary" />
                 </div>
                 <div className="mt-6 space-y-4">
                   <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg border">
-                    <BrainCircuit className="w-5 h-5 text-primary flex-shrink-0" />
+                    <Brain className="w-5 h-5 text-primary flex-shrink-0" />
                     <div>
                       <h3 className="font-medium text-sm">AI Coach Analysis</h3>
                       <p className="text-xs text-muted-foreground">Get personalized feedback on your technique and performance</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg border">
-                    <ChartLine className="w-5 h-5 text-primary flex-shrink-0" />
+                    <LineChart className="w-5 h-5 text-primary flex-shrink-0" />
                     <div>
                       <h3 className="font-medium text-sm">Performance Tracking</h3>
                       <p className="text-xs text-muted-foreground">Monitor your progress and see improvements over time</p>
@@ -87,7 +87,7 @@ export default function LandingPlayers() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-card rounded-lg p-8 border hover:border-primary transition-colors">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                <BrainCircuit className="w-6 h-6 text-primary" />
+                <Brain className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-xl font-bold mb-3">AI Position Coach</h3>
               <p className="text-muted-foreground">
@@ -137,7 +137,7 @@ export default function LandingPlayers() {
             
             <div className="bg-card rounded-lg p-8 border hover:border-primary transition-colors">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                <Football className="w-6 h-6 text-primary" />
+                <Dumbbell className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-xl font-bold mb-3">Position-Specific Drills</h3>
               <p className="text-muted-foreground">
