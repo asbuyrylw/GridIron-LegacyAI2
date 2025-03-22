@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/header";
 import { BottomNavigation } from "@/components/layout/bottom-navigation";
 import { TrainingPlanView } from "@/components/training/training-plan";
+import { GeneratePlan } from "@/components/training/generate-plan";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
@@ -58,6 +59,7 @@ export default function TrainingPage() {
             <TabsTrigger value="nutrition">Nutrition</TabsTrigger>
           </TabsList>
           <TabsContent value="workout">
+            <GeneratePlan />
             <TrainingPlanView />
           </TabsContent>
           <TabsContent value="nutrition">

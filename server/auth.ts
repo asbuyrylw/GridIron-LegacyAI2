@@ -12,7 +12,16 @@ import { fromZodError } from "zod-validation-error";
 
 declare global {
   namespace Express {
-    interface User extends User {
+    // Define the User interface (avoiding circular reference)
+    interface User {
+      id: number;
+      username: string;
+      password: string;
+      email: string;
+      userType: string;
+      createdAt: Date;
+      firstName?: string;
+      lastName?: string;
       athlete?: Athlete;
     }
   }

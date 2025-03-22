@@ -39,7 +39,7 @@ export interface IStorage {
   markMessageAsRead(id: number): Promise<CoachMessage | undefined>;
 
   // Session Store
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Use any for session store to avoid type issues
 }
 
 export class MemStorage implements IStorage {
@@ -54,7 +54,7 @@ export class MemStorage implements IStorage {
   currentCombineMetricsId: number;
   currentTrainingPlanId: number;
   currentCoachMessageId: number;
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 
   constructor() {
     this.usersMap = new Map();
@@ -154,8 +154,8 @@ export class MemStorage implements IStorage {
   async getTrainingPlanByDate(athleteId: number, date: Date): Promise<TrainingPlan | undefined> {
     const dateString = date.toISOString().split('T')[0];
     return Array.from(this.trainingPlansMap.values()).find(plan => {
-      const planDateString = plan.date.toISOString().split('T')[0];
-      return plan.athleteId === athleteId && planDateString === dateString;
+      // Handle plan.date as string (it's stored as YYYY-MM-DD)
+      return plan.athleteId === athleteId && plan.date === dateString;
     });
   }
 

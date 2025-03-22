@@ -319,16 +319,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const message = await storage.createCoachMessage(validated);
       
-      // Simulate Coach AI response (would connect to OpenAI in production)
+      // Generate AI coach response using OpenAI
+      const athleteUser = await storage.getAthleteByUserId(req.user.id);
+      
+      // Process asynchronously so we don't block the user response
       setTimeout(async () => {
-        const aiResponse = {
-          athleteId,
-          message: "Thanks for your message! I'll analyze your progress and get back to you with specific recommendations.",
-          role: "assistant",
-          read: false
-        };
-        await storage.createCoachMessage(aiResponse);
-      }, 2000);
+        try {
+          const aiResponse = await generateCoachingResponse(validated.message, {
+            position: athleteUser?.position,
+            firstName: athlete.firstName,
+            lastName: athlete.lastName,
+            metrics: await storage.getLatestCombineMetrics(athleteId)
+          });
+          
+          await storage.createCoachMessage({
+            athleteId,
+            message: aiResponse,
+            role: "assistant",
+            read: false
+          });
+        } catch (error) {
+          console.error("Error generating coach response:", error);
+          // Save a fallback message if OpenAI fails
+          await storage.createCoachMessage({
+            athleteId,
+            message: "I apologize, but I'm having trouble processing your request right now. Please try again later.",
+            role: "assistant",
+            read: false
+          });
+        }
+      }, 100);
       
       res.status(201).json(message);
     } catch (error) {
@@ -336,6 +356,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const validationError = fromZodError(error);
         return res.status(400).json({ message: validationError.message });
       }
+      next(error);
+    }
+  });
+  
+  // Generate AI training plan
+  app.post("/api/athlete/:id/generate-plan", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow generating plans for own profile
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const { focus } = req.body;
+      
+      try {
+        // Get latest metrics for this athlete
+        const metrics = await storage.getLatestCombineMetrics(athleteId);
+        
+        // Generate plan with OpenAI
+        const generatedPlan = await generateTrainingPlan({
+          position: athlete.position,
+          metrics,
+          focus
+        });
+        
+        // Save the generated plan
+        const plan = await storage.createTrainingPlan({
+          athleteId,
+          date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD
+          title: generatedPlan.title,
+          focus: generatedPlan.focus,
+          exercises: generatedPlan.exercises,
+          completed: false,
+          coachTip: generatedPlan.coachTip
+        });
+        
+        res.status(201).json(plan);
+      } catch (error) {
+        console.error("Error generating training plan:", error);
+        return res.status(500).json({ 
+          message: "Failed to generate training plan. Please try again later."
+        });
+      }
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Analyze athlete metrics with AI
+  app.get("/api/athlete/:id/analyze-metrics", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow analyzing own metrics
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Get latest metrics for analysis
+      const metrics = await storage.getLatestCombineMetrics(athleteId);
+      
+      if (!metrics) {
+        return res.status(404).json({ message: "No metrics found to analyze" });
+      }
+      
+      try {
+        // Analyze metrics with OpenAI
+        const analysis = await analyzeAthleteMetrics(metrics, athlete.position);
+        res.json(analysis);
+      } catch (error) {
+        console.error("Error analyzing metrics:", error);
+        return res.status(500).json({ 
+          message: "Failed to analyze metrics. Please try again later."
+        });
+      }
+    } catch (error) {
       next(error);
     }
   });
