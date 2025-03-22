@@ -2,14 +2,15 @@ import { LandingLayout } from "@/components/landing/landing-layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { 
-  Football, 
+  Dumbbell, 
   TrendingUp, 
-  BrainCircuit, 
-  Medal, 
-  UserCircle, 
   Target, 
-  MessageCircle,
-  CheckCircle2
+  Brain, 
+  Medal, 
+  User,
+  LineChart,
+  CalendarClock,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function LandingPlayers() {
@@ -18,41 +19,52 @@ export default function LandingPlayers() {
       {/* Hero Section */}
       <section className="py-20 md:py-28 bg-gradient-to-b from-background to-muted/30">
         <div className="container px-4 sm:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
-                Elevate Your Game with <span className="text-primary">AI-Powered</span> Training
+                Elevate Your Football Skills with AI-Powered Training
               </h1>
               <p className="text-xl text-muted-foreground mb-8">
-                Take your football skills to the next level with personalized training plans, AI coaching feedback, and comprehensive performance tracking.
+                GridIron LegacyAI provides personalized training plans, AI coaching, and performance tracking to help you reach your full potential and get noticed by college recruiters.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/auth">
                   <Button size="lg" className="font-medium">
-                    Get Started Free
+                    Start Training Now
                   </Button>
                 </Link>
                 <Button size="lg" variant="outline" className="font-medium">
-                  Watch Demo
+                  View Demo
                 </Button>
               </div>
             </div>
-            <div className="relative">
-              <div className="aspect-video rounded-lg bg-gradient-to-tr from-primary/20 to-primary/40 overflow-hidden shadow-xl flex items-center justify-center">
-                <Football className="w-24 h-24 text-primary/80" />
-              </div>
-              <div className="absolute -bottom-6 -right-6 bg-background rounded-lg shadow-lg p-4 w-48">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-5 h-5 text-green-500" />
-                  <span className="font-medium">40yd Dash</span>
+            <div className="flex justify-center">
+              <div className="bg-gradient-to-br from-primary/20 to-primary/5 p-8 rounded-2xl border border-primary/10 max-w-md">
+                <div className="aspect-video bg-card rounded-lg flex items-center justify-center">
+                  <Football className="w-16 h-16 text-primary" />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Last</span>
-                  <span>4.85s</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Current</span>
-                  <span className="text-green-500 font-medium">4.72s</span>
+                <div className="mt-6 space-y-4">
+                  <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg border">
+                    <BrainCircuit className="w-5 h-5 text-primary flex-shrink-0" />
+                    <div>
+                      <h3 className="font-medium text-sm">AI Coach Analysis</h3>
+                      <p className="text-xs text-muted-foreground">Get personalized feedback on your technique and performance</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg border">
+                    <ChartLine className="w-5 h-5 text-primary flex-shrink-0" />
+                    <div>
+                      <h3 className="font-medium text-sm">Performance Tracking</h3>
+                      <p className="text-xs text-muted-foreground">Monitor your progress and see improvements over time</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg border">
+                    <CalendarClock className="w-5 h-5 text-primary flex-shrink-0" />
+                    <div>
+                      <h3 className="font-medium text-sm">Daily Training Plans</h3>
+                      <p className="text-xs text-muted-foreground">Follow structured workouts designed for your position</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -61,174 +73,196 @@ export default function LandingPlayers() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20">
+      <section className="py-20 bg-muted/30">
         <div className="container px-4 sm:px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight mb-4">
-              Features Built For Athletes
+              Features Designed for Athletes
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Our comprehensive platform helps you train smarter, track progress effectively, and showcase your talents to recruiters.
+              Our platform gives you all the tools you need to improve your football skills, track your progress, and boost your recruiting potential.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="bg-card rounded-lg p-6 shadow-sm border">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-card rounded-lg p-8 border hover:border-primary transition-colors">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                 <BrainCircuit className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-medium mb-2">AI Coaching Assistant</h3>
+              <h3 className="text-xl font-bold mb-3">AI Position Coach</h3>
               <p className="text-muted-foreground">
-                Get personalized coaching advice, form technique analysis, and real-time feedback for your position on the field.
+                Get personalized coaching advice tailored to your specific position from our AI coach that understands the nuances of football.
               </p>
             </div>
             
-            {/* Feature 2 */}
-            <div className="bg-card rounded-lg p-6 shadow-sm border">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <div className="bg-card rounded-lg p-8 border hover:border-primary transition-colors">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                 <Target className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-medium mb-2">Personalized Training Plans</h3>
+              <h3 className="text-xl font-bold mb-3">Personalized Training</h3>
               <p className="text-muted-foreground">
-                Follow custom workout routines that adapt to your position, goals, and current skill level to maximize improvement.
+                Follow custom training plans that adapt to your goals, position requirements, and current performance metrics.
               </p>
             </div>
             
-            {/* Feature 3 */}
-            <div className="bg-card rounded-lg p-6 shadow-sm border">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <div className="bg-card rounded-lg p-8 border hover:border-primary transition-colors">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                 <TrendingUp className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-medium mb-2">Combine Metrics Tracking</h3>
+              <h3 className="text-xl font-bold mb-3">Combine Metrics</h3>
               <p className="text-muted-foreground">
-                Track and visualize your progress in key metrics like 40-yard dash, vertical jump, and other combine measurements.
+                Track and improve your 40-yard dash, vertical jump, broad jump, 3-cone drill, and other key performance metrics.
               </p>
             </div>
             
-            {/* Feature 4 */}
-            <div className="bg-card rounded-lg p-6 shadow-sm border">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <UserCircle className="w-6 h-6 text-primary" />
+            <div className="bg-card rounded-lg p-8 border hover:border-primary transition-colors">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                <User className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-medium mb-2">Recruiting Profile</h3>
+              <h3 className="text-xl font-bold mb-3">Recruiting Profile</h3>
               <p className="text-muted-foreground">
-                Showcase your stats, highlights, and achievements to college recruiters in a professional digital profile.
+                Create a comprehensive recruiting profile with your stats, metrics, highlights, and academic information for college scouts.
               </p>
             </div>
             
-            {/* Feature 5 */}
-            <div className="bg-card rounded-lg p-6 shadow-sm border">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <div className="bg-card rounded-lg p-8 border hover:border-primary transition-colors">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                 <Medal className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-medium mb-2">Goal Setting & Achievements</h3>
+              <h3 className="text-xl font-bold mb-3">Goal Setting</h3>
               <p className="text-muted-foreground">
-                Set realistic targets for your development, track milestones, and celebrate achievements as you improve.
+                Set measurable goals, track your progress, and celebrate achievements as you improve your football skills.
               </p>
             </div>
             
-            {/* Feature 6 */}
-            <div className="bg-card rounded-lg p-6 shadow-sm border">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <MessageCircle className="w-6 h-6 text-primary" />
+            <div className="bg-card rounded-lg p-8 border hover:border-primary transition-colors">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                <Football className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-medium mb-2">Community Support</h3>
+              <h3 className="text-xl font-bold mb-3">Position-Specific Drills</h3>
               <p className="text-muted-foreground">
-                Connect with fellow athletes, share progress, and motivate each other to reach your potential.
+                Access a library of drills and exercises designed specifically for your position and skill level.
               </p>
             </div>
           </div>
         </div>
       </section>
       
-      {/* Benefits Section */}
+      {/* Testimonials */}
+      <section className="py-20">
+        <div className="container px-4 sm:px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold tracking-tight mb-4">
+              What Athletes Are Saying
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Hear from players who have transformed their performance with GridIron LegacyAI.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bg-card rounded-lg p-8 border relative">
+              <div className="absolute -top-4 -left-4 text-4xl text-primary">"</div>
+              <p className="mb-6 text-muted-foreground">
+                My 40-yard dash time improved by 0.3 seconds after following the speed training plan for just two months. Coaches are noticing the difference on the field.
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <User className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Jason M.</h4>
+                  <p className="text-sm text-muted-foreground">Wide Receiver, Class of 2024</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-card rounded-lg p-8 border relative">
+              <div className="absolute -top-4 -left-4 text-4xl text-primary">"</div>
+              <p className="mb-6 text-muted-foreground">
+                The AI coach helped me fix flaws in my throwing mechanics that I didn't even know I had. My accuracy and distance have both improved significantly.
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <User className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Tyler R.</h4>
+                  <p className="text-sm text-muted-foreground">Quarterback, Class of 2023</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-card rounded-lg p-8 border relative">
+              <div className="absolute -top-4 -left-4 text-4xl text-primary">"</div>
+              <p className="mb-6 text-muted-foreground">
+                I've received more college interest since creating my recruiting profile. The performance tracking makes it easy to show coaches my improvements.
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <User className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Marcus J.</h4>
+                  <p className="text-sm text-muted-foreground">Linebacker, Class of 2023</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* How It Works */}
       <section className="py-20 bg-muted/30">
         <div className="container px-4 sm:px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight mb-4">
-              How GridIron LegacyAI Benefits Players
+              How GridIron LegacyAI Works
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Our platform addresses the real challenges faced by football players looking to improve their game and get noticed.
+              Getting started is simple - follow these steps to begin your journey to football excellence.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Benefit 1 */}
-            <div className="flex gap-4">
-              <div className="mt-1">
-                <CheckCircle2 className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-medium mb-2">Overcome Limited Coaching Access</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="relative">
+              <div className="bg-card rounded-lg p-8 border">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background font-bold mb-6">
+                  1
+                </div>
+                <h3 className="text-xl font-bold mb-3">Create Your Profile</h3>
                 <p className="text-muted-foreground">
-                  Get 24/7 access to AI coaching advice when you don't have direct access to position-specific coaching expertise.
+                  Sign up and enter your details including position, experience level, height, weight, and specific goals.
                 </p>
+              </div>
+              <div className="hidden md:block absolute -right-4 top-1/2 transform -translate-y-1/2 z-10">
+                <div className="w-8 h-8 text-muted-foreground">→</div>
               </div>
             </div>
             
-            {/* Benefit 2 */}
-            <div className="flex gap-4">
-              <div className="mt-1">
-                <CheckCircle2 className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-medium mb-2">Structured Training Approach</h3>
+            <div className="relative">
+              <div className="bg-card rounded-lg p-8 border">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background font-bold mb-6">
+                  2
+                </div>
+                <h3 className="text-xl font-bold mb-3">Get Your Training Plan</h3>
                 <p className="text-muted-foreground">
-                  Replace random workouts with science-backed, progressive training plans that target your specific needs and goals.
+                  Receive a position-specific training plan generated by our AI that's tailored to your specific needs and goals.
                 </p>
+              </div>
+              <div className="hidden md:block absolute -right-4 top-1/2 transform -translate-y-1/2 z-10">
+                <div className="w-8 h-8 text-muted-foreground">→</div>
               </div>
             </div>
             
-            {/* Benefit 3 */}
-            <div className="flex gap-4">
-              <div className="mt-1">
-                <CheckCircle2 className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-medium mb-2">Objective Progress Tracking</h3>
+            <div>
+              <div className="bg-card rounded-lg p-8 border">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background font-bold mb-6">
+                  3
+                </div>
+                <h3 className="text-xl font-bold mb-3">Train and Track Progress</h3>
                 <p className="text-muted-foreground">
-                  See real, measurable improvement with data-driven metrics rather than subjective feelings about your development.
-                </p>
-              </div>
-            </div>
-            
-            {/* Benefit 4 */}
-            <div className="flex gap-4">
-              <div className="mt-1">
-                <CheckCircle2 className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-medium mb-2">Increased Recruiting Visibility</h3>
-                <p className="text-muted-foreground">
-                  Stand out to college programs with a professional digital profile showcasing your verified performance metrics.
-                </p>
-              </div>
-            </div>
-            
-            {/* Benefit 5 */}
-            <div className="flex gap-4">
-              <div className="mt-1">
-                <CheckCircle2 className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-medium mb-2">Injury Prevention Focus</h3>
-                <p className="text-muted-foreground">
-                  Follow balanced training plans that incorporate proper recovery and technique to reduce injury risk.
-                </p>
-              </div>
-            </div>
-            
-            {/* Benefit 6 */}
-            <div className="flex gap-4">
-              <div className="mt-1">
-                <CheckCircle2 className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-medium mb-2">Position-Specific Development</h3>
-                <p className="text-muted-foreground">
-                  Focus on the skills that matter most for your specific position instead of generic football training.
+                  Follow your daily workouts, log your metrics, and get AI coaching feedback to continuously improve your performance.
                 </p>
               </div>
             </div>
@@ -237,15 +271,29 @@ export default function LandingPlayers() {
       </section>
       
       {/* CTA Section */}
-      <section className="py-20">
+      <section className="py-20 bg-primary/5 border-y border-primary/20">
         <div className="container px-4 sm:px-6">
-          <div className="bg-primary/5 border border-primary/20 rounded-lg p-8 md:p-12 text-center">
-            <h2 className="text-3xl font-bold tracking-tight mb-4">
-              Ready to Elevate Your Game?
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-3xl font-bold tracking-tight mb-6">
+              Ready to Take Your Game to the Next Level?
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              Join thousands of players who are taking their football skills to the next level with GridIron LegacyAI.
+            <p className="text-xl text-muted-foreground mb-6">
+              Join thousands of athletes who are using GridIron LegacyAI to improve their skills, track their progress, and increase their chances of playing at the next level.
             </p>
+            <div className="space-y-4 mb-8">
+              <div className="flex items-center gap-2 justify-center">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+                <span>Free 14-day trial</span>
+              </div>
+              <div className="flex items-center gap-2 justify-center">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+                <span>Cancel anytime</span>
+              </div>
+              <div className="flex items-center gap-2 justify-center">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+                <span>Unlimited access to all features</span>
+              </div>
+            </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/auth">
                 <Button size="lg" className="font-medium">

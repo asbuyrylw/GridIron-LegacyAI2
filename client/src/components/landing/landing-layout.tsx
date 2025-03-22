@@ -1,6 +1,12 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Football, Trophy, ChartLineUp, UserCircle } from "lucide-react";
+import { 
+  GraduationCap as School, 
+  Award as Trophy, 
+  BarChart3 as ChartLineUp, 
+  User as UserCircle,
+  Dribbble as Football
+} from "lucide-react";
 import { ReactNode } from "react";
 
 interface LandingLayoutProps {
