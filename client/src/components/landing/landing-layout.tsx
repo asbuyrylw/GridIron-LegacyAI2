@@ -27,35 +27,31 @@ export function LandingLayout({ children, activeTab }: LandingLayoutProps) {
           
           {/* Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/landing/players">
-              <a className={`text-sm font-medium transition-colors hover:text-primary ${activeTab === "players" ? "text-primary" : "text-muted-foreground"}`}>
-                For Players
-              </a>
+            <Link href="/landing/players" className={`text-sm font-medium transition-colors hover:text-primary ${activeTab === "players" ? "text-primary" : "text-muted-foreground"}`}>
+              For Players
             </Link>
-            <Link href="/landing/parents">
-              <a className={`text-sm font-medium transition-colors hover:text-primary ${activeTab === "parents" ? "text-primary" : "text-muted-foreground"}`}>
-                For Parents
-              </a>
+            <Link href="/landing/parents" className={`text-sm font-medium transition-colors hover:text-primary ${activeTab === "parents" ? "text-primary" : "text-muted-foreground"}`}>
+              For Parents
             </Link>
-            <Link href="/landing/coaches">
-              <a className={`text-sm font-medium transition-colors hover:text-primary ${activeTab === "coaches" ? "text-primary" : "text-muted-foreground"}`}>
-                For Coaches
-              </a>
+            <Link href="/landing/coaches" className={`text-sm font-medium transition-colors hover:text-primary ${activeTab === "coaches" ? "text-primary" : "text-muted-foreground"}`}>
+              For Coaches
             </Link>
-            <Link href="/landing/schools">
-              <a className={`text-sm font-medium transition-colors hover:text-primary ${activeTab === "schools" ? "text-primary" : "text-muted-foreground"}`}>
-                For Schools
-              </a>
+            <Link href="/landing/schools" className={`text-sm font-medium transition-colors hover:text-primary ${activeTab === "schools" ? "text-primary" : "text-muted-foreground"}`}>
+              For Schools
             </Link>
           </nav>
           
           {/* Auth buttons */}
           <div className="flex items-center gap-2">
             <Link href="/auth">
-              <Button variant="outline">Log In</Button>
+              <div>
+                <Button variant="outline">Log In</Button>
+              </div>
             </Link>
             <Link href="/auth">
-              <Button>Sign Up</Button>
+              <div>
+                <Button>Sign Up</Button>
+              </div>
             </Link>
           </div>
         </div>
@@ -64,29 +60,21 @@ export function LandingLayout({ children, activeTab }: LandingLayoutProps) {
       {/* Mobile Navigation */}
       <div className="md:hidden border-t fixed bottom-0 left-0 right-0 bg-background z-10">
         <div className="grid grid-cols-4 h-16">
-          <Link href="/landing/players">
-            <a className={`flex flex-col items-center justify-center h-full ${activeTab === "players" ? "text-primary" : "text-muted-foreground"}`}>
-              <Football className="h-5 w-5" />
-              <span className="text-xs mt-1">Players</span>
-            </a>
+          <Link href="/landing/players" className={`flex flex-col items-center justify-center h-full ${activeTab === "players" ? "text-primary" : "text-muted-foreground"}`}>
+            <Football className="h-5 w-5" />
+            <span className="text-xs mt-1">Players</span>
           </Link>
-          <Link href="/landing/parents">
-            <a className={`flex flex-col items-center justify-center h-full ${activeTab === "parents" ? "text-primary" : "text-muted-foreground"}`}>
-              <UserCircle className="h-5 w-5" />
-              <span className="text-xs mt-1">Parents</span>
-            </a>
+          <Link href="/landing/parents" className={`flex flex-col items-center justify-center h-full ${activeTab === "parents" ? "text-primary" : "text-muted-foreground"}`}>
+            <UserCircle className="h-5 w-5" />
+            <span className="text-xs mt-1">Parents</span>
           </Link>
-          <Link href="/landing/coaches">
-            <a className={`flex flex-col items-center justify-center h-full ${activeTab === "coaches" ? "text-primary" : "text-muted-foreground"}`}>
-              <Trophy className="h-5 w-5" />
-              <span className="text-xs mt-1">Coaches</span>
-            </a>
+          <Link href="/landing/coaches" className={`flex flex-col items-center justify-center h-full ${activeTab === "coaches" ? "text-primary" : "text-muted-foreground"}`}>
+            <Trophy className="h-5 w-5" />
+            <span className="text-xs mt-1">Coaches</span>
           </Link>
-          <Link href="/landing/schools">
-            <a className={`flex flex-col items-center justify-center h-full ${activeTab === "schools" ? "text-primary" : "text-muted-foreground"}`}>
-              <ChartLineUp className="h-5 w-5" />
-              <span className="text-xs mt-1">Schools</span>
-            </a>
+          <Link href="/landing/schools" className={`flex flex-col items-center justify-center h-full ${activeTab === "schools" ? "text-primary" : "text-muted-foreground"}`}>
+            <ChartLineUp className="h-5 w-5" />
+            <span className="text-xs mt-1">Schools</span>
           </Link>
         </div>
       </div>

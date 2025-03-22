@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
@@ -20,6 +20,28 @@ import LandingCoaches from "@/pages/landing/landing-coaches";
 import LandingSchools from "@/pages/landing/landing-schools";
 
 function Router() {
+  const { user, isLoading } = useAuth();
+  
+  // If not logged in, redirect to landing page instead of auth page
+  if (!isLoading && !user) {
+    return (
+      <Switch>
+        {/* Public Routes */}
+        <Route path="/auth" component={AuthPage} />
+        
+        {/* Landing Pages */}
+        <Route path="/landing/players" component={LandingPlayers} />
+        <Route path="/landing/parents" component={LandingParents} />
+        <Route path="/landing/coaches" component={LandingCoaches} />
+        <Route path="/landing/schools" component={LandingSchools} />
+        <Route path="/landing" component={LandingIndex} />
+        <Route path="/" component={LandingIndex} />
+        
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+  
   return (
     <Switch>
       {/* Protected Routes */}
@@ -32,7 +54,7 @@ function Router() {
       {/* Public Routes */}
       <Route path="/auth" component={AuthPage} />
       
-      {/* Landing Pages */}
+      {/* Landing Pages (still accessible when logged in) */}
       <Route path="/landing" component={LandingIndex} />
       <Route path="/landing/players" component={LandingPlayers} />
       <Route path="/landing/parents" component={LandingParents} />
