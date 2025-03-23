@@ -21,6 +21,7 @@ export interface IStorage {
   getAthleteByUserId(userId: number): Promise<Athlete | undefined>;
   createAthlete(athlete: InsertAthlete): Promise<Athlete>;
   updateAthlete(id: number, athlete: Partial<InsertAthlete>): Promise<Athlete | undefined>;
+  getAllAthletes(): Promise<Athlete[]>;
   
   // Combine Metrics Methods
   getCombineMetrics(athleteId: number): Promise<CombineMetric[]>;
@@ -118,6 +119,10 @@ export class MemStorage implements IStorage {
     const updatedAthlete: Athlete = { ...athlete, ...athleteUpdate };
     this.athletesMap.set(id, updatedAthlete);
     return updatedAthlete;
+  }
+  
+  async getAllAthletes(): Promise<Athlete[]> {
+    return Array.from(this.athletesMap.values());
   }
 
   // Combine Metrics Methods

@@ -15,6 +15,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
   
+  // Get current athlete (for logged-in user)
+  app.get("/api/athlete/me", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athlete = await storage.getAthleteByUserId(req.user.id);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete profile not found" });
+      }
+      
+      res.json(athlete);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   // -- Athlete Routes --
   // GET athlete profile
   app.get("/api/athlete/:id", async (req, res, next) => {
@@ -471,6 +490,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(updatedMessage);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get unread coach messages count for current user
+  app.get("/api/athlete/me/unread-messages", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athlete = await storage.getAthleteByUserId(req.user.id);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete profile not found" });
+      }
+      
+      const messages = await storage.getCoachMessages(athlete.id);
+      const unreadCount = messages.filter(msg => !msg.read && msg.role === "assistant").length;
+      
+      res.json({ count: unreadCount });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Search athletes (for recruiters)
+  app.get("/api/search/athletes", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Only allow users with coach/recruiter roles to search
+      if (req.user.userType !== "coach" && req.user.userType !== "recruiter") {
+        return res.status(403).json({ message: "Only coaches and recruiters can search athletes" });
+      }
+      
+      const { position, school, graduationYear, targetDivision } = req.query;
+      
+      // Get all athletes with public profiles
+      const athletes = Array.from(storage.athletesMap.values())
+        .filter(athlete => athlete.profileVisibility);
+      
+      // Apply filters if provided
+      let filteredAthletes = athletes;
+      
+      if (position) {
+        filteredAthletes = filteredAthletes.filter(
+          athlete => athlete.position?.toLowerCase().includes(String(position).toLowerCase())
+        );
+      }
+      
+      if (school) {
+        filteredAthletes = filteredAthletes.filter(
+          athlete => athlete.school?.toLowerCase().includes(String(school).toLowerCase())
+        );
+      }
+      
+      if (graduationYear) {
+        filteredAthletes = filteredAthletes.filter(
+          athlete => athlete.graduationYear === parseInt(String(graduationYear))
+        );
+      }
+      
+      if (targetDivision) {
+        filteredAthletes = filteredAthletes.filter(
+          athlete => athlete.targetDivision?.toLowerCase().includes(String(targetDivision).toLowerCase())
+        );
+      }
+      
+      // Get metrics for each athlete to include in response
+      const results = await Promise.all(filteredAthletes.map(async (athlete) => {
+        const metrics = await storage.getLatestCombineMetrics(athlete.id);
+        
+        // Return athlete data with metrics but remove sensitive data
+        return {
+          id: athlete.id,
+          firstName: athlete.firstName,
+          lastName: athlete.lastName,
+          position: athlete.position,
+          school: athlete.school,
+          grade: athlete.grade,
+          graduationYear: athlete.graduationYear,
+          height: athlete.height,
+          weight: athlete.weight,
+          targetDivision: athlete.targetDivision,
+          metrics: metrics || null
+        };
+      }));
+      
+      res.json(results);
     } catch (error) {
       next(error);
     }
