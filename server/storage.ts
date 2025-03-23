@@ -111,6 +111,12 @@ export class MemStorage implements IStorage {
   private nutritionPlansMap: Map<number, NutritionPlan>;
   private mealLogsMap: Map<number, MealLog>;
   private aiMealSuggestionsMap: Map<number, AiMealSuggestion>;
+  private socialConnectionsMap: Map<number, SocialConnection>;
+  private socialPostsMap: Map<number, SocialPost>;
+  private achievementsMap: Map<number, Achievement>;
+  private athleteAchievementsMap: Map<number, AthleteAchievement>;
+  private leaderboardsMap: Map<number, Leaderboard>;
+  private leaderboardEntriesMap: Map<number, LeaderboardEntry>;
   
   currentUserId: number;
   currentAthleteId: number;
@@ -120,6 +126,12 @@ export class MemStorage implements IStorage {
   currentNutritionPlanId: number;
   currentMealLogId: number;
   currentAiMealSuggestionId: number;
+  currentSocialConnectionId: number;
+  currentSocialPostId: number;
+  currentAchievementId: number;
+  currentAthleteAchievementId: number;
+  currentLeaderboardId: number;
+  currentLeaderboardEntryId: number;
   sessionStore: any;
 
   constructor() {
@@ -131,6 +143,12 @@ export class MemStorage implements IStorage {
     this.nutritionPlansMap = new Map();
     this.mealLogsMap = new Map();
     this.aiMealSuggestionsMap = new Map();
+    this.socialConnectionsMap = new Map();
+    this.socialPostsMap = new Map();
+    this.achievementsMap = new Map();
+    this.athleteAchievementsMap = new Map();
+    this.leaderboardsMap = new Map();
+    this.leaderboardEntriesMap = new Map();
     
     this.currentUserId = 1;
     this.currentAthleteId = 1;
@@ -140,6 +158,12 @@ export class MemStorage implements IStorage {
     this.currentNutritionPlanId = 1;
     this.currentMealLogId = 1;
     this.currentAiMealSuggestionId = 1;
+    this.currentSocialConnectionId = 1;
+    this.currentSocialPostId = 1;
+    this.currentAchievementId = 1;
+    this.currentAthleteAchievementId = 1;
+    this.currentLeaderboardId = 1;
+    this.currentLeaderboardEntryId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // prune expired entries every 24h
@@ -439,6 +463,326 @@ export class MemStorage implements IStorage {
     
     this.aiMealSuggestionsMap.set(id, suggestion);
     return suggestion;
+  }
+
+  // Social Connection Methods
+  async getSocialConnections(userId: number): Promise<SocialConnection[]> {
+    return Array.from(this.socialConnectionsMap.values())
+      .filter((connection) => connection.userId === userId)
+      .sort((a, b) => a.platform.localeCompare(b.platform));
+  }
+
+  async getSocialConnectionByPlatform(userId: number, platform: string): Promise<SocialConnection | undefined> {
+    return Array.from(this.socialConnectionsMap.values()).find(
+      (connection) => connection.userId === userId && connection.platform === platform && connection.connected === true
+    );
+  }
+
+  async createSocialConnection(insertConnection: InsertSocialConnection): Promise<SocialConnection> {
+    const id = this.currentSocialConnectionId++;
+    const createdAt = new Date();
+    
+    // Check if connection to this platform already exists, if so, update it instead
+    const existingConnection = await this.getSocialConnectionByPlatform(
+      insertConnection.userId, 
+      insertConnection.platform
+    );
+    
+    if (existingConnection) {
+      // Update existing connection
+      const updatedConnection = await this.updateSocialConnection(existingConnection.id, {
+        ...insertConnection,
+        connected: true
+      });
+      
+      return updatedConnection!;
+    }
+    
+    // Create new connection
+    const connection: SocialConnection = {
+      ...insertConnection,
+      id,
+      createdAt,
+      connected: insertConnection.connected ?? true,
+      tokenExpiry: insertConnection.tokenExpiry ?? null,
+      refreshToken: insertConnection.refreshToken ?? null,
+      username: insertConnection.username ?? null,
+    };
+    
+    this.socialConnectionsMap.set(id, connection);
+    return connection;
+  }
+
+  async updateSocialConnection(id: number, connectionUpdate: Partial<InsertSocialConnection>): Promise<SocialConnection | undefined> {
+    const connection = this.socialConnectionsMap.get(id);
+    if (!connection) return undefined;
+    
+    const updatedConnection: SocialConnection = { ...connection, ...connectionUpdate };
+    this.socialConnectionsMap.set(id, updatedConnection);
+    return updatedConnection;
+  }
+
+  async disconnectSocialConnection(id: number): Promise<SocialConnection | undefined> {
+    const connection = this.socialConnectionsMap.get(id);
+    if (!connection) return undefined;
+    
+    const updatedConnection: SocialConnection = { ...connection, connected: false };
+    this.socialConnectionsMap.set(id, updatedConnection);
+    return updatedConnection;
+  }
+
+  // Social Post Methods
+  async getSocialPosts(userId: number): Promise<SocialPost[]> {
+    return Array.from(this.socialPostsMap.values())
+      .filter((post) => post.userId === userId)
+      .sort((a, b) => {
+        // First sort by scheduledFor (if available)
+        if (a.scheduledFor && b.scheduledFor) {
+          return a.scheduledFor.getTime() - b.scheduledFor.getTime();
+        }
+        
+        // Then by createdAt (most recent first)
+        return b.createdAt.getTime() - a.createdAt.getTime();
+      });
+  }
+
+  async getSocialPostById(id: number): Promise<SocialPost | undefined> {
+    return this.socialPostsMap.get(id);
+  }
+
+  async createSocialPost(insertPost: InsertSocialPost): Promise<SocialPost> {
+    const id = this.currentSocialPostId++;
+    const createdAt = new Date();
+    
+    const post: SocialPost = {
+      ...insertPost,
+      id,
+      createdAt,
+      status: insertPost.status ?? "pending",
+      scheduledFor: insertPost.scheduledFor ?? null,
+      postedAt: null,
+      errorMessage: null,
+      mediaUrl: insertPost.mediaUrl ?? null
+    };
+    
+    this.socialPostsMap.set(id, post);
+    return post;
+  }
+
+  async updateSocialPostStatus(id: number, status: string, postedAt?: Date, errorMessage?: string): Promise<SocialPost | undefined> {
+    const post = this.socialPostsMap.get(id);
+    if (!post) return undefined;
+    
+    const updatedPost: SocialPost = {
+      ...post,
+      status,
+      postedAt: postedAt ?? post.postedAt,
+      errorMessage: errorMessage ?? post.errorMessage
+    };
+    
+    this.socialPostsMap.set(id, updatedPost);
+    return updatedPost;
+  }
+
+  // Achievement Methods
+  async getAchievements(category?: string): Promise<Achievement[]> {
+    let achievements = Array.from(this.achievementsMap.values());
+    
+    if (category) {
+      achievements = achievements.filter(achievement => achievement.category === category);
+    }
+    
+    return achievements.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async getAchievementById(id: number): Promise<Achievement | undefined> {
+    return this.achievementsMap.get(id);
+  }
+
+  async createAchievement(insertAchievement: InsertAchievement): Promise<Achievement> {
+    const id = this.currentAchievementId++;
+    const createdAt = new Date();
+    
+    const achievement: Achievement = {
+      ...insertAchievement,
+      id,
+      createdAt
+    };
+    
+    this.achievementsMap.set(id, achievement);
+    return achievement;
+  }
+
+  // Athlete Achievement Methods
+  async getAthleteAchievements(athleteId: number): Promise<AthleteAchievement[]> {
+    return Array.from(this.athleteAchievementsMap.values())
+      .filter((athleteAchievement) => athleteAchievement.athleteId === athleteId)
+      .sort((a, b) => {
+        // Sort by completed status (completed first)
+        if (a.completed && !b.completed) return -1;
+        if (!a.completed && b.completed) return 1;
+        
+        // Then by earnedAt date (most recent first)
+        return b.earnedAt.getTime() - a.earnedAt.getTime();
+      });
+  }
+
+  async getAthleteAchievementById(id: number): Promise<AthleteAchievement | undefined> {
+    return this.athleteAchievementsMap.get(id);
+  }
+
+  async createAthleteAchievement(insertAthleteAchievement: InsertAthleteAchievement): Promise<AthleteAchievement> {
+    const id = this.currentAthleteAchievementId++;
+    
+    const athleteAchievement: AthleteAchievement = {
+      ...insertAthleteAchievement,
+      id,
+      earnedAt: insertAthleteAchievement.earnedAt ?? new Date(),
+      progress: insertAthleteAchievement.progress ?? 0,
+      completed: insertAthleteAchievement.completed ?? false
+    };
+    
+    this.athleteAchievementsMap.set(id, athleteAchievement);
+    return athleteAchievement;
+  }
+
+  async updateAthleteAchievementProgress(id: number, progress: number, completed?: boolean): Promise<AthleteAchievement | undefined> {
+    const athleteAchievement = this.athleteAchievementsMap.get(id);
+    if (!athleteAchievement) return undefined;
+    
+    const isNewlyCompleted = completed ?? (progress >= 100);
+    
+    const updatedAthleteAchievement: AthleteAchievement = {
+      ...athleteAchievement,
+      progress: Math.min(Math.max(0, progress), 100), // Ensure progress is between 0-100
+      completed: isNewlyCompleted
+    };
+    
+    this.athleteAchievementsMap.set(id, updatedAthleteAchievement);
+    return updatedAthleteAchievement;
+  }
+
+  // Leaderboard Methods
+  async getLeaderboards(active?: boolean): Promise<Leaderboard[]> {
+    let leaderboards = Array.from(this.leaderboardsMap.values());
+    
+    if (active !== undefined) {
+      leaderboards = leaderboards.filter(leaderboard => leaderboard.active === active);
+    }
+    
+    return leaderboards.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async getLeaderboardById(id: number): Promise<Leaderboard | undefined> {
+    return this.leaderboardsMap.get(id);
+  }
+
+  async createLeaderboard(insertLeaderboard: InsertLeaderboard): Promise<Leaderboard> {
+    const id = this.currentLeaderboardId++;
+    
+    const leaderboard: Leaderboard = {
+      ...insertLeaderboard,
+      id,
+      startDate: insertLeaderboard.startDate ?? null,
+      endDate: insertLeaderboard.endDate ?? null,
+      active: insertLeaderboard.active ?? true
+    };
+    
+    this.leaderboardsMap.set(id, leaderboard);
+    return leaderboard;
+  }
+
+  async updateLeaderboard(id: number, active: boolean): Promise<Leaderboard | undefined> {
+    const leaderboard = this.leaderboardsMap.get(id);
+    if (!leaderboard) return undefined;
+    
+    const updatedLeaderboard: Leaderboard = { ...leaderboard, active };
+    this.leaderboardsMap.set(id, updatedLeaderboard);
+    return updatedLeaderboard;
+  }
+
+  // Leaderboard Entry Methods
+  async getLeaderboardEntries(leaderboardId: number): Promise<LeaderboardEntry[]> {
+    return Array.from(this.leaderboardEntriesMap.values())
+      .filter((entry) => entry.leaderboardId === leaderboardId)
+      .sort((a, b) => {
+        // Sort by rank (ascending)
+        if (a.rank !== null && b.rank !== null) {
+          return a.rank - b.rank;
+        }
+        
+        // If ranks are null, sort by value (descending)
+        return b.value - a.value;
+      });
+  }
+
+  async getAthleteLeaderboardEntry(leaderboardId: number, athleteId: number): Promise<LeaderboardEntry | undefined> {
+    return Array.from(this.leaderboardEntriesMap.values()).find(
+      (entry) => entry.leaderboardId === leaderboardId && entry.athleteId === athleteId
+    );
+  }
+
+  async createLeaderboardEntry(insertEntry: InsertLeaderboardEntry): Promise<LeaderboardEntry> {
+    const id = this.currentLeaderboardEntryId++;
+    const updatedAt = new Date();
+    
+    // Check if entry for this athlete on this leaderboard already exists
+    const existingEntry = await this.getAthleteLeaderboardEntry(
+      insertEntry.leaderboardId,
+      insertEntry.athleteId
+    );
+    
+    if (existingEntry) {
+      // Update existing entry with new value
+      return this.updateLeaderboardEntry(existingEntry.id, insertEntry.value)!;
+    }
+    
+    // Create new entry
+    const entry: LeaderboardEntry = {
+      ...insertEntry,
+      id,
+      updatedAt,
+      rank: insertEntry.rank ?? null
+    };
+    
+    this.leaderboardEntriesMap.set(id, entry);
+    
+    // Update rankings after adding new entry
+    await this.recalculateLeaderboardRankings(insertEntry.leaderboardId);
+    
+    return entry;
+  }
+
+  async updateLeaderboardEntry(id: number, value: number, rank?: number): Promise<LeaderboardEntry | undefined> {
+    const entry = this.leaderboardEntriesMap.get(id);
+    if (!entry) return undefined;
+    
+    const updatedEntry: LeaderboardEntry = {
+      ...entry,
+      value,
+      rank: rank !== undefined ? rank : entry.rank,
+      updatedAt: new Date()
+    };
+    
+    this.leaderboardEntriesMap.set(id, updatedEntry);
+    
+    // Recalculate rankings when values change
+    await this.recalculateLeaderboardRankings(entry.leaderboardId);
+    
+    return updatedEntry;
+  }
+
+  // Helper method to recalculate rankings on a leaderboard
+  private async recalculateLeaderboardRankings(leaderboardId: number): Promise<void> {
+    const entries = Array.from(this.leaderboardEntriesMap.values())
+      .filter(entry => entry.leaderboardId === leaderboardId)
+      .sort((a, b) => b.value - a.value); // Sort by value (descending)
+    
+    // Update rank for each entry
+    entries.forEach((entry, index) => {
+      const rank = index + 1; // Ranks start at 1
+      this.leaderboardEntriesMap.set(entry.id, { ...entry, rank });
+    });
   }
 }
 
