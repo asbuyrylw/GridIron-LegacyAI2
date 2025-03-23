@@ -6,7 +6,13 @@ import {
   coachMessages, type CoachMessage, type InsertCoachMessage,
   nutritionPlans, type NutritionPlan, type InsertNutritionPlan,
   mealLogs, type MealLog, type InsertMealLog,
-  aiMealSuggestions, type AiMealSuggestion, type InsertAiMealSuggestion
+  aiMealSuggestions, type AiMealSuggestion, type InsertAiMealSuggestion,
+  socialConnections, type SocialConnection, type InsertSocialConnection,
+  socialPosts, type SocialPost, type InsertSocialPost,
+  achievements, type Achievement, type InsertAchievement,
+  athleteAchievements, type AthleteAchievement, type InsertAthleteAchievement,
+  leaderboards, type Leaderboard, type InsertLeaderboard,
+  leaderboardEntries, type LeaderboardEntry, type InsertLeaderboardEntry
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -55,6 +61,42 @@ export interface IStorage {
   // AI Meal Suggestion Methods
   getAiMealSuggestions(athleteId: number, mealType?: string, goal?: string): Promise<AiMealSuggestion[]>;
   createAiMealSuggestion(suggestion: InsertAiMealSuggestion): Promise<AiMealSuggestion>;
+
+  // Social Connection Methods
+  getSocialConnections(userId: number): Promise<SocialConnection[]>;
+  getSocialConnectionByPlatform(userId: number, platform: string): Promise<SocialConnection | undefined>;
+  createSocialConnection(connection: InsertSocialConnection): Promise<SocialConnection>;
+  updateSocialConnection(id: number, connection: Partial<InsertSocialConnection>): Promise<SocialConnection | undefined>;
+  disconnectSocialConnection(id: number): Promise<SocialConnection | undefined>;
+
+  // Social Post Methods
+  getSocialPosts(userId: number): Promise<SocialPost[]>;
+  getSocialPostById(id: number): Promise<SocialPost | undefined>;
+  createSocialPost(post: InsertSocialPost): Promise<SocialPost>;
+  updateSocialPostStatus(id: number, status: string, postedAt?: Date, errorMessage?: string): Promise<SocialPost | undefined>;
+
+  // Achievement Methods
+  getAchievements(category?: string): Promise<Achievement[]>;
+  getAchievementById(id: number): Promise<Achievement | undefined>;
+  createAchievement(achievement: InsertAchievement): Promise<Achievement>;
+
+  // Athlete Achievement Methods
+  getAthleteAchievements(athleteId: number): Promise<AthleteAchievement[]>;
+  getAthleteAchievementById(id: number): Promise<AthleteAchievement | undefined>;
+  createAthleteAchievement(athleteAchievement: InsertAthleteAchievement): Promise<AthleteAchievement>;
+  updateAthleteAchievementProgress(id: number, progress: number, completed?: boolean): Promise<AthleteAchievement | undefined>;
+
+  // Leaderboard Methods
+  getLeaderboards(active?: boolean): Promise<Leaderboard[]>;
+  getLeaderboardById(id: number): Promise<Leaderboard | undefined>;
+  createLeaderboard(leaderboard: InsertLeaderboard): Promise<Leaderboard>;
+  updateLeaderboard(id: number, active: boolean): Promise<Leaderboard | undefined>;
+
+  // Leaderboard Entry Methods
+  getLeaderboardEntries(leaderboardId: number): Promise<LeaderboardEntry[]>;
+  getAthleteLeaderboardEntry(leaderboardId: number, athleteId: number): Promise<LeaderboardEntry | undefined>;
+  createLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry>;
+  updateLeaderboardEntry(id: number, value: number, rank?: number): Promise<LeaderboardEntry | undefined>;
 
   // Session Store
   sessionStore: any; // Use any for session store to avoid type issues
