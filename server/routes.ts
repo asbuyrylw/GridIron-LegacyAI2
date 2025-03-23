@@ -517,6 +517,216 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get performance progress over time
+  app.get("/api/athlete/:id/progress/:metric", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const metricType = req.params.metric; // Can be 'combine', 'training', or 'both'
+      const { period } = req.query; // Can be 'week', 'month', 'year', 'all'
+      
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own progress data
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Determine the start date based on the requested period
+      const startDate = new Date();
+      
+      if (period === 'week') {
+        startDate.setDate(startDate.getDate() - 7);
+      } else if (period === 'month') {
+        startDate.setMonth(startDate.getMonth() - 1);
+      } else if (period === 'year') {
+        startDate.setFullYear(startDate.getFullYear() - 1);
+      } else {
+        // 'all' or not specified - no date filtering
+        startDate.setFullYear(2000); // Set to far in the past to get all records
+      }
+      
+      // Get data based on the requested metric type
+      let combineData: any[] = [];
+      let trainingData: any[] = [];
+      
+      if (metricType === 'combine' || metricType === 'both') {
+        // Get combine metrics history
+        const allMetrics = await storage.getCombineMetrics(athleteId);
+        
+        // Filter by date if needed
+        combineData = allMetrics.filter(metric => {
+          return new Date(metric.dateRecorded) >= startDate;
+        }).map(metric => ({
+          id: metric.id,
+          date: metric.dateRecorded.toISOString().split('T')[0],
+          fortyYard: metric.fortyYard,
+          shuttle: metric.shuttle,
+          verticalJump: metric.verticalJump,
+          broadJump: metric.broadJump,
+          benchPress: metric.benchPress
+        }));
+      }
+      
+      if (metricType === 'training' || metricType === 'both') {
+        // Get training plans history
+        const allPlans = await storage.getTrainingPlans(athleteId);
+        
+        // Filter by date and track completion status
+        trainingData = allPlans.filter(plan => {
+          return new Date(plan.date) >= startDate;
+        }).map(plan => ({
+          id: plan.id,
+          date: plan.date,
+          title: plan.title,
+          focus: plan.focus,
+          completed: plan.completed
+        }));
+      }
+      
+      // Prepare response based on the requested metric type
+      let response: any = {
+        athleteId,
+        period: period || 'all',
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: new Date().toISOString().split('T')[0]
+      };
+      
+      if (metricType === 'combine') {
+        response.data = combineData;
+      } else if (metricType === 'training') {
+        response.data = trainingData;
+      } else {
+        // 'both'
+        response.combineData = combineData;
+        response.trainingData = trainingData;
+      }
+      
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get dashboard data for an athlete
+  app.get("/api/athlete/:id/dashboard", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own dashboard
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Get latest metrics, all metrics history, and recent training plans
+      const latestMetrics = await storage.getLatestCombineMetrics(athleteId);
+      const metricsHistory = await storage.getCombineMetrics(athleteId);
+      const recentTrainingPlans = await storage.getTrainingPlans(athleteId);
+      const messages = await storage.getCoachMessages(athleteId);
+      
+      // Calculate training completion rate (last 7 days)
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      
+      const recentPlans = recentTrainingPlans.filter(plan => {
+        const planDate = new Date(plan.date);
+        return planDate >= oneWeekAgo;
+      });
+      
+      const completedPlans = recentPlans.filter(plan => plan.completed);
+      const completionRate = recentPlans.length > 0 
+        ? (completedPlans.length / recentPlans.length) * 100 
+        : 0;
+      
+      // Calculate metric improvements (if there are at least 2 metrics recorded)
+      const improvements: Record<string, { value: string, percentage: string | number }> = {};
+      if (metricsHistory.length >= 2) {
+        const oldest = metricsHistory[metricsHistory.length - 1];
+        const latest = metricsHistory[0];
+        
+        if (oldest.fortyYard !== null && latest.fortyYard !== null) {
+          improvements['fortyYard'] = {
+            value: (oldest.fortyYard - latest.fortyYard).toFixed(2),
+            percentage: oldest.fortyYard > 0 
+              ? (((oldest.fortyYard - latest.fortyYard) / oldest.fortyYard) * 100).toFixed(1) 
+              : 0
+          };
+        }
+        
+        // Add improvements for other metrics
+        const metricKeys = ['shuttle', 'verticalJump', 'broadJump', 'benchPress'] as const;
+        metricKeys.forEach(metric => {
+          const oldMetricValue = oldest[metric];
+          const newMetricValue = latest[metric];
+          
+          if (oldMetricValue !== null && newMetricValue !== null) {
+            const isSpeed = ['shuttle'].includes(metric);
+            const oldValue = oldMetricValue;
+            const newValue = newMetricValue;
+            
+            // For speed metrics, smaller is better (negative value means improvement)
+            // For power metrics, larger is better (positive value means improvement)
+            const rawImprovement = isSpeed ? oldValue - newValue : newValue - oldValue;
+            const improvementPercentage = oldValue > 0 
+              ? ((rawImprovement / oldValue) * 100).toFixed(1)
+              : 0;
+              
+            improvements[metric] = {
+              value: rawImprovement.toFixed(2),
+              percentage: improvementPercentage
+            };
+          }
+        });
+      }
+      
+      // Get unread coach message count
+      const unreadMessages = messages.filter(msg => !msg.read && msg.role === "assistant").length;
+      
+      // Compile dashboard data
+      const dashboardData = {
+        athleteInfo: {
+          id: athlete.id,
+          firstName: athlete.firstName,
+          lastName: athlete.lastName,
+          position: athlete.position,
+          grade: athlete.grade,
+          school: athlete.school
+        },
+        trainingStats: {
+          completionRate,
+          plansCompleted: completedPlans.length,
+          totalPlans: recentTrainingPlans.length,
+          upcomingPlan: recentTrainingPlans.length > 0 
+            ? recentTrainingPlans.find(plan => !plan.completed) || null 
+            : null
+        },
+        metrics: latestMetrics || null,
+        improvements,
+        unreadMessages
+      };
+      
+      res.json(dashboardData);
+    } catch (error) {
+      next(error);
+    }
+  });
+
   // Search athletes (for recruiters)
   app.get("/api/search/athletes", async (req, res, next) => {
     try {
