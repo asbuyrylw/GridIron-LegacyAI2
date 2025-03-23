@@ -532,8 +532,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { position, school, graduationYear, targetDivision } = req.query;
       
       // Get all athletes with public profiles
-      const athletes = Array.from(storage.athletesMap.values())
-        .filter(athlete => athlete.profileVisibility);
+      const allAthletes = await storage.getAllAthletes();
+      const athletes = allAthletes.filter(athlete => athlete.profileVisibility);
       
       // Apply filters if provided
       let filteredAthletes = athletes;

@@ -89,7 +89,13 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
     const createdAt = new Date();
-    const user: User = { ...insertUser, id, createdAt };
+    // Set default values for any required fields that might be undefined
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      createdAt,
+      userType: insertUser.userType || "athlete"
+    };
     this.usersMap.set(id, user);
     return user;
   }
@@ -107,7 +113,26 @@ export class MemStorage implements IStorage {
 
   async createAthlete(insertAthlete: InsertAthlete): Promise<Athlete> {
     const id = this.currentAthleteId++;
-    const athlete: Athlete = { ...insertAthlete, id };
+    // Set null for optional fields that might be undefined
+    const athlete: Athlete = { 
+      ...insertAthlete, 
+      id,
+      height: insertAthlete.height ?? null,
+      weight: insertAthlete.weight ?? null,
+      bodyFat: insertAthlete.bodyFat ?? null,
+      school: insertAthlete.school ?? null,
+      grade: insertAthlete.grade ?? null,
+      graduationYear: insertAthlete.graduationYear ?? null,
+      gpa: insertAthlete.gpa ?? null,
+      actScore: insertAthlete.actScore ?? null,
+      targetDivision: insertAthlete.targetDivision ?? null,
+      profileImage: insertAthlete.profileImage ?? null,
+      profileVisibility: insertAthlete.profileVisibility ?? true,
+      hudlLink: insertAthlete.hudlLink ?? null,
+      maxPrepsLink: insertAthlete.maxPrepsLink ?? null,
+      subscriptionTier: insertAthlete.subscriptionTier ?? "free",
+      subscriptionRenewal: insertAthlete.subscriptionRenewal ?? null
+    };
     this.athletesMap.set(id, athlete);
     return athlete;
   }
@@ -140,7 +165,17 @@ export class MemStorage implements IStorage {
   async createCombineMetrics(insertMetrics: InsertCombineMetric): Promise<CombineMetric> {
     const id = this.currentCombineMetricsId++;
     const dateRecorded = new Date();
-    const metrics: CombineMetric = { ...insertMetrics, id, dateRecorded };
+    // Set null for optional fields that might be undefined
+    const metrics: CombineMetric = { 
+      ...insertMetrics, 
+      id, 
+      dateRecorded,
+      fortyYard: insertMetrics.fortyYard ?? null,
+      shuttle: insertMetrics.shuttle ?? null,
+      verticalJump: insertMetrics.verticalJump ?? null,
+      broadJump: insertMetrics.broadJump ?? null,
+      benchPress: insertMetrics.benchPress ?? null
+    };
     this.combineMetricsMap.set(id, metrics);
     return metrics;
   }
@@ -166,7 +201,13 @@ export class MemStorage implements IStorage {
 
   async createTrainingPlan(insertPlan: InsertTrainingPlan): Promise<TrainingPlan> {
     const id = this.currentTrainingPlanId++;
-    const plan: TrainingPlan = { ...insertPlan, id };
+    // Set null for optional fields that might be undefined
+    const plan: TrainingPlan = { 
+      ...insertPlan, 
+      id,
+      completed: insertPlan.completed ?? false,
+      coachTip: insertPlan.coachTip ?? null
+    };
     this.trainingPlansMap.set(id, plan);
     return plan;
   }
@@ -190,7 +231,14 @@ export class MemStorage implements IStorage {
   async createCoachMessage(insertMessage: InsertCoachMessage): Promise<CoachMessage> {
     const id = this.currentCoachMessageId++;
     const createdAt = new Date();
-    const message: CoachMessage = { ...insertMessage, id, createdAt };
+    // Set defaults for optional fields that might be undefined
+    const message: CoachMessage = { 
+      ...insertMessage, 
+      id, 
+      createdAt,
+      role: insertMessage.role || "assistant",
+      read: insertMessage.read ?? false
+    };
     this.coachMessagesMap.set(id, message);
     return message;
   }
