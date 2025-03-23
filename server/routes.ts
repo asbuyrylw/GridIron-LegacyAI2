@@ -730,6 +730,307 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // -- Nutrition Plan Routes --
+  // Get all nutrition plans for an athlete
+  app.get("/api/athlete/:id/nutrition", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own nutrition plans
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const plans = await storage.getNutritionPlans(athleteId);
+      res.json(plans);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Get active nutrition plan for an athlete
+  app.get("/api/athlete/:id/nutrition/active", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own nutrition plan
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const plan = await storage.getActiveNutritionPlan(athleteId);
+      
+      if (!plan) {
+        return res.status(404).json({ message: "No active nutrition plan found" });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Create a nutrition plan
+  app.post("/api/athlete/:id/nutrition", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow creating nutrition plans for own profile
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Validate the nutrition plan data
+      const validated = insertNutritionPlanSchema.parse({
+        ...req.body,
+        athleteId
+      });
+      
+      const plan = await storage.createNutritionPlan(validated);
+      res.status(201).json(plan);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      next(error);
+    }
+  });
+
+  // Update a nutrition plan active status
+  app.patch("/api/athlete/:athleteId/nutrition/:planId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.athleteId);
+      const planId = parseInt(req.params.planId);
+      
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow updating own nutrition plans
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const { active } = req.body;
+      if (typeof active !== 'boolean') {
+        return res.status(400).json({ message: "Active status must be a boolean" });
+      }
+      
+      const updatedPlan = await storage.updateNutritionPlan(planId, active);
+      
+      if (!updatedPlan) {
+        return res.status(404).json({ message: "Nutrition plan not found" });
+      }
+      
+      res.json(updatedPlan);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // -- Meal Log Routes --
+  // Get meal logs for an athlete (optionally filtered by date)
+  app.get("/api/athlete/:id/meals", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const dateParam = req.query.date as string;
+      let date: Date | undefined;
+      
+      if (dateParam) {
+        date = new Date(dateParam);
+        if (isNaN(date.getTime())) {
+          return res.status(400).json({ message: "Invalid date format" });
+        }
+      }
+      
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own meal logs
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const meals = await storage.getMealLogs(athleteId, date);
+      res.json(meals);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Create a meal log
+  app.post("/api/athlete/:id/meals", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow creating meal logs for own profile
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Validate the meal log data
+      const validated = insertMealLogSchema.parse({
+        ...req.body,
+        athleteId
+      });
+      
+      const meal = await storage.createMealLog(validated);
+      res.status(201).json(meal);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      next(error);
+    }
+  });
+
+  // -- AI Meal Suggestion Routes --
+  // Get AI meal suggestions for an athlete
+  app.get("/api/athlete/:id/meal-suggestions", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const mealType = req.query.mealType as string;
+      const goal = req.query.goal as string;
+      
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own meal suggestions
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const suggestions = await storage.getAiMealSuggestions(athleteId, mealType, goal);
+      res.json(suggestions);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Generate and store AI meal suggestion
+  app.post("/api/athlete/:id/meal-suggestions", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow generating meal suggestions for own profile
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const { mealType, goal } = req.body;
+      
+      if (!mealType || !goal) {
+        return res.status(400).json({ message: "Meal type and goal are required" });
+      }
+      
+      try {
+        // Get athlete's active nutrition plan
+        const nutritionPlan = await storage.getActiveNutritionPlan(athleteId);
+        
+        if (!nutritionPlan) {
+          return res.status(404).json({ message: "No active nutrition plan found. Please create a nutrition plan first." });
+        }
+        
+        // Generate a meal suggestion - could be integrated with OpenAI in the future
+        const suggestion = {
+          name: `${goal.charAt(0).toUpperCase() + goal.slice(1)} ${mealType} meal`,
+          ingredients: ["Protein source", "Carbohydrate source", "Healthy fat", "Vegetables"],
+          instructions: "Prepare all ingredients and combine for a balanced meal.",
+          nutritionInfo: {
+            calories: nutritionPlan.dailyCalories / 3, // Rough estimate for one meal
+            protein: nutritionPlan.proteinTarget / 3,
+            carbs: nutritionPlan.carbTarget / 3,
+            fat: nutritionPlan.fatTarget / 3
+          }
+        };
+        
+        // Store the suggestion
+        const mealSuggestion = await storage.createAiMealSuggestion({
+          athleteId,
+          mealType,
+          goal,
+          suggestion
+        });
+        
+        res.status(201).json(mealSuggestion);
+      } catch (error) {
+        console.error("Error generating meal suggestion:", error);
+        return res.status(500).json({ 
+          message: "Failed to generate meal suggestion. Please try again later."
+        });
+      }
+    } catch (error) {
+      next(error);
+    }
+  });
+
   // Search athletes (for recruiters)
   app.get("/api/search/athletes", async (req, res, next) => {
     try {
