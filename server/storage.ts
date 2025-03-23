@@ -500,13 +500,15 @@ export class MemStorage implements IStorage {
     
     // Create new connection
     const connection: SocialConnection = {
-      ...insertConnection,
       id,
-      createdAt,
-      connected: insertConnection.connected ?? true,
-      tokenExpiry: insertConnection.tokenExpiry ?? null,
-      refreshToken: insertConnection.refreshToken ?? null,
+      userId: insertConnection.userId,
+      platform: insertConnection.platform,
       username: insertConnection.username ?? null,
+      createdAt,
+      accessToken: insertConnection.accessToken as string | null ?? null,
+      refreshToken: insertConnection.refreshToken ?? null,
+      tokenExpiry: insertConnection.tokenExpiry ?? null,
+      connected: insertConnection.connected as boolean | null ?? true,
     };
     
     this.socialConnectionsMap.set(id, connection);
@@ -733,8 +735,16 @@ export class MemStorage implements IStorage {
     );
     
     if (existingEntry) {
-      // Update existing entry with new value
-      return this.updateLeaderboardEntry(existingEntry.id, insertEntry.value)!;
+      // Create a default entry in case update fails
+      const defaultUpdatedEntry: LeaderboardEntry = {
+        ...existingEntry,
+        value: insertEntry.value,
+        updatedAt: new Date()
+      };
+      
+      // Try to update existing entry with new value
+      const updated = await this.updateLeaderboardEntry(existingEntry.id, insertEntry.value);
+      return updated || defaultUpdatedEntry;
     }
     
     // Create new entry
