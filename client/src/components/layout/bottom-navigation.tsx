@@ -7,6 +7,7 @@ import {
   BarChart2, 
   User, 
   Settings,
+  Trophy
 } from "lucide-react";
 
 export function BottomNavigation() {
@@ -17,6 +18,7 @@ export function BottomNavigation() {
     { icon: Dumbbell, label: "Training", path: "/training" },
     { icon: Apple, label: "Nutrition", path: "/nutrition" },
     { icon: BarChart2, label: "Stats", path: "/stats" },
+    { icon: Trophy, label: "Social", path: "/social-achievements" },
     { icon: User, label: "Profile", path: "/profile" },
   ];
   

@@ -25,7 +25,7 @@ import { Switch } from "@/components/ui/switch";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { SiTwitter, SiInstagram, SiFacebook, SiTiktok } from "react-icons/si";
+import { FaTwitter, FaInstagram, FaFacebook, FaTiktok } from "react-icons/fa";
 import { Trash2, Link as LinkIcon, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -41,10 +41,10 @@ type SocialConnectionFormValues = z.infer<typeof socialConnectionSchema>;
 
 // Social platform icons
 const platformIcons = {
-  twitter: SiTwitter,
-  instagram: SiInstagram,
-  facebook: SiFacebook,
-  tiktok: SiTiktok
+  twitter: FaTwitter,
+  instagram: FaInstagram,
+  facebook: FaFacebook,
+  tiktok: FaTiktok
 };
 
 export function SocialConnections() {

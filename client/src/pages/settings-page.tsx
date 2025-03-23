@@ -21,6 +21,8 @@ import {
   FileText,
   Lock,
   User,
+  Share2,
+  Award
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
@@ -36,6 +38,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { SocialConnections } from "@/components/social/social-connections";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function SettingsPage() {
   const { user, logoutMutation } = useAuth();
@@ -185,6 +189,51 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
           
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Share2 className="h-5 w-5 mr-2" />
+                Social Media Connections
+              </CardTitle>
+              <CardDescription>
+                Connect your social media accounts to share achievements and progress
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SocialConnections />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Award className="h-5 w-5 mr-2" />
+                Achievements & Leaderboards
+              </CardTitle>
+              <CardDescription>
+                Manage your achievements and leaderboard participation
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="achievements">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="achievements">Achievements</TabsTrigger>
+                  <TabsTrigger value="leaderboards">Leaderboards</TabsTrigger>
+                </TabsList>
+                <TabsContent value="achievements" className="mt-4">
+                  <Button variant="outline" className="w-full" onClick={() => toast({ title: "Coming Soon", description: "Achievements preferences will be available in a future update." })}>
+                    Configure Achievement Notifications
+                  </Button>
+                </TabsContent>
+                <TabsContent value="leaderboards" className="mt-4">
+                  <Button variant="outline" className="w-full" onClick={() => toast({ title: "Coming Soon", description: "Leaderboard preferences will be available in a future update." })}>
+                    Configure Leaderboard Privacy
+                  </Button>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
