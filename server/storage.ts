@@ -280,6 +280,124 @@ export class MemStorage implements IStorage {
     this.coachMessagesMap.set(id, updatedMessage);
     return updatedMessage;
   }
+
+  // Nutrition Plan Methods
+  async getNutritionPlans(athleteId: number): Promise<NutritionPlan[]> {
+    return Array.from(this.nutritionPlansMap.values())
+      .filter((plan) => plan.athleteId === athleteId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getActiveNutritionPlan(athleteId: number): Promise<NutritionPlan | undefined> {
+    return Array.from(this.nutritionPlansMap.values()).find(
+      (plan) => plan.athleteId === athleteId && plan.active === true
+    );
+  }
+
+  async createNutritionPlan(insertPlan: InsertNutritionPlan): Promise<NutritionPlan> {
+    const id = this.currentNutritionPlanId++;
+    const createdAt = new Date();
+    
+    // When creating a new active plan, deactivate any existing active plans
+    if (insertPlan.active) {
+      const currentActivePlan = await this.getActiveNutritionPlan(insertPlan.athleteId);
+      if (currentActivePlan) {
+        await this.updateNutritionPlan(currentActivePlan.id, false);
+      }
+    }
+
+    const plan: NutritionPlan = { 
+      ...insertPlan, 
+      id,
+      createdAt,
+      active: insertPlan.active ?? true
+    };
+    
+    this.nutritionPlansMap.set(id, plan);
+    return plan;
+  }
+
+  async updateNutritionPlan(id: number, active: boolean): Promise<NutritionPlan | undefined> {
+    const plan = this.nutritionPlansMap.get(id);
+    if (!plan) return undefined;
+    
+    const updatedPlan: NutritionPlan = { ...plan, active };
+    this.nutritionPlansMap.set(id, updatedPlan);
+    return updatedPlan;
+  }
+
+  // Meal Log Methods
+  async getMealLogs(athleteId: number, date?: Date): Promise<MealLog[]> {
+    let mealLogs = Array.from(this.mealLogsMap.values()).filter(
+      (log) => log.athleteId === athleteId
+    );
+    
+    if (date) {
+      const dateString = date.toISOString().split('T')[0];
+      mealLogs = mealLogs.filter(log => {
+        // Handle log.date as string (it's stored as YYYY-MM-DD)
+        return log.date === dateString;
+      });
+    }
+    
+    return mealLogs.sort((a, b) => {
+      // First sort by date
+      if (a.date < b.date) return -1;
+      if (a.date > b.date) return 1;
+      
+      // Then sort by meal type (breakfast, lunch, dinner, snack)
+      const mealTypeOrder = { breakfast: 0, lunch: 1, dinner: 2, snack: 3 };
+      return mealTypeOrder[a.mealType as keyof typeof mealTypeOrder] - 
+             mealTypeOrder[b.mealType as keyof typeof mealTypeOrder];
+    });
+  }
+
+  async createMealLog(insertMealLog: InsertMealLog): Promise<MealLog> {
+    const id = this.currentMealLogId++;
+    
+    const mealLog: MealLog = { 
+      ...insertMealLog, 
+      id,
+      protein: insertMealLog.protein ?? null,
+      carbs: insertMealLog.carbs ?? null,
+      fat: insertMealLog.fat ?? null,
+      notes: insertMealLog.notes ?? null
+    };
+    
+    this.mealLogsMap.set(id, mealLog);
+    return mealLog;
+  }
+
+  // AI Meal Suggestion Methods
+  async getAiMealSuggestions(athleteId: number, mealType?: string, goal?: string): Promise<AiMealSuggestion[]> {
+    let suggestions = Array.from(this.aiMealSuggestionsMap.values()).filter(
+      (suggestion) => suggestion.athleteId === athleteId
+    );
+    
+    if (mealType) {
+      suggestions = suggestions.filter(suggestion => suggestion.mealType === mealType);
+    }
+    
+    if (goal) {
+      suggestions = suggestions.filter(suggestion => suggestion.goal === goal);
+    }
+    
+    return suggestions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async createAiMealSuggestion(insertSuggestion: InsertAiMealSuggestion): Promise<AiMealSuggestion> {
+    const id = this.currentAiMealSuggestionId++;
+    const createdAt = new Date();
+    
+    const suggestion: AiMealSuggestion = { 
+      ...insertSuggestion, 
+      id,
+      createdAt
+    };
+    
+    this.aiMealSuggestionsMap.set(id, suggestion);
+    return suggestion;
+  }
 }
 
 export const storage = new MemStorage();

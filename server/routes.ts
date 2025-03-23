@@ -6,7 +6,10 @@ import { setupAuth } from "./auth";
 import { 
   insertCombineMetricsSchema, 
   insertTrainingPlanSchema, 
-  insertCoachMessageSchema
+  insertCoachMessageSchema,
+  insertNutritionPlanSchema,
+  insertMealLogSchema,
+  insertAiMealSuggestionSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
