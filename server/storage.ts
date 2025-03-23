@@ -3,7 +3,10 @@ import {
   athletes, type Athlete, type InsertAthlete,
   combineMetrics, type CombineMetric, type InsertCombineMetric,
   trainingPlans, type TrainingPlan, type InsertTrainingPlan,
-  coachMessages, type CoachMessage, type InsertCoachMessage
+  coachMessages, type CoachMessage, type InsertCoachMessage,
+  nutritionPlans, type NutritionPlan, type InsertNutritionPlan,
+  mealLogs, type MealLog, type InsertMealLog,
+  aiMealSuggestions, type AiMealSuggestion, type InsertAiMealSuggestion
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -39,6 +42,20 @@ export interface IStorage {
   createCoachMessage(message: InsertCoachMessage): Promise<CoachMessage>;
   markMessageAsRead(id: number): Promise<CoachMessage | undefined>;
 
+  // Nutrition Plan Methods
+  getNutritionPlans(athleteId: number): Promise<NutritionPlan[]>;
+  getActiveNutritionPlan(athleteId: number): Promise<NutritionPlan | undefined>;
+  createNutritionPlan(plan: InsertNutritionPlan): Promise<NutritionPlan>;
+  updateNutritionPlan(id: number, active: boolean): Promise<NutritionPlan | undefined>;
+  
+  // Meal Log Methods
+  getMealLogs(athleteId: number, date?: Date): Promise<MealLog[]>;
+  createMealLog(mealLog: InsertMealLog): Promise<MealLog>;
+  
+  // AI Meal Suggestion Methods
+  getAiMealSuggestions(athleteId: number, mealType?: string, goal?: string): Promise<AiMealSuggestion[]>;
+  createAiMealSuggestion(suggestion: InsertAiMealSuggestion): Promise<AiMealSuggestion>;
+
   // Session Store
   sessionStore: any; // Use any for session store to avoid type issues
 }
@@ -49,12 +66,18 @@ export class MemStorage implements IStorage {
   private combineMetricsMap: Map<number, CombineMetric>;
   private trainingPlansMap: Map<number, TrainingPlan>;
   private coachMessagesMap: Map<number, CoachMessage>;
+  private nutritionPlansMap: Map<number, NutritionPlan>;
+  private mealLogsMap: Map<number, MealLog>;
+  private aiMealSuggestionsMap: Map<number, AiMealSuggestion>;
   
   currentUserId: number;
   currentAthleteId: number;
   currentCombineMetricsId: number;
   currentTrainingPlanId: number;
   currentCoachMessageId: number;
+  currentNutritionPlanId: number;
+  currentMealLogId: number;
+  currentAiMealSuggestionId: number;
   sessionStore: any;
 
   constructor() {
@@ -63,12 +86,18 @@ export class MemStorage implements IStorage {
     this.combineMetricsMap = new Map();
     this.trainingPlansMap = new Map();
     this.coachMessagesMap = new Map();
+    this.nutritionPlansMap = new Map();
+    this.mealLogsMap = new Map();
+    this.aiMealSuggestionsMap = new Map();
     
     this.currentUserId = 1;
     this.currentAthleteId = 1;
     this.currentCombineMetricsId = 1;
     this.currentTrainingPlanId = 1;
     this.currentCoachMessageId = 1;
+    this.currentNutritionPlanId = 1;
+    this.currentMealLogId = 1;
+    this.currentAiMealSuggestionId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // prune expired entries every 24h
