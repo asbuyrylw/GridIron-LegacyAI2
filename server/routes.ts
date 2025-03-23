@@ -9,7 +9,13 @@ import {
   insertCoachMessageSchema,
   insertNutritionPlanSchema,
   insertMealLogSchema,
-  insertAiMealSuggestionSchema
+  insertAiMealSuggestionSchema,
+  insertSocialConnectionSchema,
+  insertSocialPostSchema,
+  insertAchievementSchema,
+  insertAthleteAchievementSchema,
+  insertLeaderboardSchema,
+  insertLeaderboardEntrySchema
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -1103,6 +1109,293 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create HTTP server
+  // -- Social Media Routes --
+  // Get user's social connections
+  app.get("/api/user/social-connections", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const connections = await storage.getSocialConnections(req.user.id);
+      res.json(connections);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Get social connection by platform
+  app.get("/api/user/social-connections/:platform", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const platform = req.params.platform;
+      const connection = await storage.getSocialConnectionByPlatform(req.user.id, platform);
+      
+      if (!connection) {
+        return res.status(404).json({ message: `No connection found for ${platform}` });
+      }
+      
+      res.json(connection);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Create/update social connection
+  app.post("/api/user/social-connections", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Validate the connection data
+      const validated = insertSocialConnectionSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      
+      const connection = await storage.createSocialConnection(validated);
+      res.status(201).json(connection);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      next(error);
+    }
+  });
+
+  // Disconnect from platform
+  app.delete("/api/user/social-connections/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const connectionId = parseInt(req.params.id);
+      const connection = await storage.disconnectSocialConnection(connectionId);
+      
+      if (!connection) {
+        return res.status(404).json({ message: "Connection not found" });
+      }
+      
+      res.json(connection);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Get user's social posts
+  app.get("/api/user/social-posts", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const posts = await storage.getSocialPosts(req.user.id);
+      res.json(posts);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Create a social post
+  app.post("/api/user/social-posts", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Validate the post data
+      const validated = insertSocialPostSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      
+      const post = await storage.createSocialPost(validated);
+      
+      // In a real app, we would have a background job to publish posts
+      // to social media platforms, but for demo purposes, we'll just mark it as posted
+      setTimeout(async () => {
+        try {
+          // Simulating a successful post
+          await storage.updateSocialPostStatus(post.id, "posted", new Date());
+        } catch (error) {
+          console.error("Error posting to social media:", error);
+          await storage.updateSocialPostStatus(
+            post.id, 
+            "failed", 
+            undefined, 
+            "Error connecting to social media platform"
+          );
+        }
+      }, 2000);
+      
+      res.status(201).json(post);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      next(error);
+    }
+  });
+
+  // -- Achievements & Leaderboards Routes --
+  // Get all achievements
+  app.get("/api/achievements", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const category = req.query.category as string | undefined;
+      const achievements = await storage.getAchievements(category);
+      res.json(achievements);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Get athlete's achievements
+  app.get("/api/athlete/:id/achievements", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own achievements or if profile is public
+      if (athlete.userId !== req.user.id && !athlete.profileVisibility) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const achievements = await storage.getAthleteAchievements(athleteId);
+      res.json(achievements);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Update achievement progress
+  app.patch("/api/athlete/achievements/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const achievementId = parseInt(req.params.id);
+      const { progress, completed } = req.body;
+      
+      // Validate progress is a number between 0-100
+      if (typeof progress !== "number" || progress < 0 || progress > 100) {
+        return res.status(400).json({ message: "Progress must be a number between 0 and 100" });
+      }
+      
+      const updatedAchievement = await storage.updateAthleteAchievementProgress(
+        achievementId,
+        progress,
+        completed
+      );
+      
+      if (!updatedAchievement) {
+        return res.status(404).json({ message: "Achievement not found" });
+      }
+      
+      res.json(updatedAchievement);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Get all active leaderboards
+  app.get("/api/leaderboards", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const activeOnly = req.query.active === "true";
+      const leaderboards = await storage.getLeaderboards(activeOnly);
+      res.json(leaderboards);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Get leaderboard entries
+  app.get("/api/leaderboards/:id/entries", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const leaderboardId = parseInt(req.params.id);
+      const leaderboard = await storage.getLeaderboardById(leaderboardId);
+      
+      if (!leaderboard) {
+        return res.status(404).json({ message: "Leaderboard not found" });
+      }
+      
+      const entries = await storage.getLeaderboardEntries(leaderboardId);
+      res.json(entries);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Submit score to leaderboard
+  app.post("/api/leaderboards/:id/entries", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const leaderboardId = parseInt(req.params.id);
+      const leaderboard = await storage.getLeaderboardById(leaderboardId);
+      
+      if (!leaderboard) {
+        return res.status(404).json({ message: "Leaderboard not found" });
+      }
+      
+      if (!leaderboard.active) {
+        return res.status(400).json({ message: "This leaderboard is currently inactive" });
+      }
+      
+      const athlete = await storage.getAthleteByUserId(req.user.id);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete profile not found" });
+      }
+      
+      const { value } = req.body;
+      
+      if (typeof value !== "number") {
+        return res.status(400).json({ message: "Value must be a number" });
+      }
+      
+      // Create or update the leaderboard entry
+      const entry = await storage.createLeaderboardEntry({
+        leaderboardId,
+        athleteId: athlete.id,
+        value
+      });
+      
+      res.status(201).json(entry);
+    } catch (error) {
+      next(error);
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
