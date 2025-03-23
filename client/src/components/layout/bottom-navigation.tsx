@@ -2,7 +2,8 @@ import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { 
   Home, 
-  Dumbbell, 
+  Dumbbell,
+  Apple,
   BarChart2, 
   User, 
   Settings,
@@ -14,9 +15,9 @@ export function BottomNavigation() {
   const navItems = [
     { icon: Home, label: "Home", path: "/" },
     { icon: Dumbbell, label: "Training", path: "/training" },
+    { icon: Apple, label: "Nutrition", path: "/nutrition" },
     { icon: BarChart2, label: "Stats", path: "/stats" },
     { icon: User, label: "Profile", path: "/profile" },
-    { icon: Settings, label: "Settings", path: "/settings" },
   ];
   
   return (

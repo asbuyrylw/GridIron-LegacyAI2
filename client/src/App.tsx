@@ -11,6 +11,7 @@ import TrainingPage from "@/pages/training-page";
 import StatsPage from "@/pages/stats-page";
 import ProfilePage from "@/pages/profile-page";
 import SettingsPage from "@/pages/settings-page";
+import NutritionPage from "@/pages/nutrition-page";
 
 // Landing Pages
 import LandingIndex from "@/pages/landing/index";
@@ -47,6 +48,7 @@ function Router() {
       {/* Protected Routes */}
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/training" component={TrainingPage} />
+      <ProtectedRoute path="/nutrition" component={NutritionPage} />
       <ProtectedRoute path="/stats" component={StatsPage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
