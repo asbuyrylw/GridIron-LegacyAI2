@@ -57,9 +57,21 @@ export function SocialConnections() {
     data: connections, 
     isLoading: connectionsLoading,
     error: connectionsError
-  } = useQuery({
+  } = useQuery<any[]>({
     queryKey: ["/api/user/social-connections"],
-    queryFn: getQueryFn({ on401: "throw" }),
+    queryFn: async () => {
+      const res = await fetch(`/api/user/social-connections`);
+      
+      if (res.status === 401) {
+        throw new Error("Not authorized");
+      }
+      
+      if (!res.ok) {
+        throw new Error("Failed to fetch data");
+      }
+      
+      return res.json();
+    },
   });
   
   // Mutation for creating/updating social connection
@@ -157,7 +169,7 @@ export function SocialConnections() {
       </CardHeader>
       <CardContent>
         {/* Display existing connections */}
-        {!connectionsLoading && connections && connections.length > 0 && (
+        {!connectionsLoading && connections && Array.isArray(connections) && connections.length > 0 && (
           <div className="space-y-4 mb-6">
             {connections.map((connection: any) => {
               const PlatformIcon = platformIcons[connection.platform as keyof typeof platformIcons] 
@@ -199,7 +211,7 @@ export function SocialConnections() {
         )}
         
         {/* Empty state */}
-        {!connectionsLoading && (!connections || connections.length === 0) && !addingNew && (
+        {!connectionsLoading && (!connections || !Array.isArray(connections) || connections.length === 0) && !addingNew && (
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <LinkIcon className="h-10 w-10 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-1">No social platforms connected</h3>
@@ -306,7 +318,7 @@ export function SocialConnections() {
         )}
       </CardContent>
       <CardFooter className="justify-center border-t pt-4">
-        {!addingNew && connections && connections.length > 0 && (
+        {!addingNew && connections && Array.isArray(connections) && connections.length > 0 && (
           <Button onClick={() => setAddingNew(true)}>
             Add Another Platform
           </Button>
@@ -316,23 +328,3 @@ export function SocialConnections() {
   );
 }
 
-// Helper function for query fetching
-function getQueryFn<T>(options: { on401: "throw" | "returnNull" }) {
-  return async () => {
-    const res = await fetch(`/api/user/social-connections`);
-    
-    if (res.status === 401) {
-      if (options.on401 === "throw") {
-        throw new Error("Not authorized");
-      } else {
-        return null;
-      }
-    }
-    
-    if (!res.ok) {
-      throw new Error("Failed to fetch data");
-    }
-    
-    return res.json() as Promise<T>;
-  };
-}

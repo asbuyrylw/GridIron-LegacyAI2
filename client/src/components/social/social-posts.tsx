@@ -67,7 +67,19 @@ export function SocialPosts() {
     isLoading: connectionsLoading,
   } = useQuery<any[]>({
     queryKey: ["/api/user/social-connections"],
-    queryFn: getQueryFn({ on401: "throw" }),
+    queryFn: async () => {
+      const res = await fetch(`/api/user/social-connections`);
+      
+      if (res.status === 401) {
+        throw new Error("Not authorized");
+      }
+      
+      if (!res.ok) {
+        throw new Error("Failed to fetch data");
+      }
+      
+      return res.json();
+    },
   });
   
   // Query for getting social posts
@@ -508,23 +520,3 @@ export function SocialPosts() {
   );
 }
 
-// Helper function for query fetching
-function getQueryFn<T>(options: { on401: "throw" | "returnNull" }) {
-  return async () => {
-    const res = await fetch(`/api/user/social-connections`);
-    
-    if (res.status === 401) {
-      if (options.on401 === "throw") {
-        throw new Error("Not authorized");
-      } else {
-        return null;
-      }
-    }
-    
-    if (!res.ok) {
-      throw new Error("Failed to fetch data");
-    }
-    
-    return res.json() as Promise<T>;
-  };
-}

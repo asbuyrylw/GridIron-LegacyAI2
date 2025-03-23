@@ -59,7 +59,8 @@ export default function SettingsPage() {
     });
   };
   
-  const athlete = user?.athlete;
+  // Since athlete might not exist on user type, we'll handle it safely
+  const athlete = user ? (user as any).athlete : undefined;
   const subscriptionTier = athlete?.subscriptionTier || "free";
   
   let tierName;
