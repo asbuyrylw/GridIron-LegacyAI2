@@ -74,6 +74,7 @@ export const nutritionPlans = pgTable("nutrition_plans", {
   carbTarget: integer("carb_target").notNull(), // in grams
   fatTarget: integer("fat_target").notNull(), // in grams
   hydrationTarget: integer("hydration_target").notNull(), // in oz
+  restrictions: text("restrictions"), // allergies, intolerances, dietary preferences
   createdAt: timestamp("created_at").defaultNow().notNull(),
   active: boolean("active").default(true),
 });

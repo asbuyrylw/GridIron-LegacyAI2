@@ -1,4 +1,4 @@
-import { generateCoachingResponse, generateTrainingPlan, analyzeAthleteMetrics } from "./openai";
+import { generateCoachingResponse, generateTrainingPlan, analyzeAthleteMetrics, generateMealSuggestion } from "./openai";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -990,7 +990,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const { mealType, goal } = req.body;
+      const { mealType, goal, restrictions } = req.body;
       
       if (!mealType || !goal) {
         return res.status(400).json({ message: "Meal type and goal are required" });
@@ -1004,18 +1004,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "No active nutrition plan found. Please create a nutrition plan first." });
         }
         
-        // Generate a meal suggestion - could be integrated with OpenAI in the future
-        const suggestion = {
-          name: `${goal.charAt(0).toUpperCase() + goal.slice(1)} ${mealType} meal`,
-          ingredients: ["Protein source", "Carbohydrate source", "Healthy fat", "Vegetables"],
-          instructions: "Prepare all ingredients and combine for a balanced meal.",
-          nutritionInfo: {
-            calories: nutritionPlan.dailyCalories / 3, // Rough estimate for one meal
-            protein: nutritionPlan.proteinTarget / 3,
-            carbs: nutritionPlan.carbTarget / 3,
-            fat: nutritionPlan.fatTarget / 3
-          }
-        };
+        // Generate a personalized meal suggestion using OpenAI
+        const suggestion = await generateMealSuggestion(
+          nutritionPlan, 
+          mealType, 
+          goal,
+          restrictions || nutritionPlan.restrictions || ""
+        );
         
         // Store the suggestion
         const mealSuggestion = await storage.createAiMealSuggestion({
