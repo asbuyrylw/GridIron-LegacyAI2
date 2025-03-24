@@ -12,15 +12,57 @@
     background-image: linear-gradient(to bottom right, rgba(240, 245, 255, 0.5), rgba(255, 255, 255, 1));
     min-height: 100vh;
   }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+  
+  /* Animated gradient backgrounds for special elements */
+  .animate-gradient {
+    background-size: 400% 400%;
+    animation: gradient 8s ease infinite;
+  }
+  
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  /* Confetti animation for achievements */
+  @keyframes float {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 0;
+    }
+    50% {
+      opacity: 0.3;
+    }
+    100% {
+      transform: translateY(-20px) rotate(360deg);
+      opacity: 0;
+    }
+  }
+  
+  .confetti {
+    animation: float 3s ease-in-out infinite;
+  }
 }
 
 @layer components {
+  /* Card Styles */
   .dashboard-card {
-    @apply bg-white rounded-xl shadow-md p-6 border border-blue-100 hover:shadow-lg transition-shadow;
+    @apply bg-white rounded-xl shadow-md p-6 border border-blue-100/50 hover:shadow-lg transition-shadow;
   }
   
   .stat-card {
-    @apply bg-white rounded-xl shadow-sm p-4 border border-blue-50;
+    @apply bg-white rounded-xl shadow-sm p-4 border border-blue-50 hover:border-blue-200 transition-colors;
   }
   
   .gradient-card {
@@ -33,15 +75,93 @@
     @apply bg-white rounded-xl shadow-sm p-4 border border-blue-50 hover:border-primary/50 transition-colors;
   }
   
+  .celebration-card {
+    @apply rounded-xl shadow-lg overflow-hidden;
+    background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
+    color: white;
+  }
+  
+  /* Progress Indicators */
   .progress-container {
-    @apply h-2 bg-blue-100 rounded-full overflow-hidden;
+    @apply h-2.5 bg-slate-100 rounded-full overflow-hidden;
   }
   
   .progress-bar {
     @apply h-full bg-gradient-to-r from-blue-500 to-indigo-600;
+    transition: width 0.5s ease-in-out;
   }
   
+  .progress-bar-success {
+    @apply bg-gradient-to-r from-green-400 to-green-500;
+  }
+  
+  .progress-bar-warning {
+    @apply bg-gradient-to-r from-yellow-400 to-orange-500;
+  }
+  
+  .progress-bar-danger {
+    @apply bg-gradient-to-r from-red-400 to-red-500;
+  }
+  
+  /* Icon Styles */
   .badge-icon {
-    @apply flex items-center justify-center w-12 h-12 rounded-full bg-primary/10;
+    @apply flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary;
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+  }
+  
+  .badge-icon-success {
+    @apply bg-green-50 text-green-600;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+  }
+  
+  .badge-icon-pending {
+    @apply bg-yellow-50 text-yellow-600;
+    box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.1);
+  }
+  
+  /* Achievement Badge Glow */
+  .achievement-glow {
+    @apply relative;
+  }
+  
+  .achievement-glow::after {
+    content: '';
+    @apply absolute inset-0 rounded-full;
+    box-shadow: 0 0 15px 5px rgba(var(--primary-rgb), 0.3);
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% {
+      transform: scale(0.95);
+      opacity: 0.7;
+    }
+    70% {
+      transform: scale(1);
+      opacity: 0.3;
+    }
+    100% {
+      transform: scale(0.95);
+      opacity: 0.7;
+    }
+  }
+  
+  /* Football Field Pattern for Headers */
+  .field-pattern {
+    background-color: #4CAF50;
+    background-image: 
+      linear-gradient(0deg, transparent 9%, 
+        rgba(255, 255, 255, .2) 10%, rgba(255, 255, 255, .2) 12%, transparent 13%, transparent 29%,
+        rgba(255, 255, 255, .1) 30%, rgba(255, 255, 255, .1) 31%, transparent 32%, transparent 49%, 
+        rgba(255, 255, 255, .1) 50%, rgba(255, 255, 255, .1) 51%, transparent 52%, transparent 69%, 
+        rgba(255, 255, 255, .1) 70%, rgba(255, 255, 255, .1) 71%, transparent 72%, transparent 88%,
+        rgba(255, 255, 255, .2) 89%, rgba(255, 255, 255, .2) 90%, transparent 91%, transparent),
+      linear-gradient(90deg, transparent 9%, 
+        rgba(255, 255, 255, .2) 10%, rgba(255, 255, 255, .2) 12%, transparent 13%, transparent 29%,
+        rgba(255, 255, 255, .1) 30%, rgba(255, 255, 255, .1) 31%, transparent 32%, transparent 49%, 
+        rgba(255, 255, 255, .1) 50%, rgba(255, 255, 255, .1) 51%, transparent 52%, transparent 69%, 
+        rgba(255, 255, 255, .1) 70%, rgba(255, 255, 255, .1) 71%, transparent 72%, transparent 88%,
+        rgba(255, 255, 255, .2) 89%, rgba(255, 255, 255, .2) 90%, transparent 91%, transparent);
+    background-size: 50px 50px;
   }
 }

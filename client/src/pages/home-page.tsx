@@ -12,9 +12,11 @@ import { Header } from "@/components/layout/header";
 import { BottomNavigation } from "@/components/layout/bottom-navigation";
 import { ChatInterface } from "@/components/coach-ai/chat-interface";
 import { CombineMetric } from "@shared/schema";
+import { Redirect } from "wouter";
+import { Loader2 } from "lucide-react";
 
 export default function HomePage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const athleteId = user?.athlete?.id;
   
   const [chatOpen, setChatOpen] = useState(false);
@@ -54,8 +56,32 @@ export default function HomePage() {
     }
   };
   
-  const fortyYardProgress = calculateProgress(latestMetrics?.fortyYard, D1_BENCHMARKS.fortyYard, true);
-  const benchProgress = calculateProgress(latestMetrics?.benchPress, D1_BENCHMARKS.benchPress, false);
+  // Safe access to metrics with proper type checking
+  const fortyYardProgress = calculateProgress(
+    typeof latestMetrics?.fortyYard === 'number' ? latestMetrics.fortyYard : undefined,
+    D1_BENCHMARKS.fortyYard, 
+    true
+  );
+  
+  const benchProgress = calculateProgress(
+    typeof latestMetrics?.benchPress === 'number' ? latestMetrics.benchPress : undefined, 
+    D1_BENCHMARKS.benchPress, 
+    false
+  );
+  
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  // Redirect if not authenticated
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
   
   return (
     <div className="min-h-screen pb-16 relative bg-gradient-to-b from-blue-50/50 to-white">

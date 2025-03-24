@@ -183,7 +183,12 @@ export const insertLeaderboardSchema = createInsertSchema(leaderboards).omit({ i
 export const insertLeaderboardEntrySchema = createInsertSchema(leaderboardEntries).omit({ id: true, updatedAt: true });
 
 // Select Types
-export type User = typeof users.$inferSelect;
+export type User = typeof users.$inferSelect & {
+  // Extended properties for auth/API responses
+  firstName?: string;
+  lastName?: string;
+  athlete?: Athlete;
+};
 export type Athlete = typeof athletes.$inferSelect;
 export type CombineMetric = typeof combineMetrics.$inferSelect;
 export type TrainingPlan = typeof trainingPlans.$inferSelect;
