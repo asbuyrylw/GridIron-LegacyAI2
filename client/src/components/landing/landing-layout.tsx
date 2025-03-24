@@ -5,9 +5,16 @@ import {
   Award as Trophy, 
   BarChart3 as ChartLineUp, 
   User as UserCircle,
-  Dribbble as Football
+  Activity as Football,
+  ChevronDown
 } from "lucide-react";
 import { ReactNode } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface LandingLayoutProps {
   children: ReactNode;
@@ -25,20 +32,39 @@ export function LandingLayout({ children, activeTab }: LandingLayoutProps) {
             <span className="font-bold text-xl">GridIron LegacyAI</span>
           </div>
           
-          {/* Navigation */}
+          {/* Navigation - Dropdown */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/landing/players" className={`text-sm font-medium transition-colors hover:text-primary ${activeTab === "players" ? "text-primary" : "text-muted-foreground"}`}>
-              For Players
-            </Link>
-            <Link href="/landing/parents" className={`text-sm font-medium transition-colors hover:text-primary ${activeTab === "parents" ? "text-primary" : "text-muted-foreground"}`}>
-              For Parents
-            </Link>
-            <Link href="/landing/coaches" className={`text-sm font-medium transition-colors hover:text-primary ${activeTab === "coaches" ? "text-primary" : "text-muted-foreground"}`}>
-              For Coaches
-            </Link>
-            <Link href="/landing/schools" className={`text-sm font-medium transition-colors hover:text-primary ${activeTab === "schools" ? "text-primary" : "text-muted-foreground"}`}>
-              For Schools
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary focus-visible:outline-none">
+                {activeTab ? `For ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}` : "Explore"} <ChevronDown className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center">
+                <Link href="/landing/players">
+                  <DropdownMenuItem className={`cursor-pointer flex items-center gap-2 ${activeTab === "players" ? "text-primary" : ""}`}>
+                    <Football className="h-4 w-4" />
+                    <span>For Players</span>
+                  </DropdownMenuItem>
+                </Link>
+                <Link href="/landing/parents">
+                  <DropdownMenuItem className={`cursor-pointer flex items-center gap-2 ${activeTab === "parents" ? "text-primary" : ""}`}>
+                    <UserCircle className="h-4 w-4" />
+                    <span>For Parents</span>
+                  </DropdownMenuItem>
+                </Link>
+                <Link href="/landing/coaches">
+                  <DropdownMenuItem className={`cursor-pointer flex items-center gap-2 ${activeTab === "coaches" ? "text-primary" : ""}`}>
+                    <Trophy className="h-4 w-4" />
+                    <span>For Coaches</span>
+                  </DropdownMenuItem>
+                </Link>
+                <Link href="/landing/schools">
+                  <DropdownMenuItem className={`cursor-pointer flex items-center gap-2 ${activeTab === "schools" ? "text-primary" : ""}`}>
+                    <School className="h-4 w-4" />
+                    <span>For Schools</span>
+                  </DropdownMenuItem>
+                </Link>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
           
           {/* Auth buttons */}
