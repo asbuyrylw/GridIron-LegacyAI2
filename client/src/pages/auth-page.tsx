@@ -342,7 +342,7 @@ function RegisterForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (
                     </svg>
                   </div>
                   <Input 
-                    className="pl-10 py-5 bg-slate-50 border-slate-200 focus:bg-white" 
+                    className="pl-10 py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
                     placeholder="jsmith24" 
                     {...field} 
                   />
@@ -368,7 +368,7 @@ function RegisterForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (
                     </svg>
                   </div>
                   <Input 
-                    className="pl-10 py-5 bg-slate-50 border-slate-200 focus:bg-white" 
+                    className="pl-10 py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
                     type="email" 
                     placeholder="john.smith@example.com" 
                     {...field} 
@@ -396,7 +396,7 @@ function RegisterForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (
                     </svg>
                   </div>
                   <Input 
-                    className="pl-10 py-5 bg-slate-50 border-slate-200 focus:bg-white" 
+                    className="pl-10 py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
                     placeholder="QB, RB, WR, etc." 
                     {...field} 
                   />
@@ -423,7 +423,7 @@ function RegisterForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (
                       </svg>
                     </div>
                     <Input 
-                      className="pl-10 py-5 bg-slate-50 border-slate-200 focus:bg-white" 
+                      className="pl-10 py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
                       type="password" 
                       placeholder="••••••••" 
                       {...field} 
@@ -449,7 +449,7 @@ function RegisterForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (
                       </svg>
                     </div>
                     <Input 
-                      className="pl-10 py-5 bg-slate-50 border-slate-200 focus:bg-white" 
+                      className="pl-10 py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
                       type="password" 
                       placeholder="••••••••" 
                       {...field} 
