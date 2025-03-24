@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,16 @@ interface MealSuggestionsProps {
 export function MealSuggestions({ athleteId, nutritionPlan }: MealSuggestionsProps) {
   const [mealType, setMealType] = useState("breakfast");
   const [goal, setGoal] = useState("performance");
+  const [restrictions, setRestrictions] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
+
+  // Extract dietary restrictions from the nutrition plan if available
+  useEffect(() => {
+    if (nutritionPlan?.restrictions) {
+      setRestrictions(nutritionPlan.restrictions);
+    }
+  }, [nutritionPlan?.restrictions]);
 
   const { data: suggestions, isLoading } = useQuery({
     queryKey: ["/api/athlete", athleteId, "meal-suggestions", mealType, goal],
@@ -37,9 +46,11 @@ export function MealSuggestions({ athleteId, nutritionPlan }: MealSuggestionsPro
 
   const generateMutation = useMutation({
     mutationFn: async () => {
+      setIsGenerating(true);
       const res = await apiRequest("POST", `/api/athlete/${athleteId}/meal-suggestions`, {
         mealType,
-        goal
+        goal,
+        restrictions
       });
       return await res.json();
     },
@@ -49,8 +60,9 @@ export function MealSuggestions({ athleteId, nutritionPlan }: MealSuggestionsPro
       });
       toast({
         title: "Success",
-        description: "Meal suggestion generated successfully.",
+        description: "AI meal suggestion generated successfully.",
       });
+      setIsGenerating(false);
     },
     onError: (error: Error) => {
       toast({
@@ -58,6 +70,7 @@ export function MealSuggestions({ athleteId, nutritionPlan }: MealSuggestionsPro
         description: `Failed to generate meal suggestion: ${error.message}`,
         variant: "destructive",
       });
+      setIsGenerating(false);
     }
   });
 
@@ -171,12 +184,16 @@ export function MealSuggestions({ athleteId, nutritionPlan }: MealSuggestionsPro
                       </p>
                     </div>
                   </div>
+                  {suggestion.suggestion.description && (
+                    <p className="text-sm text-muted-foreground mt-2">{suggestion.suggestion.description}</p>
+                  )}
                 </CardHeader>
                 <CardContent className="pt-4">
                   <Tabs defaultValue="ingredients">
                     <TabsList className="mb-2">
                       <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
                       <TabsTrigger value="instructions">Instructions</TabsTrigger>
+                      <TabsTrigger value="benefits">Benefits</TabsTrigger>
                     </TabsList>
                     <TabsContent value="ingredients">
                       <ul className="list-disc pl-5 space-y-1">
@@ -186,10 +203,55 @@ export function MealSuggestions({ athleteId, nutritionPlan }: MealSuggestionsPro
                       </ul>
                     </TabsContent>
                     <TabsContent value="instructions">
-                      <p className="text-sm">{suggestion.suggestion.instructions}</p>
+                      <p className="text-sm whitespace-pre-line">{suggestion.suggestion.instructions}</p>
+                      {suggestion.suggestion.prepTime && (
+                        <p className="text-sm mt-2 text-muted-foreground">
+                          Prep time: {suggestion.suggestion.prepTime}
+                        </p>
+                      )}
+                    </TabsContent>
+                    <TabsContent value="benefits">
+                      {suggestion.suggestion.benefits && suggestion.suggestion.benefits.length > 0 ? (
+                        <ul className="list-disc pl-5 space-y-1">
+                          {suggestion.suggestion.benefits.map((benefit: string, index: number) => (
+                            <li key={index} className="text-sm">{benefit}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No specific benefits listed.</p>
+                      )}
+                      {suggestion.suggestion.tips && (
+                        <div className="mt-3 p-2 bg-muted/50 rounded-md">
+                          <p className="text-sm font-medium">Tips:</p>
+                          <p className="text-sm">{suggestion.suggestion.tips}</p>
+                        </div>
+                      )}
                     </TabsContent>
                   </Tabs>
                 </CardContent>
+                <CardFooter className="border-t pt-3 px-4">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="ml-auto"
+                    onClick={() => {
+                      navigator.clipboard.writeText(
+                        `${suggestion.suggestion.name}\n` +
+                        `Calories: ${Math.round(suggestion.suggestion.nutritionInfo.calories)}\n` +
+                        `Protein: ${Math.round(suggestion.suggestion.nutritionInfo.protein)}g\n` +
+                        `Carbs: ${Math.round(suggestion.suggestion.nutritionInfo.carbs)}g\n` +
+                        `Fat: ${Math.round(suggestion.suggestion.nutritionInfo.fat)}g\n` +
+                        `Ingredients: ${suggestion.suggestion.ingredients.join(', ')}`
+                      );
+                      toast({
+                        title: "Copied to clipboard",
+                        description: "Meal details copied for easy logging",
+                      });
+                    }}
+                  >
+                    Copy for Meal Log
+                  </Button>
+                </CardFooter>
               </Card>
             ))}
           </div>

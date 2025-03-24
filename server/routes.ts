@@ -1009,7 +1009,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           nutritionPlan, 
           mealType, 
           goal,
-          restrictions || nutritionPlan.restrictions || ""
+          restrictions || (nutritionPlan as any).restrictions || ""
         );
         
         // Store the suggestion
