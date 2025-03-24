@@ -25,24 +25,31 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Left column: Auth form */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-4 md:p-8">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <ellipse cx="12" cy="12" rx="8" ry="10" />
-                <line x1="4" y1="12" x2="20" y2="12" />
-                <line x1="12" y1="2" x2="12" y2="22" />
-              </svg>
-              <CardTitle className="text-2xl font-montserrat font-bold text-primary">GridIron LegacyAI</CardTitle>
+      <div className="w-full md:w-1/2 flex items-center justify-center p-4 md:p-8 bg-gradient-to-b from-blue-50/70 to-white">
+        <Card className="w-full max-w-md border-0 shadow-xl">
+          <CardHeader className="space-y-1 pb-2">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-primary text-white p-2 rounded-xl">
+                <svg className="h-7 w-7" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <ellipse cx="12" cy="12" rx="8" ry="10" />
+                  <line x1="4" y1="12" x2="20" y2="12" />
+                  <line x1="12" y1="2" x2="12" y2="22" />
+                </svg>
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-blue-700 bg-clip-text text-transparent">
+                  GridIron LegacyAI
+                </CardTitle>
+                <CardDescription>
+                  Your personal football training and recruiting assistant
+                </CardDescription>
+              </div>
             </div>
-            <CardDescription>
-              Your personal football training and recruiting assistant
-            </CardDescription>
           </CardHeader>
+          
           <CardContent>
-            <Tabs defaultValue="login" value={authTab} onValueChange={setAuthTab}>
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs defaultValue="login" value={authTab} onValueChange={setAuthTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
               </TabsList>
@@ -54,8 +61,9 @@ export default function AuthPage() {
               </TabsContent>
             </Tabs>
           </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <div className="text-sm text-muted-foreground text-center">
+          
+          <CardFooter className="flex flex-col gap-4 border-t pt-4 mt-2">
+            <div className="text-xs text-muted-foreground text-center">
               By continuing, you agree to GridIron LegacyAI's Terms of Service and Privacy Policy.
             </div>
           </CardFooter>
@@ -63,32 +71,67 @@ export default function AuthPage() {
       </div>
       
       {/* Right column: Hero */}
-      <div className="w-full md:w-1/2 bg-primary text-white p-8 flex flex-col justify-center">
-        <div className="max-w-lg mx-auto">
-          <h1 className="text-3xl md:text-4xl font-montserrat font-bold mb-6">
-            Elevate Your Game to College Level
+      <div className="w-full md:w-1/2 bg-gradient-to-br from-primary to-blue-800 text-white p-8 flex flex-col justify-center relative overflow-hidden">
+        {/* Football field pattern overlay */}
+        <div className="absolute inset-0 field-pattern opacity-10"></div>
+        
+        {/* Content with decorative elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full filter blur-3xl opacity-20 -mr-32 -mt-32"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-400 rounded-full filter blur-3xl opacity-20 -ml-32 -mb-32"></div>
+        
+        <div className="max-w-lg mx-auto relative z-10">
+          <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-1 rounded-full text-sm font-medium mb-4">
+            #1 Football Training App for Athletes
+          </div>
+          
+          <h1 className="text-3xl md:text-5xl font-bold mb-8 leading-tight">
+            Elevate Your Game to <span className="text-blue-200">College Level</span>
           </h1>
-          <div className="space-y-4 mb-8">
-            <div className="flex items-start gap-2">
-              <div className="bg-white text-primary rounded-full h-6 w-6 flex items-center justify-center mt-0.5">✓</div>
-              <p>Personalized training plans developed by AI and backed by D1 sports performance data</p>
+          
+          <div className="space-y-5 mb-10">
+            <div className="flex items-start gap-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 mt-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+              </div>
+              <p className="text-white/90 text-lg">Personalized training plans developed by AI and backed by D1 sports performance data</p>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="bg-white text-primary rounded-full h-6 w-6 flex items-center justify-center mt-0.5">✓</div>
-              <p>Track your combine metrics and see how you compare to college recruiting benchmarks</p>
+            
+            <div className="flex items-start gap-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 mt-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+              </div>
+              <p className="text-white/90 text-lg">Track your combine metrics and see how you compare to college recruiting benchmarks</p>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="bg-white text-primary rounded-full h-6 w-6 flex items-center justify-center mt-0.5">✓</div>
-              <p>Connect with thousands of college coaches through your personal recruiting profile</p>
+            
+            <div className="flex items-start gap-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 mt-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+              </div>
+              <p className="text-white/90 text-lg">Connect with thousands of college coaches through your professional recruiting profile</p>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="bg-white text-primary rounded-full h-6 w-6 flex items-center justify-center mt-0.5">✓</div>
-              <p>Get personalized guidance from Coach Legacy AI, your 24/7 training assistant</p>
+            
+            <div className="flex items-start gap-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 mt-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+              </div>
+              <p className="text-white/90 text-lg">Get personalized guidance from Coach Legacy AI, your 24/7 training assistant</p>
             </div>
           </div>
-          <div className="text-lg font-medium mb-2">Join thousands of athletes already on their way to college football</div>
-          <div className="text-sm opacity-80">
-            "GridIron LegacyAI helped me improve my 40-yard dash by 0.3 seconds in just 8 weeks. I'm now being recruited by 3 D1 schools!" - Jason T., QB, Class of 2024
+          
+          <div className="bg-white/10 backdrop-blur-sm p-5 rounded-xl border border-white/20">
+            <div className="text-xl font-medium mb-2">Join thousands of athletes on their way to college football</div>
+            <div className="text-white/80 italic">
+              "GridIron LegacyAI helped me improve my 40-yard dash by 0.3 seconds in just 8 weeks. I'm now being recruited by 3 D1 schools!"
+              <div className="mt-2 font-bold text-blue-200">— Jason Thompson, QB, Class of 2024</div>
+            </div>
           </div>
         </div>
       </div>
@@ -107,15 +150,27 @@ function LoginForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (dat
   
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 mt-2">
         <FormField
           control={form.control}
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel className="text-sm font-medium">Username</FormLabel>
               <FormControl>
-                <Input placeholder="Enter your username" {...field} />
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                  <Input 
+                    className="pl-10 py-6 bg-slate-50 border-slate-200 focus:bg-white" 
+                    placeholder="Enter your username" 
+                    {...field} 
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -126,24 +181,89 @@ function LoginForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (dat
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <div className="flex justify-between items-center">
+                <FormLabel className="text-sm font-medium">Password</FormLabel>
+                <a href="#" className="text-xs text-primary hover:underline">
+                  Forgot password?
+                </a>
+              </div>
               <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                  </div>
+                  <Input 
+                    className="pl-10 py-6 bg-slate-50 border-slate-200 focus:bg-white" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    {...field} 
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Logging in...
-            </>
-          ) : (
-            "Sign In"
-          )}
-        </Button>
+        
+        <div className="pt-2">
+          <Button 
+            type="submit" 
+            className="w-full py-6 text-base font-medium shadow-md" 
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Logging in...
+              </>
+            ) : (
+              "Sign In"
+            )}
+          </Button>
+        </div>
+        
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-slate-200"></span>
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3">
+          <Button variant="outline" className="bg-slate-50 border-slate-200 hover:bg-slate-100" type="button">
+            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                fill="#4285F4"
+              />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853"
+              />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335"
+              />
+              <path d="M1 1h22v22H1z" fill="none" />
+            </svg>
+            Google
+          </Button>
+          <Button variant="outline" className="bg-slate-50 border-slate-200 hover:bg-slate-100" type="button">
+            <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
+            </svg>
+            Facebook
+          </Button>
+        </div>
       </form>
     </Form>
   );
@@ -165,16 +285,22 @@ function RegisterForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (
   
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name</FormLabel>
+                <FormLabel className="text-sm font-medium">First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="John" {...field} />
+                  <div className="relative">
+                    <Input 
+                      className="py-5 bg-slate-50 border-slate-200 focus:bg-white" 
+                      placeholder="John" 
+                      {...field} 
+                    />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -185,9 +311,15 @@ function RegisterForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name</FormLabel>
+                <FormLabel className="text-sm font-medium">Last Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Smith" {...field} />
+                  <div className="relative">
+                    <Input 
+                      className="py-5 bg-slate-50 border-slate-200 focus:bg-white" 
+                      placeholder="Smith" 
+                      {...field} 
+                    />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -200,9 +332,21 @@ function RegisterForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel className="text-sm font-medium">Username</FormLabel>
               <FormControl>
-                <Input placeholder="jsmith24" {...field} />
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                  <Input 
+                    className="pl-10 py-5 bg-slate-50 border-slate-200 focus:bg-white" 
+                    placeholder="jsmith24" 
+                    {...field} 
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -214,9 +358,22 @@ function RegisterForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-sm font-medium">Email Address</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="john.smith@example.com" {...field} />
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                    </svg>
+                  </div>
+                  <Input 
+                    className="pl-10 py-5 bg-slate-50 border-slate-200 focus:bg-white" 
+                    type="email" 
+                    placeholder="john.smith@example.com" 
+                    {...field} 
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -228,53 +385,103 @@ function RegisterForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (
           name="position"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Position</FormLabel>
+              <FormLabel className="text-sm font-medium">Football Position</FormLabel>
               <FormControl>
-                <Input placeholder="QB, RB, WR, etc." {...field} />
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <ellipse cx="12" cy="12" rx="8" ry="10"></ellipse>
+                      <line x1="4" y1="12" x2="20" y2="12"></line>
+                      <line x1="12" y1="2" x2="12" y2="22"></line>
+                    </svg>
+                  </div>
+                  <Input 
+                    className="pl-10 py-5 bg-slate-50 border-slate-200 focus:bg-white" 
+                    placeholder="QB, RB, WR, etc." 
+                    {...field} 
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium">Password</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                      </svg>
+                    </div>
+                    <Input 
+                      className="pl-10 py-5 bg-slate-50 border-slate-200 focus:bg-white" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      {...field} 
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium">Confirm Password</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                      </svg>
+                    </div>
+                    <Input 
+                      className="pl-10 py-5 bg-slate-50 border-slate-200 focus:bg-white" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      {...field} 
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
-        <FormField
-          control={form.control}
-          name="confirmPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="pt-2">
+          <Button 
+            type="submit" 
+            className="w-full py-6 text-base font-medium shadow-md" 
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              "Create Free Account"
+            )}
+          </Button>
+        </div>
         
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating account...
-            </>
-          ) : (
-            "Create Account"
-          )}
-        </Button>
+        <div className="text-xs text-center text-muted-foreground mt-3">
+          By creating an account, you agree to our <a href="#" className="underline text-primary">Terms of Service</a> and <a href="#" className="underline text-primary">Privacy Policy</a>.
+        </div>
       </form>
     </Form>
   );
