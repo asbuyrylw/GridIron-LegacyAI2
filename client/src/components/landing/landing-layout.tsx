@@ -5,9 +5,9 @@ import {
   Award as Trophy, 
   BarChart3 as ChartLineUp, 
   User as UserCircle,
-  Activity as Football,
   ChevronDown
 } from "lucide-react";
+import { FootballIcon } from "@/components/ui/football-icon";
 import { ReactNode } from "react";
 import {
   DropdownMenu,
@@ -28,7 +28,7 @@ export function LandingLayout({ children, activeTab }: LandingLayoutProps) {
       <header className="border-b sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center px-4 sm:px-6 justify-between">
           <div className="flex items-center gap-2">
-            <Football className="w-8 h-8 text-primary" />
+            <FootballIcon width={32} height={32} />
             <span className="font-bold text-xl">GridIron LegacyAI</span>
           </div>
           
@@ -41,7 +41,7 @@ export function LandingLayout({ children, activeTab }: LandingLayoutProps) {
               <DropdownMenuContent align="center">
                 <Link href="/landing/players">
                   <DropdownMenuItem className={`cursor-pointer flex items-center gap-2 ${activeTab === "players" ? "text-primary" : ""}`}>
-                    <Football className="h-4 w-4" />
+                    <FootballIcon width={16} height={16} />
                     <span>For Players</span>
                   </DropdownMenuItem>
                 </Link>
@@ -87,7 +87,7 @@ export function LandingLayout({ children, activeTab }: LandingLayoutProps) {
       <div className="md:hidden border-t fixed bottom-0 left-0 right-0 bg-background z-10">
         <div className="grid grid-cols-4 h-16">
           <Link href="/landing/players" className={`flex flex-col items-center justify-center h-full ${activeTab === "players" ? "text-primary" : "text-muted-foreground"}`}>
-            <Football className="h-5 w-5" />
+            <FootballIcon width={20} height={20} />
             <span className="text-xs mt-1">Players</span>
           </Link>
           <Link href="/landing/parents" className={`flex flex-col items-center justify-center h-full ${activeTab === "parents" ? "text-primary" : "text-muted-foreground"}`}>
@@ -116,7 +116,7 @@ export function LandingLayout({ children, activeTab }: LandingLayoutProps) {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Football className="w-6 h-6 text-primary" />
+                <FootballIcon width={24} height={24} />
                 <span className="font-bold">GridIron LegacyAI</span>
               </div>
               <p className="text-sm text-muted-foreground">
