@@ -77,60 +77,60 @@ export default function AuthPage() {
         
         {/* Content with decorative elements */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full filter blur-3xl opacity-20 -mr-32 -mt-32"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-400 rounded-full filter blur-3xl opacity-20 -ml-32 -mb-32"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-400 rounded-full filter blur-3xl opacity-5 -ml-32 -mb-32"></div>
         
         <div className="max-w-lg mx-auto relative z-10">
-          <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-1 rounded-full text-sm font-medium mb-4">
+          <div className="inline-block bg-blue-50 px-4 py-1 rounded-full text-sm font-medium mb-4 text-blue-600">
             #1 Football Training App for Athletes
           </div>
           
-          <h1 className="text-3xl md:text-5xl font-bold mb-8 leading-tight">
-            Elevate Your Game to <span className="text-blue-200">College Level</span>
+          <h1 className="text-3xl md:text-5xl font-bold mb-8 leading-tight text-gray-800">
+            Elevate Your Game to <span className="text-blue-600">College Level</span>
           </h1>
           
           <div className="space-y-5 mb-10">
             <div className="flex items-start gap-3">
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 mt-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+              <div className="bg-blue-50 rounded-lg p-2 mt-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
                   <path d="M20 6 9 17l-5-5"/>
                 </svg>
               </div>
-              <p className="text-white/90 text-lg">Personalized training plans developed by AI and backed by D1 sports performance data</p>
+              <p className="text-gray-700 text-lg">Personalized training plans developed by AI and backed by D1 sports performance data</p>
             </div>
             
             <div className="flex items-start gap-3">
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 mt-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+              <div className="bg-blue-50 rounded-lg p-2 mt-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
                   <path d="M20 6 9 17l-5-5"/>
                 </svg>
               </div>
-              <p className="text-white/90 text-lg">Track your combine metrics and see how you compare to college recruiting benchmarks</p>
+              <p className="text-gray-700 text-lg">Track your combine metrics and see how you compare to college recruiting benchmarks</p>
             </div>
             
             <div className="flex items-start gap-3">
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 mt-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+              <div className="bg-blue-50 rounded-lg p-2 mt-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
                   <path d="M20 6 9 17l-5-5"/>
                 </svg>
               </div>
-              <p className="text-white/90 text-lg">Connect with thousands of college coaches through your professional recruiting profile</p>
+              <p className="text-gray-700 text-lg">Connect with thousands of college coaches through your professional recruiting profile</p>
             </div>
             
             <div className="flex items-start gap-3">
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 mt-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+              <div className="bg-blue-50 rounded-lg p-2 mt-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
                   <path d="M20 6 9 17l-5-5"/>
                 </svg>
               </div>
-              <p className="text-white/90 text-lg">Get personalized guidance from Coach Legacy AI, your 24/7 training assistant</p>
+              <p className="text-gray-700 text-lg">Get personalized guidance from Coach Legacy AI, your 24/7 training assistant</p>
             </div>
           </div>
           
-          <div className="bg-white/10 backdrop-blur-sm p-5 rounded-xl border border-white/20">
-            <div className="text-xl font-medium mb-2">Join thousands of athletes on their way to college football</div>
-            <div className="text-white/80 italic">
+          <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+            <div className="text-xl font-medium mb-2 text-gray-800">Join thousands of athletes on their way to college football</div>
+            <div className="text-gray-600 italic">
               "GridIron LegacyAI helped me improve my 40-yard dash by 0.3 seconds in just 8 weeks. I'm now being recruited by 3 D1 schools!"
-              <div className="mt-2 font-bold text-blue-200">— Jason Thompson, QB, Class of 2024</div>
+              <div className="mt-2 font-bold text-blue-600">— Jason Thompson, QB, Class of 2024</div>
             </div>
           </div>
         </div>
@@ -235,7 +235,7 @@ function LoginForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (dat
         </div>
         
         <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" className="bg-slate-50 border-slate-200 hover:bg-slate-100" type="button">
+          <Button variant="outline" className="bg-white border-slate-200 hover:bg-slate-50" type="button">
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -257,7 +257,7 @@ function LoginForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (dat
             </svg>
             Google
           </Button>
-          <Button variant="outline" className="bg-slate-50 border-slate-200 hover:bg-slate-100" type="button">
+          <Button variant="outline" className="bg-white border-slate-200 hover:bg-slate-50" type="button">
             <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
             </svg>
