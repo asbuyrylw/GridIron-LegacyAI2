@@ -166,7 +166,7 @@ function LoginForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (dat
                     </svg>
                   </div>
                   <Input 
-                    className="pl-10 py-6 bg-slate-50 border-slate-200 focus:bg-white" 
+                    className="pl-10 py-6 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
                     placeholder="Enter your username" 
                     {...field} 
                   />
@@ -196,7 +196,7 @@ function LoginForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (dat
                     </svg>
                   </div>
                   <Input 
-                    className="pl-10 py-6 bg-slate-50 border-slate-200 focus:bg-white" 
+                    className="pl-10 py-6 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
                     type="password" 
                     placeholder="••••••••" 
                     {...field} 
@@ -296,7 +296,7 @@ function RegisterForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (
                 <FormControl>
                   <div className="relative">
                     <Input 
-                      className="py-5 bg-slate-50 border-slate-200 focus:bg-white" 
+                      className="py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
                       placeholder="John" 
                       {...field} 
                     />
@@ -315,7 +315,7 @@ function RegisterForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (
                 <FormControl>
                   <div className="relative">
                     <Input 
-                      className="py-5 bg-slate-50 border-slate-200 focus:bg-white" 
+                      className="py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
                       placeholder="Smith" 
                       {...field} 
                     />

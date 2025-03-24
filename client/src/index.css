@@ -8,8 +8,7 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
-    background-image: linear-gradient(to bottom right, rgba(240, 245, 255, 0.5), rgba(255, 255, 255, 1));
+    @apply font-sans antialiased bg-white text-foreground;
     min-height: 100vh;
   }
   
@@ -17,10 +16,10 @@
     @apply font-bold;
   }
   
-  /* Animated gradient backgrounds for special elements */
+  /* Subtle animations for special elements */
   .animate-gradient {
-    background-size: 400% 400%;
-    animation: gradient 8s ease infinite;
+    background-size: 200% 200%;
+    animation: gradient 10s ease infinite;
   }
   
   @keyframes gradient {
@@ -58,65 +57,71 @@
 @layer components {
   /* Card Styles */
   .dashboard-card {
-    @apply bg-white rounded-xl shadow-md p-6 border border-blue-100/50 hover:shadow-lg transition-shadow;
+    @apply bg-white rounded-lg shadow-sm p-6 border border-slate-100 hover:shadow-md transition-shadow;
   }
   
   .stat-card {
-    @apply bg-white rounded-xl shadow-sm p-4 border border-blue-50 hover:border-blue-200 transition-colors;
+    @apply bg-white rounded-lg shadow-sm p-4 border border-slate-100 hover:border-slate-200 transition-colors;
   }
   
   .gradient-card {
-    @apply rounded-xl shadow-md p-6 transition-all hover:shadow-lg;
-    background: linear-gradient(135deg, #4a89dc 0%, #5e9cea 100%);
-    color: white;
+    @apply rounded-lg shadow-sm p-6 transition-all hover:shadow-md;
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    border: 1px solid #e2e8f0;
   }
   
   .achievement-card {
-    @apply bg-white rounded-xl shadow-sm p-4 border border-blue-50 hover:border-primary/50 transition-colors;
+    @apply bg-white rounded-lg shadow-sm p-4 border border-slate-100 hover:border-slate-200 transition-colors;
   }
   
   .celebration-card {
-    @apply rounded-xl shadow-lg overflow-hidden;
-    background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
-    color: white;
+    @apply rounded-lg shadow-md overflow-hidden bg-white border border-slate-100;
+    position: relative;
+  }
+  
+  .celebration-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, #3b82f6, #ef4444);
   }
   
   /* Progress Indicators */
   .progress-container {
-    @apply h-2.5 bg-slate-100 rounded-full overflow-hidden;
+    @apply h-2 bg-slate-100 rounded-full overflow-hidden;
   }
   
   .progress-bar {
-    @apply h-full bg-gradient-to-r from-blue-500 to-indigo-600;
+    @apply h-full bg-primary;
     transition: width 0.5s ease-in-out;
   }
   
   .progress-bar-success {
-    @apply bg-gradient-to-r from-green-400 to-green-500;
+    @apply bg-green-500;
   }
   
   .progress-bar-warning {
-    @apply bg-gradient-to-r from-yellow-400 to-orange-500;
+    @apply bg-yellow-500;
   }
   
   .progress-bar-danger {
-    @apply bg-gradient-to-r from-red-400 to-red-500;
+    @apply bg-red-500;
   }
   
   /* Icon Styles */
   .badge-icon {
-    @apply flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary;
-    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+    @apply flex items-center justify-center w-10 h-10 rounded-full bg-slate-50 text-slate-600 border border-slate-200;
   }
   
   .badge-icon-success {
-    @apply bg-green-50 text-green-600;
-    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+    @apply bg-green-50 text-green-600 border-green-100;
   }
   
   .badge-icon-pending {
-    @apply bg-yellow-50 text-yellow-600;
-    box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.1);
+    @apply bg-yellow-50 text-yellow-600 border-yellow-100;
   }
   
   /* Achievement Badge Glow */
@@ -127,41 +132,33 @@
   .achievement-glow::after {
     content: '';
     @apply absolute inset-0 rounded-full;
-    box-shadow: 0 0 15px 5px rgba(var(--primary-rgb), 0.3);
-    animation: pulse 2s infinite;
+    box-shadow: 0 0 10px 2px rgba(59, 130, 246, 0.2);
+    animation: subtle-pulse 3s infinite;
   }
   
-  @keyframes pulse {
+  @keyframes subtle-pulse {
     0% {
-      transform: scale(0.95);
-      opacity: 0.7;
+      transform: scale(0.98);
+      opacity: 0.5;
     }
     70% {
       transform: scale(1);
-      opacity: 0.3;
+      opacity: 0.2;
     }
     100% {
-      transform: scale(0.95);
-      opacity: 0.7;
+      transform: scale(0.98);
+      opacity: 0.5;
     }
   }
   
   /* Football Field Pattern for Headers */
   .field-pattern {
-    background-color: #4CAF50;
+    background-color: #ffffff;
     background-image: 
-      linear-gradient(0deg, transparent 9%, 
-        rgba(255, 255, 255, .2) 10%, rgba(255, 255, 255, .2) 12%, transparent 13%, transparent 29%,
-        rgba(255, 255, 255, .1) 30%, rgba(255, 255, 255, .1) 31%, transparent 32%, transparent 49%, 
-        rgba(255, 255, 255, .1) 50%, rgba(255, 255, 255, .1) 51%, transparent 52%, transparent 69%, 
-        rgba(255, 255, 255, .1) 70%, rgba(255, 255, 255, .1) 71%, transparent 72%, transparent 88%,
-        rgba(255, 255, 255, .2) 89%, rgba(255, 255, 255, .2) 90%, transparent 91%, transparent),
-      linear-gradient(90deg, transparent 9%, 
-        rgba(255, 255, 255, .2) 10%, rgba(255, 255, 255, .2) 12%, transparent 13%, transparent 29%,
-        rgba(255, 255, 255, .1) 30%, rgba(255, 255, 255, .1) 31%, transparent 32%, transparent 49%, 
-        rgba(255, 255, 255, .1) 50%, rgba(255, 255, 255, .1) 51%, transparent 52%, transparent 69%, 
-        rgba(255, 255, 255, .1) 70%, rgba(255, 255, 255, .1) 71%, transparent 72%, transparent 88%,
-        rgba(255, 255, 255, .2) 89%, rgba(255, 255, 255, .2) 90%, transparent 91%, transparent);
-    background-size: 50px 50px;
+      linear-gradient(0deg, transparent 95%, 
+        rgba(59, 130, 246, 0.1) 100%),
+      linear-gradient(90deg, transparent 95%, 
+        rgba(59, 130, 246, 0.1) 100%);
+    background-size: 20px 20px;
   }
 }
