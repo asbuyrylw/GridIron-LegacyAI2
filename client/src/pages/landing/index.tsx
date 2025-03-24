@@ -2,7 +2,7 @@ import { LandingLayout } from "@/components/landing/landing-layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { 
-  Dribbble as Football, 
+  Activity as Football, 
   TrendingUp, 
   Brain as BrainCircuit, 
   Award as Trophy, 
