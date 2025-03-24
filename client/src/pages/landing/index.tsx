@@ -1,8 +1,9 @@
 import { LandingLayout } from "@/components/landing/landing-layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { FootballIcon } from "@/components/ui/football-icon";
 import { 
-  Activity as Football, 
+  Dumbbell, 
   TrendingUp, 
   Brain as BrainCircuit, 
   Award as Trophy, 
@@ -61,7 +62,7 @@ export default function LandingIndex() {
             <div className="bg-card rounded-lg p-8 border group hover:border-primary transition-colors">
               <div className="flex justify-between items-start mb-6">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Football className="w-6 h-6 text-primary" />
+                  <Dumbbell className="w-6 h-6 text-primary" />
                 </div>
                 <Link href="/landing/players">
                   <div className="flex items-center gap-1 text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">
