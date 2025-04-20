@@ -98,30 +98,32 @@ export default function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - 2/3 width */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Coach AI Card */}
-            <div 
-              className="dashboard-card bg-gradient-to-br from-blue-500 to-blue-600 text-white"
-            >
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-white/20 rounded-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M12 2a4 4 0 0 1 4 4v4a4 4 0 0 1-4 4 4 4 0 0 1-4-4V6a4 4 0 0 1 4-4z"/><path d="M6 10v1a6 6 0 1 0 12 0v-1"/><path d="M11 22h2"/><path d="M10 22h4"/></svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold mb-1">Coach Legacy AI</h3>
-                  <p className="text-white/90 mb-3">Get personalized coaching and feedback from your AI coach</p>
-                  <div className="w-full mt-2">
-                    <iframe
-                      src={`https://embed.chatnode.ai/9935e96a-42a5-4e07-88d7-35fde736371e?data-name=${user?.firstName || 'Athlete'}&data-email=${user?.email || ''}&data-phone=`}
-                      width="100%"
-                      height="300"
-                      style={{ visibility: "hidden", border: "none", borderRadius: "0.5rem", overflow: "hidden" }}
-                      onLoad={(e) => { e.currentTarget.style.visibility = "visible"; }}
-                      allow="autoplay; clipboard-read; clipboard-write"
-                    ></iframe>
+            {/* Coach AI Card - Only shown when user is logged in */}
+            {user && (
+              <div 
+                className="dashboard-card bg-gradient-to-br from-blue-500 to-blue-600 text-white"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-white/20 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M12 2a4 4 0 0 1 4 4v4a4 4 0 0 1-4 4 4 4 0 0 1-4-4V6a4 4 0 0 1 4-4z"/><path d="M6 10v1a6 6 0 1 0 12 0v-1"/><path d="M11 22h2"/><path d="M10 22h4"/></svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold mb-1">Coach Legacy AI</h3>
+                    <p className="text-white/90 mb-3">Get personalized coaching and feedback from your AI coach</p>
+                    <div className="w-full mt-2">
+                      <iframe
+                        src={`https://embed.chatnode.ai/9935e96a-42a5-4e07-88d7-35fde736371e?data-name=${user?.firstName || 'Athlete'}&data-email=${user?.email || ''}&data-phone=`}
+                        width="100%"
+                        height="300"
+                        style={{ visibility: "hidden", border: "none", borderRadius: "0.5rem", overflow: "hidden" }}
+                        onLoad={(e) => { e.currentTarget.style.visibility = "visible"; }}
+                        allow="autoplay; clipboard-read; clipboard-write"
+                      ></iframe>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
             
             {/* Training Plan */}
             <div className="dashboard-card">
