@@ -101,7 +101,6 @@ export default function HomePage() {
             {/* Coach AI Card */}
             <div 
               className="dashboard-card bg-gradient-to-br from-blue-500 to-blue-600 text-white"
-              onClick={() => setChatOpen(true)}
             >
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-white/20 rounded-lg">
@@ -110,9 +109,16 @@ export default function HomePage() {
                 <div>
                   <h3 className="text-lg font-bold mb-1">Coach Legacy AI</h3>
                   <p className="text-white/90 mb-3">Get personalized coaching and feedback from your AI coach</p>
-                  <button className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                    Open Coach Chat
-                  </button>
+                  <div className="w-full mt-2">
+                    <iframe
+                      src={`https://embed.chatnode.ai/9935e96a-42a5-4e07-88d7-35fde736371e?data-name=${user?.firstName || 'Athlete'}&data-email=${user?.email || ''}&data-phone=`}
+                      width="100%"
+                      height="300"
+                      style={{ visibility: "hidden", border: "none", borderRadius: "0.5rem", overflow: "hidden" }}
+                      onLoad={(e) => { e.currentTarget.style.visibility = "visible"; }}
+                      allow="autoplay; clipboard-read; clipboard-write"
+                    ></iframe>
+                  </div>
                 </div>
               </div>
             </div>
@@ -231,7 +237,9 @@ export default function HomePage() {
       </main>
       
       <BottomNavigation />
-      <ChatInterface isOpen={chatOpen} onClose={() => setChatOpen(false)} />
+      {/* ChatInterface is now replaced with the embedded chatnode.ai
+      <ChatInterface isOpen={chatOpen} onClose={() => setChatOpen(false)} /> 
+      */}
     </div>
   );
 }
