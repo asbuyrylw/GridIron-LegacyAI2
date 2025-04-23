@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
+import OnboardingPage from "@/pages/onboarding-page";
 import TrainingPage from "@/pages/training-page";
 import StatsPage from "@/pages/stats-page";
 import ProfilePage from "@/pages/profile-page";
