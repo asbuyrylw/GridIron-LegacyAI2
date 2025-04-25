@@ -75,7 +75,7 @@ export default function AthleticMetricsForm({
                 <FormItem>
                   <FormLabel>Height (ft and inches)</FormLabel>
                   <FormControl>
-                    <Input placeholder="6'2\"" {...field} />
+                    <Input placeholder="6'2" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -110,7 +110,7 @@ export default function AthleticMetricsForm({
               <FormItem>
                 <FormLabel>Projected Height at 18 (Optional)</FormLabel>
                 <FormControl>
-                  <Input placeholder="6'3\"" {...field} />
+                  <Input placeholder="6'3" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

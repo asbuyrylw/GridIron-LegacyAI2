@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
@@ -34,7 +34,7 @@ const steps = [
 export default function OnboardingPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<Partial<OnboardingData>>({});
   const isLastStep = currentStep === steps.length - 1;
@@ -42,7 +42,7 @@ export default function OnboardingPage() {
 
   // Redirect to home if onboarding is already completed
   if (user?.athlete?.onboardingCompleted) {
-    navigate("/");
+    setLocation("/");
     return null;
   }
 
@@ -59,7 +59,7 @@ export default function OnboardingPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       // Wait for a moment to show the success message before redirecting
-      setTimeout(() => navigate("/"), 2000);
+      setTimeout(() => setLocation("/"), 2000);
     },
     onError: (error: Error) => {
       toast({

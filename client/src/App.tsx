@@ -49,6 +49,7 @@ function Router() {
     <Switch>
       {/* Protected Routes */}
       <ProtectedRoute path="/" component={HomePage} />
+      <ProtectedRoute path="/onboarding" component={OnboardingPage} />
       <ProtectedRoute path="/training" component={TrainingPage} />
       <ProtectedRoute path="/nutrition" component={NutritionPage} />
       <ProtectedRoute path="/stats" component={StatsPage} />
