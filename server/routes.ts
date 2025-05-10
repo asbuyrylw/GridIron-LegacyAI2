@@ -1418,11 +1418,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const data = onboardingSchema.parse(req.body);
         
-        // 1. Update athlete profile with personal info
-        await storage.updateAthlete(athleteId, {
+        // 1. Update athlete profile with personal info - Convert Date objects to ISO strings
+        const personalInfo = {
           ...data.personalInfo,
           onboardingCompleted: true
-        });
+        };
+        
+        // Convert Date objects to strings for database compatibility
+        if (personalInfo.dateOfBirth instanceof Date) {
+          personalInfo.dateOfBirth = personalInfo.dateOfBirth.toISOString().split('T')[0];
+        }
+        
+        await storage.updateAthlete(athleteId, personalInfo);
         
         // 2. Update or create football info (positions, etc.)
         await storage.updateAthlete(athleteId, {
@@ -1475,10 +1482,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        // 6. Create recruiting preferences
+        // 6. Create recruiting preferences - Convert Date objects to ISO strings
         if (data.recruitingGoals) {
+          const recruitingGoals = { ...data.recruitingGoals };
+          
+          // Convert Date objects to strings for database compatibility
+          if (recruitingGoals.footballSeasonStart instanceof Date) {
+            recruitingGoals.footballSeasonStart = recruitingGoals.footballSeasonStart.toISOString().split('T')[0];
+          }
+          
+          if (recruitingGoals.footballSeasonEnd instanceof Date) {
+            recruitingGoals.footballSeasonEnd = recruitingGoals.footballSeasonEnd.toISOString().split('T')[0];
+          }
+          
           await storage.createRecruitingPreferences({
-            ...data.recruitingGoals,
+            ...recruitingGoals,
             athleteId
           });
         }
