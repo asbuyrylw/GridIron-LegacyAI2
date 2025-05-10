@@ -32,9 +32,9 @@ function Router() {
   const { user, isLoading } = useAuth();
   const [location] = useLocation();
   
-  // Loading state - show an empty div instead of null
+  // Loading state - show a spinning loader
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center" />;
+    return <LoadingSpinner fullScreen size="lg" />;
   }
   
   // If not logged in, redirect to landing page instead of auth page

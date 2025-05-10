@@ -12,9 +12,10 @@ import { SubscriptionInfo } from "@/components/subscription-info";
 import { Header } from "@/components/layout/header";
 import { BottomNavigation } from "@/components/layout/bottom-navigation";
 import { ChatInterface } from "@/components/coach-ai/chat-interface";
+import { ShareButton } from "@/components/social/share-button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { CombineMetric } from "@shared/schema";
 import { Redirect } from "wouter";
-import { Loader2 } from "lucide-react";
 
 export default function HomePage() {
   const { user, isLoading } = useAuth();
@@ -72,11 +73,7 @@ export default function HomePage() {
   
   // Loading state
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen size="lg" />;
   }
   
   // Redirect if not authenticated
