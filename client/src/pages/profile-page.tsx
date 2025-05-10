@@ -8,6 +8,7 @@ import {
   CardTitle,
   CardFooter
 } from "@/components/ui/card";
+import { ProfileExport } from "@/components/profile/profile-export";
 import { Redirect } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -151,14 +152,17 @@ export default function ProfilePage() {
       <main className="container mx-auto px-4 pt-4 pb-20">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl md:text-3xl font-montserrat font-bold">Recruiting Profile</h1>
-          <Button 
-            onClick={handleShareProfile}
-            size="sm"
-            className="flex items-center gap-1"
-          >
-            <Share2 className="h-4 w-4" />
-            <span>Share</span>
-          </Button>
+          <div className="flex gap-2">
+            <ProfileExport />
+            <Button 
+              onClick={handleShareProfile}
+              size="sm"
+              className="flex items-center gap-1"
+            >
+              <Share2 className="h-4 w-4" />
+              <span>Share</span>
+            </Button>
+          </div>
         </div>
         
         <Card className="mb-6">

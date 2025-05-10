@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { OnboardingData } from "@shared/schema";
+import { StepIndicator } from "@/components/onboarding/step-indicator";
 
 // Import step components
 import PersonalInfoForm from "@/components/onboarding/personal-info-form";
@@ -101,7 +102,8 @@ export default function OnboardingPage() {
               Let's set up your profile to get personalized training, nutrition, and recruiting plans
             </CardDescription>
             
-            <div className="mt-4">
+            <div className="mt-6">
+              <StepIndicator steps={steps} currentStep={currentStep} className="mb-4" />
               <Progress value={progress} className="h-2" />
               <div className="mt-2 text-sm text-muted-foreground">
                 Step {currentStep + 1} of {steps.length}: {steps[currentStep].label}
