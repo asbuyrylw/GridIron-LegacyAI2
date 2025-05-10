@@ -745,8 +745,13 @@ export class MemStorage implements IStorage {
   }
 
   // Achievement Methods
-  async getAchievements(): Promise<Achievement[]> {
-    const achievements = Array.from(this.achievementsMap.values());
+  async getAchievements(category?: string): Promise<Achievement[]> {
+    let achievements = Array.from(this.achievementsMap.values());
+    
+    if (category) {
+      achievements = achievements.filter(achievement => achievement.type === category);
+    }
+    
     return achievements.sort((a, b) => a.name.localeCompare(b.name));
   }
 
