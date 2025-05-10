@@ -102,7 +102,7 @@ interface NavItemProps {
 function NavItem({ label, href, icon: Icon, active }: NavItemProps) {
   return (
     <Link href={href}>
-      <a className="flex flex-col items-center justify-center p-1 rounded-md transition-colors hover:bg-muted/50">
+      <div className="flex flex-col items-center justify-center p-1 rounded-md transition-colors hover:bg-muted/50">
         <div 
           className={cn(
             "p-1 rounded-md mb-1", 
@@ -117,7 +117,7 @@ function NavItem({ label, href, icon: Icon, active }: NavItemProps) {
         )}>
           {label}
         </span>
-      </a>
+      </div>
     </Link>
   );
 }

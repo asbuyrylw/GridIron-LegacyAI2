@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { Link } from "wouter";
 import { ProgressMetric } from "@/components/dashboard/progress-metric";
 import { BodyMetrics } from "@/components/dashboard/body-metrics";
 import { QuickActions } from "@/components/dashboard/quick-actions";
@@ -111,8 +112,12 @@ export default function HomePage() {
                   <h3 className="text-lg font-bold mb-1">Welcome to GridIron LegacyAI</h3>
                   <p className="text-white/90 mb-3">Your personal football training and recruiting assistant</p>
                   <div className="flex gap-3 mt-4">
-                    <button className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium">Start Training</button>
-                    <button className="bg-blue-600 border border-white/30 text-white px-4 py-2 rounded-lg font-medium">View Stats</button>
+                    <Link href="/training">
+                      <div className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium cursor-pointer">Start Training</div>
+                    </Link>
+                    <Link href="/stats">
+                      <div className="bg-blue-600 border border-white/30 text-white px-4 py-2 rounded-lg font-medium cursor-pointer">View Stats</div>
+                    </Link>
                   </div>
                 </div>
               </div>
