@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { SOCIAL_PLATFORMS, SocialPlatform } from "@/lib/social-platforms";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -211,7 +211,9 @@ export function SocialPostCreator({ connections }: SocialPostCreatorProps) {
                       backgroundColor: selectedPlatforms.includes(platform.id) ? `${platform.color}20` : undefined
                     }}
                   >
-                    <platform.icon className="h-4 w-4 mr-2" style={{ color: platform.color }} />
+                    <div className="h-4 w-4 mr-2" style={{ color: platform.color }}>
+                      {React.createElement(platform.icon)}
+                    </div>
                     {platform.name}
                   </Toggle>
                 ))

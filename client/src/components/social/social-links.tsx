@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { SocialPlatform, SOCIAL_PLATFORMS, formatSocialMediaUrl } from "@/lib/social-platforms";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -134,7 +134,9 @@ export function SocialLinks({
                 return (
                   <div key={platform.id} className="space-y-2">
                     <Label htmlFor={`social-${platform.id}`} className="flex items-center gap-2">
-                      <platform.icon className="h-5 w-5" style={{ color: platform.color }} />
+                      <div className="h-5 w-5" style={{ color: platform.color }}>
+                        {React.createElement(platform.icon)}
+                      </div>
                       {platform.name}
                     </Label>
                     <div className="flex gap-2">
@@ -175,7 +177,9 @@ export function SocialLinks({
                         <div key={link.platform} className="flex items-center justify-between gap-2 p-3 rounded-md bg-muted/50">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full flex items-center justify-center" style={{ backgroundColor: `${platform.color}20` }}>
-                              {React.createElement(platform.icon, { className: "h-5 w-5", style: { color: platform.color } })}
+                              <div className="h-5 w-5" style={{ color: platform.color }}>
+                                {React.createElement(platform.icon)}
+                              </div>
                             </div>
                             <div>
                               <div className="font-medium flex items-center gap-2">
