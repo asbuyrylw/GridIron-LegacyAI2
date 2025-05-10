@@ -1,6 +1,24 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, real, date, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, real, date, jsonb, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Achievement types and levels
+export const achievementTypeEnum = pgEnum('achievement_type', [
+  'performance',
+  'training',
+  'nutrition',
+  'profile',
+  'social',
+  'recruiting',
+  'academic'
+]);
+
+export const achievementLevelEnum = pgEnum('achievement_level', [
+  'bronze',
+  'silver',
+  'gold',
+  'platinum'
+]);
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -210,12 +228,14 @@ export const socialPosts = pgTable("social_posts", {
 
 export const achievements = pgTable("achievements", {
   id: serial("id").primaryKey(),
+  achievementId: text("achievement_id").notNull().unique(), // Matches with front-end ID
   name: text("name").notNull(),
   description: text("description").notNull(),
   icon: text("icon").notNull(),
-  category: text("category").notNull(), // performance, training, nutrition, etc.
-  threshold: integer("threshold").notNull(), // value needed to earn achievement
+  type: achievementTypeEnum("type").notNull(), // performance, training, nutrition, etc.
+  level: achievementLevelEnum("level").notNull(), // bronze, silver, gold, platinum
   points: integer("points").notNull(),
+  requirements: jsonb("requirements").notNull(), // Array of requirement objects
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -223,8 +243,9 @@ export const athleteAchievements = pgTable("athlete_achievements", {
   id: serial("id").primaryKey(),
   athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
   achievementId: integer("achievement_id").references(() => achievements.id).notNull(),
-  earnedAt: timestamp("earned_at").defaultNow().notNull(),
-  progress: integer("progress").notNull().default(0),
+  progress: integer("progress").notNull().default(0), // 0-100
+  earnedAt: timestamp("earned_at"), // null if not earned yet
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   completed: boolean("completed").default(false),
 });
 
