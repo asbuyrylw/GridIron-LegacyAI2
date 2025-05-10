@@ -268,5 +268,6 @@ export function useAchievementTracker() {
     }
   }, [athleteId, recruitingData, updateProgress]);
   
-  return null;
+  // Return nothing as this hook is used for its side effects
+  return;
 }

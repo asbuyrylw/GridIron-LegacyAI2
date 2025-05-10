@@ -1,192 +1,105 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Achievement } from "@/lib/achievement-badges";
+import { useToast } from "@/hooks/use-toast";
 
-type AchievementProgressOptions = {
-  showToasts?: boolean;
-};
+interface AchievementProgress {
+  id: number;
+  athleteId: number;
+  achievementId: string;
+  progress: number;
+  completed: boolean;
+  completedAt: string | null;
+}
 
-export function useAchievementProgress(options: AchievementProgressOptions = {}) {
-  const { showToasts = true } = options;
+interface UpdateProgressParams {
+  achievementId: string;
+  progress: number;
+  achievement?: Achievement;
+}
+
+/**
+ * This hook provides methods for updating and tracking an athlete's achievement progress
+ */
+export function useAchievementProgress() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [recentlyEarnedAchievements, setRecentlyEarnedAchievements] = useState<Achievement[]>([]);
+  const { toast } = useToast();
+  const athleteId = user?.athlete?.id;
   
-  // If no athlete ID, we can't update achievements
-  if (!user?.athlete?.id) {
-    return {
-      updateProgress: () => Promise.resolve(),
-      recentlyEarnedAchievements,
-      clearRecentlyEarnedAchievements: () => setRecentlyEarnedAchievements([]),
-    };
-  }
+  // Get current achievements progress
+  const { data: achievements = [] } = useQuery<AchievementProgress[]>({
+    queryKey: [`/api/athlete/${athleteId}/achievements`],
+    enabled: !!athleteId,
+  });
   
-  // Mutation to update an achievement's progress
-  const updateAchievementMutation = useMutation({
-    mutationFn: async ({ 
-      achievementId, 
-      progress, 
-      completed 
-    }: { 
-      achievementId: number; 
-      progress: number;
-      completed?: boolean;
-    }) => {
-      const res = await apiRequest(
-        "PATCH", 
-        `/api/athlete/${user.athlete.id}/achievements/${achievementId}`,
-        { progress, completed }
-      );
+  // Mutation to update achievement progress
+  const progressMutation = useMutation({
+    mutationFn: async ({ achievementId, progress }: UpdateProgressParams) => {
+      const url = `/api/athlete/${athleteId}/achievements/${achievementId}`;
+      const res = await apiRequest("PATCH", url, { progress });
       return await res.json();
     },
     onSuccess: () => {
-      // Invalidate the athlete achievements query to refetch
-      queryClient.invalidateQueries({
-        queryKey: [`/api/athlete/${user.athlete.id}/achievements`],
+      queryClient.invalidateQueries({ 
+        queryKey: [`/api/athlete/${athleteId}/achievements`] 
       });
     },
     onError: (error: Error) => {
-      if (showToasts) {
-        toast({
-          title: "Failed to update achievement",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    },
-  });
-
-  // Mutation to create a new achievement for an athlete
-  const createAchievementMutation = useMutation({
-    mutationFn: async ({
-      achievementId,
-      progress = 0,
-      completed = false,
-    }: {
-      achievementId: number;
-      progress?: number;
-      completed?: boolean;
-    }) => {
-      const res = await apiRequest(
-        "POST",
-        `/api/athlete/${user.athlete.id}/achievements`,
-        { achievementId, progress, completed }
-      );
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [`/api/athlete/${user.athlete.id}/achievements`],
+      toast({
+        title: "Error updating achievement",
+        description: error.message,
+        variant: "destructive",
       });
-    },
-    onError: (error: Error) => {
-      if (showToasts) {
-        toast({
-          title: "Failed to create achievement",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
     },
   });
   
-  // Function to update achievement progress
-  // This will create the achievement if it doesn't exist
-  const updateProgress = async (
-    achievementIds: string | string[],
-    progressUpdate: number | ((current: number) => number),
-    frontendAchievement?: Achievement
+  // Helper method to update progress for a specific achievement
+  const updateProgress = (
+    achievementId: string, 
+    progress: number,
+    achievement?: Achievement
   ) => {
-    const ids = Array.isArray(achievementIds) ? achievementIds : [achievementIds];
+    if (!athleteId) return;
     
-    // Get current achievements
-    const currentAchievementsResponse = await apiRequest(
-      "GET",
-      `/api/athlete/${user.athlete.id}/achievements`
+    // Find existing progress for this achievement
+    const existingProgress = achievements.find(
+      (a) => a.achievementId === achievementId
     );
-    const currentAchievements = await currentAchievementsResponse.json();
     
-    // Process each achievement
-    for (const idString of ids) {
-      const id = parseInt(idString);
-      
-      // Find if the achievement already exists
-      const existingAchievement = currentAchievements.find(
-        (a: any) => a.achievementId === id
-      );
-      
-      if (existingAchievement) {
-        // If it's already completed, skip it
-        if (existingAchievement.completed) continue;
-        
-        // Calculate new progress
-        const currentProgress = existingAchievement.progress || 0;
-        const newProgress = typeof progressUpdate === 'function' 
-          ? progressUpdate(currentProgress)
-          : Math.min(100, currentProgress + progressUpdate);
-        
-        // If progress is 100, mark it as completed
-        const completed = newProgress >= 100;
-        
-        // Update the achievement
-        await updateAchievementMutation.mutateAsync({
-          achievementId: id,
-          progress: newProgress,
-          completed
-        });
-        
-        // If newly completed and we have the frontend achievement details, 
-        // add it to the recently earned list
-        if (completed && !existingAchievement.completed && frontendAchievement) {
-          setRecentlyEarnedAchievements(prev => [...prev, frontendAchievement]);
-          
-          if (showToasts) {
-            toast({
-              title: "Achievement Unlocked!",
-              description: `You've earned the "${frontendAchievement.name}" achievement!`,
-              variant: "default",
-            });
-          }
-        }
-      } else {
-        // If it doesn't exist, create it with initial progress
-        const initialProgress = typeof progressUpdate === 'number' 
-          ? Math.min(100, progressUpdate) 
-          : 0;
-        
-        // If progress is 100, mark it as completed
-        const completed = initialProgress >= 100;
-        
-        await createAchievementMutation.mutateAsync({
-          achievementId: id,
-          progress: initialProgress,
-          completed
-        });
-        
-        // If completed and we have the frontend achievement details,
-        // add it to the recently earned list
-        if (completed && frontendAchievement) {
-          setRecentlyEarnedAchievements(prev => [...prev, frontendAchievement]);
-          
-          if (showToasts) {
-            toast({
-              title: "Achievement Unlocked!",
-              description: `You've earned the "${frontendAchievement.name}" achievement!`,
-              variant: "default",
-            });
-          }
-        }
-      }
+    // Don't update if it's already completed or if new progress is less than current
+    if (
+      existingProgress?.completed || 
+      (existingProgress && existingProgress.progress >= progress)
+    ) {
+      return;
     }
+    
+    // Update progress on the backend
+    progressMutation.mutate({ achievementId, progress, achievement });
+  };
+  
+  // Check if an achievement is completed
+  const isCompleted = (achievementId: string) => {
+    return achievements.some(
+      (a) => a.achievementId === achievementId && a.completed
+    );
+  };
+  
+  // Get progress percentage for an achievement
+  const getProgress = (achievementId: string) => {
+    const achievement = achievements.find(
+      (a) => a.achievementId === achievementId
+    );
+    return achievement?.progress || 0;
   };
   
   return {
+    achievements,
     updateProgress,
-    recentlyEarnedAchievements,
-    clearRecentlyEarnedAchievements: () => setRecentlyEarnedAchievements([]),
+    isCompleted,
+    getProgress,
+    isLoading: progressMutation.isPending,
   };
 }
