@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { SOCIAL_PLATFORMS, SocialPlatform } from "@/lib/social-platforms";
 import { formatDistance } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2, MessageSquare, Heart, Share2, Calendar, Clock } from "lucide-react";
+import { ShareButton } from "@/components/social/share-button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { MessageSquare, Heart, Calendar, Clock } from "lucide-react";
 import { 
   Card, 
   CardContent, 
@@ -181,7 +183,7 @@ export function SocialPostsFeed() {
           <div className="mt-4 space-y-4">
             {isLoading ? (
               <div className="flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <LoadingSpinner size="md" centered />
               </div>
             ) : sortedPosts.length > 0 ? (
               sortedPosts.map(post => (
@@ -264,10 +266,12 @@ export function SocialPostsFeed() {
                         <span>Comment</span>
                       </Button>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-xs gap-1">
-                      <Share2 className="h-4 w-4" />
-                      <span>Share</span>
-                    </Button>
+                    <ShareButton
+                      title={`${post.user?.firstName || 'Athlete'}'s Social Post`}
+                      text={post.content}
+                      variant="ghost"
+                      size="sm"
+                    />
                   </div>
                 </div>
               ))
