@@ -83,6 +83,11 @@ export default function HomePage() {
     return <Redirect to="/auth" />;
   }
   
+  // Redirect to onboarding if not completed
+  if (user?.athlete && !user.athlete.onboardingCompleted) {
+    return <Redirect to="/onboarding" />;
+  }
+  
   return (
     <div className="min-h-screen pb-16 relative bg-gradient-to-b from-blue-50/50 to-white">
       <Header />
