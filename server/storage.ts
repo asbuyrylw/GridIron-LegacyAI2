@@ -1230,6 +1230,10 @@ export class MemStorage implements IStorage {
   }
   
   // Team Methods
+  async getTeams(): Promise<Team[]> {
+    return Array.from(this.teamsMap.values()).filter(team => team.isActive !== false);
+  }
+  
   async getTeam(id: number): Promise<Team | undefined> {
     return this.teamsMap.get(id);
   }
