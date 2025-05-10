@@ -1,0 +1,164 @@
+Absolutely—here is a detailed, expanded buildout for Milestones 1 through 5, ensuring clarity, feature completeness, and real-world application coverage.
+
+⸻
+
+✅ Milestone 1: Athlete Onboarding & Profiling
+
+#onboarding
+
+🔹 Functional Goals:
+	•	Collect complete personal, athletic, academic, and growth data to initialize athlete profiles
+	•	Capture behavioral and contextual data for AI model accuracy
+
+🔸 Tasks:
+	•	Build multi-step onboarding form (Chakra UI modal or route-based wizard)
+	•	Collect:
+	•	Name, age, grade, gender, school
+	•	Primary + secondary football positions
+	•	Jersey number
+	•	Parent/guardian contact info
+	•	Academic inputs:
+	•	GPA (current + projected)
+	•	SAT/ACT scores (optional)
+	•	Class schedule (by semester/term)
+	•	Physical metrics:
+	•	Height (current)
+	•	Weight
+	•	Body fat (optional)
+	•	Injuries (current or recent)
+	•	Combine stats entry:
+	•	40-yard dash, shuttle, bench reps, vertical, broad jump
+	•	Year-by-year game stats by position (e.g., WR: receptions, yards, TDs)
+	•	Parent height inputs:
+	•	Mother’s height (inches or cm)
+	•	Father’s height (inches or cm)
+	•	Intake training behavior:
+	•	Workout frequency
+	•	Lifting familiarity
+	•	Nutritional awareness
+	•	Store profile as Draft until onboarding is completed
+	•	Trigger creation of empty training plan, nutrition placeholder, and dashboard shell
+
+⸻
+
+🧠 Milestone 2: AI Training & Nutrition Plan Generator
+
+#AIplan
+
+🔹 Functional Goals:
+	•	Create individualized training and nutrition plans mapped to athlete goals and projected needs
+	•	Adapt training over time through feedback and stat changes
+
+🔸 Tasks:
+	•	Generate baseline comparison chart:
+	•	Athlete vs. D1, D2, D3 positional benchmarks (e.g., DL: 5.0s 40yd, 20 reps @ 225)
+	•	Build AI model for workout plan generation:
+	•	Input: position, age, stat gaps, training history
+	•	Output: weekly/monthly workout plans
+	•	Training plan architecture:
+	•	Core, upper body, lower body, mobility, speed/agility
+	•	Flag drills requiring equipment vs. bodyweight
+	•	Build plan tracking backend:
+	•	Log completion per day
+	•	Capture athlete feedback per week
+	•	Enable coaches to view/adapt plan
+	•	Nutrition engine:
+	•	Base calorie/macronutrient recommendation
+	•	Adjust based on weight goals and growth status
+	•	Sample meal plans or suggested foods
+	•	Build plan milestone logic:
+	•	Every 3 months, define checkpoint goals
+	•	Add notification triggers for milestone reviews
+
+⸻
+
+📊 Milestone 3: Athlete Dashboard
+
+#dashboard
+
+🔹 Functional Goals:
+	•	Serve as the command center for athletes: performance tracking, workouts, recruiting, and mindset
+
+🔸 Tasks:
+	•	Layout:
+	•	Combine stats (current, verified)
+	•	Growth projection (predicted height)
+	•	Recent achievements/unlocked badges
+	•	Daily view:
+	•	Today’s workout
+	•	Nutrition tip of the day
+	•	Motivational quote (Christian/general toggle)
+	•	Navigation:
+	•	View full training plan, nutrition history, highlight videos
+	•	Shortcut to recruiting profile
+	•	Upcoming:
+	•	Combine dates, recruiting deadlines, major games
+	•	Plan milestone alerts
+	•	Video widget:
+	•	Most recent highlight
+	•	Link to full library
+	•	Shared feedback from coach (if applicable)
+	•	Leadership rating, coachability (optional)
+	•	Plan “adherence tracker” visual (week completion %)
+
+⸻
+
+🌐 Milestone 4: Recruiting Profile & Web Page
+
+#recruiting
+
+🔹 Functional Goals:
+	•	Showcase athlete’s full recruiting snapshot in a format accessible by college programs
+
+🔸 Tasks:
+	•	Auto-generate profile from athlete data:
+	•	Personal + academic info
+	•	Combine stats (verified + self-reported)
+	•	Game stats (by season/position)
+	•	Volunteer/service activities
+	•	Projected height and position fit
+	•	Video section:
+	•	Top 3–5 pinned highlights
+	•	“View All” full video library
+	•	Verified combine badge system:
+	•	Display event name, location, metric type, and verification timestamp
+	•	Web features:
+	•	Publicly accessible URL (e.g., /recruiting/athlete-slug)
+	•	Share to Twitter/DM with auto-generated messaging
+	•	PDF export:
+	•	Compact one-sheet layout for events or email
+	•	Analytics tracking (optional):
+	•	Page views (coach/recruiter only)
+	•	Timestamped access logs
+
+⸻
+
+🏅 Milestone 5: Verified Combine Events
+
+#verification
+
+🔹 Functional Goals:
+	•	Provide a trusted, tamper-proof system for validating performance metrics at events or gyms
+
+🔸 Tasks:
+	•	Combine event creation:
+	•	Virtual vs. in-person flag
+	•	Event name, host org, location, time/date
+	•	Who can verify (coach, AD, certified trainer)
+	•	Athlete sign-up & event linking:
+	•	RSVP system with max slots per drill (if needed)
+	•	Auto-tag event to athlete profile on check-in
+	•	Verification interface for coaches:
+	•	Drill → Enter stat (e.g., 4.55s 40yd)
+	•	Upload video or gym data
+	•	Optional: live capture with mobile integration
+	•	System flags metric as “Verified” with:
+	•	Verifier ID, timestamp, source (video/gym)
+	•	Event badge and date on stat record
+	•	Auto-trigger recruiting profile update
+	•	Optional Twitter post:
+	•	“🔥 4.55s @ Combine – now verified by Coach Smith”
+
+⸻
+
+Next: Would you like me to continue this format with Milestones 6–10 next?
