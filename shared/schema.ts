@@ -269,6 +269,66 @@ export const leaderboardEntries = pgTable("leaderboard_entries", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Team Management Tables
+export const teams = pgTable("teams", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  schoolId: integer("school_id"),
+  level: text("level").notNull(), // Varsity, JV, Freshman
+  season: text("season").notNull(), // "Fall 2024"
+  sport: text("sport").notNull().default("football"),
+  coachId: integer("coach_id").references(() => users.id),
+  logoUrl: text("logo_url"),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const teamMembers = pgTable("team_members", {
+  id: serial("id").primaryKey(),
+  teamId: integer("team_id").references(() => teams.id).notNull(),
+  athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
+  role: text("role").notNull().default("player"), // player, captain, coach, assistant_coach
+  position: text("position"),
+  jerseyNumber: text("jersey_number"),
+  isActive: boolean("is_active").default(true),
+  joinedAt: timestamp("joined_at").defaultNow().notNull(),
+});
+
+export const teamEvents = pgTable("team_events", {
+  id: serial("id").primaryKey(),
+  teamId: integer("team_id").references(() => teams.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  eventType: text("event_type").notNull(), // practice, game, meeting, etc.
+  location: text("location"),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  isRequired: boolean("is_required").default(true),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const teamEventAttendance = pgTable("team_event_attendance", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => teamEvents.id).notNull(),
+  athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
+  status: text("status").notNull().default("pending"), // pending, attending, excused, absent
+  notes: text("notes"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const teamAnnouncements = pgTable("team_announcements", {
+  id: serial("id").primaryKey(),
+  teamId: integer("team_id").references(() => teams.id).notNull(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  importance: text("importance").default("normal"), // low, normal, high, urgent
+  publishedBy: integer("published_by").references(() => users.id).notNull(),
+  publishedAt: timestamp("published_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"),
+});
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertAthleteSchema = createInsertSchema(athletes).omit({ id: true });
@@ -287,6 +347,13 @@ export const insertLeaderboardEntrySchema = createInsertSchema(leaderboardEntrie
 export const insertStrengthConditioningSchema = createInsertSchema(strengthConditioning).omit({ id: true, updatedAt: true });
 export const insertNutritionInfoSchema = createInsertSchema(nutritionInfo).omit({ id: true, updatedAt: true });
 export const insertRecruitingPreferencesSchema = createInsertSchema(recruitingPreferences).omit({ id: true, updatedAt: true });
+
+// Team Management Insert Schemas
+export const insertTeamSchema = createInsertSchema(teams).omit({ id: true, createdAt: true });
+export const insertTeamMemberSchema = createInsertSchema(teamMembers).omit({ id: true, joinedAt: true });
+export const insertTeamEventSchema = createInsertSchema(teamEvents).omit({ id: true, createdAt: true });
+export const insertTeamEventAttendanceSchema = createInsertSchema(teamEventAttendance).omit({ id: true, updatedAt: true });
+export const insertTeamAnnouncementSchema = createInsertSchema(teamAnnouncements).omit({ id: true, publishedAt: true });
 
 // Select Types
 export type User = typeof users.$inferSelect & {
@@ -311,6 +378,11 @@ export type LeaderboardEntry = typeof leaderboardEntries.$inferSelect;
 export type StrengthConditioning = typeof strengthConditioning.$inferSelect;
 export type NutritionInfo = typeof nutritionInfo.$inferSelect;
 export type RecruitingPreferences = typeof recruitingPreferences.$inferSelect;
+export type Team = typeof teams.$inferSelect;
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type TeamEvent = typeof teamEvents.$inferSelect;
+export type TeamEventAttendance = typeof teamEventAttendance.$inferSelect;
+export type TeamAnnouncement = typeof teamAnnouncements.$inferSelect;
 
 // Insert Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -330,6 +402,11 @@ export type InsertLeaderboardEntry = z.infer<typeof insertLeaderboardEntrySchema
 export type InsertStrengthConditioning = z.infer<typeof insertStrengthConditioningSchema>;
 export type InsertNutritionInfo = z.infer<typeof insertNutritionInfoSchema>;
 export type InsertRecruitingPreferences = z.infer<typeof insertRecruitingPreferencesSchema>;
+export type InsertTeam = z.infer<typeof insertTeamSchema>;
+export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
+export type InsertTeamEvent = z.infer<typeof insertTeamEventSchema>;
+export type InsertTeamEventAttendance = z.infer<typeof insertTeamEventAttendanceSchema>;
+export type InsertTeamAnnouncement = z.infer<typeof insertTeamAnnouncementSchema>;
 
 // Extended Schemas for Registration
 export const athleteRegistrationSchema = insertUserSchema.extend({

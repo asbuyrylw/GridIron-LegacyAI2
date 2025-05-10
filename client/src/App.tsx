@@ -20,6 +20,8 @@ import SocialAchievementsPage from "@/pages/social-achievements-page";
 import AchievementsPage from "@/pages/achievements-page";
 import SocialFeedPage from "@/pages/social-feed-page";
 import SocialSettingsPage from "@/pages/social-settings-page";
+import TeamsPage from "@/pages/teams-page";
+import TeamDetailsPage from "@/pages/team-details-page";
 
 // Landing Pages
 import LandingIndex from "@/pages/landing/index";
@@ -75,6 +77,8 @@ function Router() {
         <ProtectedRoute path="/achievements" component={AchievementsPage} />
         <ProtectedRoute path="/social-feed" component={SocialFeedPage} />
         <ProtectedRoute path="/social-settings" component={SocialSettingsPage} />
+        <ProtectedRoute path="/teams" component={TeamsPage} />
+        <ProtectedRoute path="/teams/:id" component={TeamDetailsPage} />
         
         {/* Public Routes */}
         <Route path="/auth" component={AuthPage} />
