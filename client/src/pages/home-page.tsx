@@ -146,7 +146,7 @@ export default function HomePage() {
                 <div className="flex items-center gap-2">
                   <ShareButton
                     title={`${user?.firstName || 'Athlete'}'s Football Recruiting Profile`}
-                    text={`Check out my athlete profile on GridIron LegacyAI! ${user?.athlete?.position || 'Football player'} with ${user?.athlete?.yearsExperience || '0'} years experience.`}
+                    text={`Check out my athlete profile on GridIron LegacyAI! ${user?.athlete?.position || 'Football player'} with ${user?.athlete?.yearsPlayed || '0'} years experience.`}
                     size="sm"
                   />
                   <button className="text-sm font-medium text-primary flex items-center">
