@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { Redirect, useLocation, useRoute } from "wouter";
 import { Header } from "@/components/layout/header";
-import { BottomNavigation } from "@/components/layout/bottom-navigation";
+import { BottomNav } from "@/components/layout/bottom-nav";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ShareButton } from "@/components/social/share-button";
 import { 
@@ -407,7 +407,7 @@ export default function TeamDetailsPage() {
         </Tabs>
       </main>
       
-      <BottomNavigation />
+      <BottomNav />
     </div>
   );
 }
