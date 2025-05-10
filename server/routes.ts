@@ -15,7 +15,11 @@ import {
   insertAchievementSchema,
   insertAthleteAchievementSchema,
   insertLeaderboardSchema,
-  insertLeaderboardEntrySchema
+  insertLeaderboardEntrySchema,
+  insertStrengthConditioningSchema,
+  insertNutritionInfoSchema,
+  insertRecruitingPreferencesSchema,
+  onboardingSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -1386,6 +1390,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.status(201).json(entry);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Complete athlete onboarding
+  app.post("/api/athlete/:id/onboarding", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow completing onboarding for own profile
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Validate the onboarding data
+      try {
+        const data = onboardingSchema.parse(req.body);
+        
+        // 1. Update athlete profile with personal info
+        await storage.updateAthlete(athleteId, {
+          ...data.personalInfo,
+          onboardingCompleted: true
+        });
+        
+        // 2. Update or create football info (positions, etc.)
+        await storage.updateAthlete(athleteId, {
+          ...data.footballInfo
+        });
+        
+        // 3. Create athletic metrics (combine stats)
+        if (data.athleticMetrics) {
+          await storage.createCombineMetrics({
+            ...data.athleticMetrics,
+            athleteId
+          });
+        }
+        
+        // 4. Create strength & conditioning profile
+        if (data.strengthConditioning) {
+          await storage.createStrengthConditioning({
+            ...data.strengthConditioning,
+            athleteId
+          });
+        }
+        
+        // 5. Create nutrition profile
+        if (data.nutrition) {
+          await storage.createNutritionInfo({
+            ...data.nutrition,
+            athleteId
+          });
+          
+          // Also create a basic nutrition plan with target values
+          const currentWeight = data.nutrition.currentWeight;
+          if (currentWeight) {
+            // Calculate a basic nutrition plan based on current weight
+            // These are approximate values that would be refined by the AI later
+            const dailyCalories = Math.round(currentWeight * 15); // 15 calories per lb as baseline
+            const proteinTarget = Math.round(currentWeight * 0.8); // 0.8g per lb
+            const carbTarget = Math.round((dailyCalories * 0.5) / 4); // 50% of calories from carbs
+            const fatTarget = Math.round((dailyCalories * 0.25) / 9); // 25% of calories from fat
+            
+            await storage.createNutritionPlan({
+              athleteId,
+              goal: "maintenance", // Default goal
+              dailyCalories,
+              proteinTarget,
+              carbTarget,
+              fatTarget,
+              hydrationTarget: 100, // Basic 100oz recommendation
+              restrictions: data.nutrition.dietaryRestrictions || ""
+            });
+          }
+        }
+        
+        // 6. Create recruiting preferences
+        if (data.recruitingGoals) {
+          await storage.createRecruitingPreferences({
+            ...data.recruitingGoals,
+            athleteId
+          });
+        }
+        
+        // 7. Create an initial welcome coach message
+        await storage.createCoachMessage({
+          athleteId,
+          message: `Welcome to GridIron LegacyAI, ${athlete.firstName}! I'm your AI Coach and I'll be helping you achieve your football goals. Your profile is now set up and we're ready to start building your personalized training program. Check back here anytime you have questions about your training, nutrition, or football development.`,
+          role: "assistant",
+          read: false
+        });
+        
+        res.status(200).json({ 
+          message: "Onboarding completed successfully",
+          athleteId
+        });
+        
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          const validationError = fromZodError(error);
+          return res.status(400).json({ message: validationError.message });
+        }
+        throw error;
+      }
+      
     } catch (error) {
       next(error);
     }
