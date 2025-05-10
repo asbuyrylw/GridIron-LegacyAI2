@@ -3,6 +3,7 @@ import {
   athletes, type Athlete, type InsertAthlete,
   combineMetrics, type CombineMetric, type InsertCombineMetric,
   trainingPlans, type TrainingPlan, type InsertTrainingPlan,
+  performanceInsights, type PerformanceInsights, type InsertPerformanceInsights,
   coachMessages, type CoachMessage, type InsertCoachMessage,
   nutritionPlans, type NutritionPlan, type InsertNutritionPlan,
   mealLogs, type MealLog, type InsertMealLog,
@@ -44,6 +45,14 @@ export interface IStorage {
   getCombineMetrics(athleteId: number): Promise<CombineMetric[]>;
   getLatestCombineMetrics(athleteId: number): Promise<CombineMetric | undefined>;
   createCombineMetrics(metrics: InsertCombineMetric): Promise<CombineMetric>;
+  
+  // For API endpoint /api/athlete/:id/metrics
+  getAthleteMetrics(athleteId: number): Promise<CombineMetric[]>;
+  
+  // Performance Insights Methods
+  getPerformanceInsights(athleteId: number): Promise<PerformanceInsights | undefined>;
+  createPerformanceInsights(insights: InsertPerformanceInsights): Promise<PerformanceInsights>;
+  updatePerformanceInsights(athleteId: number, insights: Partial<InsertPerformanceInsights>): Promise<PerformanceInsights>;
   
   // Strength & Conditioning Methods
   getStrengthConditioning(athleteId: number): Promise<StrengthConditioning | undefined>;
@@ -167,6 +176,7 @@ export class MemStorage implements IStorage {
   private nutritionInfoMap: Map<number, NutritionInfo>;
   private recruitingPreferencesMap: Map<number, RecruitingPreferences>;
   private trainingPlansMap: Map<number, TrainingPlan>;
+  private performanceInsightsMap: Map<number, PerformanceInsights>;
   private coachMessagesMap: Map<number, CoachMessage>;
   private nutritionPlansMap: Map<number, NutritionPlan>;
   private mealLogsMap: Map<number, MealLog>;
@@ -190,6 +200,7 @@ export class MemStorage implements IStorage {
   currentNutritionInfoId: number;
   currentRecruitingPreferencesId: number;
   currentTrainingPlanId: number;
+  currentPerformanceInsightsId: number;
   currentCoachMessageId: number;
   currentNutritionPlanId: number;
   currentMealLogId: number;
@@ -215,6 +226,7 @@ export class MemStorage implements IStorage {
     this.nutritionInfoMap = new Map();
     this.recruitingPreferencesMap = new Map();
     this.trainingPlansMap = new Map();
+    this.performanceInsightsMap = new Map();
     this.coachMessagesMap = new Map();
     this.nutritionPlansMap = new Map();
     this.mealLogsMap = new Map();
@@ -238,6 +250,7 @@ export class MemStorage implements IStorage {
     this.currentNutritionInfoId = 1;
     this.currentRecruitingPreferencesId = 1;
     this.currentTrainingPlanId = 1;
+    this.currentPerformanceInsightsId = 1;
     this.currentCoachMessageId = 1;
     this.currentNutritionPlanId = 1;
     this.currentMealLogId = 1;
