@@ -3,8 +3,10 @@ import { BottomNavigation } from "@/components/layout/bottom-navigation";
 import { TrainingPlanView } from "@/components/training/training-plan";
 import { GeneratePlan } from "@/components/training/generate-plan";
 import { Button } from "@/components/ui/button";
+import { ShareButton } from "@/components/social/share-button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { format, addDays, subDays } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,11 +18,7 @@ export default function TrainingPage() {
   
   // Loading state
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <LoadingSpinner fullScreen size="lg" />;
   }
   
   // Redirect if not authenticated
@@ -54,7 +52,15 @@ export default function TrainingPage() {
       
       <main className="container mx-auto px-4 pt-4 pb-20">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl md:text-3xl font-montserrat font-bold">Training Plan</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl md:text-3xl font-montserrat font-bold">Training Plan</h1>
+            <ShareButton 
+              title={`${user?.firstName || 'Athlete'}'s Football Training`}
+              text={`Check out my football training plan for ${format(selectedDate, 'MMMM d')}, focusing on strength and agility! 🏈💪`}
+              size="icon"
+              variant="ghost"
+            />
+          </div>
           <Button variant="outline" size="sm" className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
             <span>Calendar</span>

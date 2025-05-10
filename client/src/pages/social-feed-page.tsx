@@ -7,7 +7,9 @@ import { BottomNavigation } from "@/components/layout/bottom-navigation";
 import { SocialPostCreator } from "@/components/social/social-post-creator";
 import { SocialPostsFeed } from "@/components/social/social-posts-feed";
 import { SocialLinks } from "@/components/social/social-links";
-import { Loader2, Settings, PlusCircle } from "lucide-react";
+import { ShareButton } from "@/components/social/share-button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Settings, PlusCircle } from "lucide-react";
 import { 
   Tabs, 
   TabsContent, 
