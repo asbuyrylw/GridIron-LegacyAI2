@@ -9,7 +9,8 @@ import {
   Award, 
   CandlestickChart, 
   Share2,
-  Settings
+  Settings,
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +61,12 @@ export function BottomNav() {
       active: location === "/achievements"
     },
     {
+      label: "Teams",
+      href: "/teams",
+      icon: Users,
+      active: location.includes("/teams")
+    },
+    {
       label: "Settings",
       href: "/settings",
       icon: Settings,
@@ -70,13 +77,13 @@ export function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border py-2 md:hidden">
       <div className="container max-w-md mx-auto px-2">
-        <div className="grid grid-cols-4 gap-1">
-          {navItems.slice(0, 4).map((item) => (
+        <div className="grid grid-cols-5 gap-1">
+          {navItems.slice(0, 5).map((item) => (
             <NavItem key={item.href} {...item} />
           ))}
         </div>
         <div className="mt-1 grid grid-cols-4 gap-1">
-          {navItems.slice(4).map((item) => (
+          {navItems.slice(5).map((item) => (
             <NavItem key={item.href} {...item} />
           ))}
         </div>

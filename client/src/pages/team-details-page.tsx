@@ -483,7 +483,7 @@ function AnnouncementCard({ announcement }: { announcement: TeamAnnouncement }) 
                 ${announcement.importance === "high" ? "text-amber-600" : ""} 
                 ${announcement.importance === "urgent" ? "text-red-600" : ""}
               `}>
-                {announcement.importance.charAt(0).toUpperCase() + announcement.importance.slice(1)} Priority
+                {(announcement.importance || "normal").charAt(0).toUpperCase() + (announcement.importance || "normal").slice(1)} Priority
               </span>
             )}
           </div>
