@@ -1,546 +1,539 @@
 import { useState } from "react";
+import { useRoute, Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
-import { Redirect, useLocation, useRoute } from "wouter";
-import { Header } from "@/components/layout/header";
-import { BottomNav } from "@/components/layout/bottom-nav";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { ShareButton } from "@/components/social/share-button";
 import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
-import { 
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from "@/components/ui/avatar";
+  useTeam, 
+  useTeamMembers, 
+  useTeamEvents, 
+  useTeamAnnouncements, 
+  useCreateTeamEvent,
+  useCreateTeamAnnouncement,
+  useEventAttendance,
+  useUpdateEventAttendance
+} from "@/hooks/use-team-hooks";
+import { TeamEventCard } from "@/components/teams/team-event-card";
+import { TeamAnnouncementCard } from "@/components/teams/team-announcement-card";
+import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
-import { Team, TeamMember, TeamEvent, TeamAnnouncement } from "@shared/schema";
 import { 
+  CalendarPlus, 
   Users, 
+  ChevronLeft, 
   Calendar, 
-  Megaphone, 
-  Settings, 
-  Clock, 
+  BellPlus,
   MapPin,
-  ChevronLeft,
-  ChevronsUpDown
+  Globe,
+  Shield,
+  UserPlus
 } from "lucide-react";
-import { formatDistance, format } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { TeamEvent, TeamAnnouncement } from "@shared/schema";
+import { format } from "date-fns";
 
 export default function TeamDetailsPage() {
-  const { user, isLoading } = useAuth();
-  const [, setLocation] = useLocation();
+  const { user } = useAuth();
   const [, params] = useRoute("/teams/:id");
-  const teamId = params?.id ? parseInt(params.id) : null;
+  const teamId = params?.id ? parseInt(params.id) : 0;
+  const athleteId = user?.athlete?.id;
+  
   const [activeTab, setActiveTab] = useState("overview");
+  const [createEventDialogOpen, setCreateEventDialogOpen] = useState(false);
+  const [createAnnouncementDialogOpen, setCreateAnnouncementDialogOpen] = useState(false);
+
+  // Get team details
+  const { data: team, isLoading: isLoadingTeam } = useTeam(teamId);
   
-  // Query for team details
-  const { data: team, isLoading: isLoadingTeam } = useQuery<Team & { isCoach: boolean }>({
-    queryKey: [`/api/teams/${teamId}`],
-    enabled: !!teamId,
-  });
+  // Get team members
+  const { data: teamMembers, isLoading: isLoadingMembers } = useTeamMembers(teamId);
   
-  // Query for team members
-  const { data: members = [], isLoading: isLoadingMembers } = useQuery<TeamMember[]>({
-    queryKey: [`/api/teams/${teamId}/members`],
-    enabled: !!teamId,
-  });
+  // Get team events
+  const { data: teamEvents, isLoading: isLoadingEvents } = useTeamEvents(teamId);
   
-  // Query for upcoming team events
-  const { data: events = [], isLoading: isLoadingEvents } = useQuery<TeamEvent[]>({
-    queryKey: [`/api/teams/${teamId}/events`],
-    enabled: !!teamId,
-  });
+  // Get team announcements
+  const { data: teamAnnouncements, isLoading: isLoadingAnnouncements } = useTeamAnnouncements(teamId);
   
-  // Query for team announcements
-  const { data: announcements = [], isLoading: isLoadingAnnouncements } = useQuery<TeamAnnouncement[]>({
-    queryKey: [`/api/teams/${teamId}/announcements`],
-    enabled: !!teamId,
-  });
+  // Get event attendance for the athlete
+  const getAttendanceStatus = (eventId: number) => {
+    // This would be implemented to get the attendance status for each event
+    // For now, return a default value
+    return "pending";
+  };
   
-  // Loading state
-  if (isLoading || isLoadingTeam) {
-    return <LoadingSpinner fullScreen size="lg" />;
-  }
+  // Handle creating events and announcements
+  const createEvent = useCreateTeamEvent(teamId);
+  const createAnnouncement = useCreateTeamAnnouncement(teamId);
   
-  // Redirect if not authenticated
-  if (!user) {
-    return <Redirect to="/auth" />;
-  }
+  // Handle updating attendance
+  const handleUpdateAttendance = (eventId: number, status: string) => {
+    // This would be implemented to update attendance status
+    console.log(`Update attendance for event ${eventId} to ${status}`);
+  };
   
-  // Redirect to onboarding if not completed
-  if (user?.athlete && !user.athlete.onboardingCompleted) {
-    return <Redirect to="/onboarding" />;
-  }
+  // Check if user is a team coach or admin
+  const isCoachOrAdmin = team && (team.coachId === user?.id || user?.userType === "admin");
   
-  // Handle team not found
-  if (!team && !isLoadingTeam) {
+  // Check if user is a team member
+  const isMember = teamMembers?.some(member => member.athleteId === athleteId);
+  
+  if (isLoadingTeam) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md mx-auto">
-          <CardHeader>
-            <CardTitle>Team Not Found</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4">The team you're looking for doesn't exist or you don't have access to it.</p>
-            <Button onClick={() => setLocation("/teams")}>Back to Teams</Button>
-          </CardContent>
-        </Card>
+      <div className="container px-4 py-6 max-w-6xl">
+        <div className="flex items-center gap-2 mb-6">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/teams">
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Back to Teams
+            </Link>
+          </Button>
+        </div>
+        
+        <div className="w-full h-40 rounded-lg bg-gray-200 animate-pulse mb-4" />
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="w-full md:w-3/4">
+            <Skeleton className="h-9 w-40 mb-6" />
+            <Skeleton className="h-24 w-full mb-6" />
+            <Skeleton className="h-48 w-full" />
+          </div>
+          <div className="w-full md:w-1/4">
+            <Skeleton className="h-9 w-40 mb-6" />
+            <Skeleton className="h-60 w-full" />
+          </div>
+        </div>
       </div>
     );
   }
-  
-  const upcomingEvents = events
-    .filter(event => new Date(event.startDate) > new Date())
-    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-    .slice(0, 3);
-  
-  const recentAnnouncements = announcements
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-    .slice(0, 3);
-  
-  const isCoach = team?.isCoach || false;
-  
-  return (
-    <div className="min-h-screen pb-16 relative">
-      <Header />
-      
-      <main className="container mx-auto px-4 pt-4 pb-20">
-        <div className="flex items-center gap-2 mb-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8" 
-            onClick={() => setLocation("/teams")}
-          >
-            <ChevronLeft className="h-4 w-4" />
+
+  if (!team) {
+    return (
+      <div className="container px-4 py-6 max-w-6xl">
+        <div className="flex items-center gap-2 mb-6">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/teams">
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Back to Teams
+            </Link>
           </Button>
-          <h1 className="text-xl font-semibold">Team Details</h1>
         </div>
         
-        {/* Team Header */}
-        <Card className="mb-6">
-          <CardHeader className="pb-4">
-            <div className="flex justify-between">
-              <div className="flex gap-4 items-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                  {team?.logoUrl ? (
-                    <img 
-                      src={team.logoUrl} 
-                      alt={team.name} 
-                      className="w-14 h-14 rounded-full object-cover" 
-                    />
+        <div className="text-center py-12">
+          <h3 className="text-lg font-semibold mb-2">Team not found</h3>
+          <p className="text-muted-foreground mb-6">
+            The team you're looking for doesn't exist or you don't have permission to view it.
+          </p>
+          <Button asChild>
+            <Link href="/teams">Go to Teams</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container px-4 py-6 max-w-6xl">
+      {/* Back button */}
+      <div className="flex items-center gap-2 mb-6">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/teams">
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back to Teams
+          </Link>
+        </Button>
+      </div>
+      
+      {/* Team banner */}
+      <div 
+        className="w-full h-40 bg-cover bg-center rounded-lg mb-8 relative" 
+        style={{ 
+          backgroundImage: team.bannerImage 
+            ? `url(${team.bannerImage})` 
+            : 'linear-gradient(to right, #4f46e5, #3b82f6)' 
+        }}
+      >
+        <div className="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex items-center justify-center">
+          <div className="text-center text-white">
+            <h1 className="text-3xl font-bold mb-2">{team.name}</h1>
+            <div className="flex items-center justify-center gap-2">
+              <Badge className="bg-white text-primary">{team.level}</Badge>
+              <span className="text-sm">{team.season}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Team content */}
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Main content */}
+        <div className="w-full md:w-3/4">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-3">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="events">Events</TabsTrigger>
+              <TabsTrigger value="announcements">Announcements</TabsTrigger>
+            </TabsList>
+            
+            {/* Overview tab */}
+            <TabsContent value="overview" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Team Information</CardTitle>
+                  <CardDescription>Details about {team.name}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {team.description && (
+                    <div>
+                      <h3 className="text-sm font-medium mb-1">Description</h3>
+                      <p className="text-sm text-muted-foreground">{team.description}</p>
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {team.location && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{team.location}</span>
+                      </div>
+                    )}
+                    
+                    {team.homeField && (
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">Home Field: {team.homeField}</span>
+                      </div>
+                    )}
+                    
+                    {team.website && (
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <a 
+                          href={team.website} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary hover:underline"
+                        >
+                          Team Website
+                        </a>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">
+                        Created {team.createdAt ? format(new Date(team.createdAt), 'MMM d, yyyy') : 'recently'}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Upcoming events preview */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <div>
+                    <CardTitle>Upcoming Events</CardTitle>
+                    <CardDescription>Next events for {team.name}</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="#" onClick={() => setActiveTab("events")}>
+                      View All
+                    </Link>
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingEvents ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-24 w-full" />
+                      <Skeleton className="h-24 w-full" />
+                    </div>
+                  ) : teamEvents && teamEvents.length > 0 ? (
+                    <div className="space-y-4">
+                      {teamEvents.slice(0, 2).map((event) => (
+                        <TeamEventCard
+                          key={event.id}
+                          event={event}
+                          athleteId={athleteId}
+                          attendanceStatus={getAttendanceStatus(event.id)}
+                          onUpdateAttendance={(status) => handleUpdateAttendance(event.id, status)}
+                        />
+                      ))}
+                    </div>
                   ) : (
-                    <Users className="h-8 w-8 text-primary" />
+                    <div className="text-center py-6">
+                      <p className="text-muted-foreground">No upcoming events</p>
+                      {isCoachOrAdmin && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-2"
+                          onClick={() => setCreateEventDialogOpen(true)}
+                        >
+                          <CalendarPlus className="h-4 w-4 mr-2" />
+                          Create Event
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {/* Recent announcements preview */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <div>
+                    <CardTitle>Recent Announcements</CardTitle>
+                    <CardDescription>Latest news for {team.name}</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="#" onClick={() => setActiveTab("announcements")}>
+                      View All
+                    </Link>
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingAnnouncements ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-24 w-full" />
+                      <Skeleton className="h-24 w-full" />
+                    </div>
+                  ) : teamAnnouncements && teamAnnouncements.length > 0 ? (
+                    <div className="space-y-4">
+                      {teamAnnouncements.slice(0, 2).map((announcement) => (
+                        <TeamAnnouncementCard
+                          key={announcement.id}
+                          announcement={announcement}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <p className="text-muted-foreground">No announcements yet</p>
+                      {isCoachOrAdmin && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-2"
+                          onClick={() => setCreateAnnouncementDialogOpen(true)}
+                        >
+                          <BellPlus className="h-4 w-4 mr-2" />
+                          Create Announcement
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            {/* Events tab */}
+            <TabsContent value="events" className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Team Events</h2>
+                {isCoachOrAdmin && (
+                  <Button onClick={() => setCreateEventDialogOpen(true)}>
+                    <CalendarPlus className="h-4 w-4 mr-2" />
+                    Create Event
+                  </Button>
+                )}
+              </div>
+              
+              {isLoadingEvents ? (
+                <div className="space-y-4">
+                  {Array(3).fill(0).map((_, idx) => (
+                    <Skeleton key={idx} className="h-40 w-full" />
+                  ))}
+                </div>
+              ) : teamEvents && teamEvents.length > 0 ? (
+                <div className="space-y-4">
+                  {teamEvents.map((event) => (
+                    <TeamEventCard
+                      key={event.id}
+                      event={event}
+                      athleteId={athleteId}
+                      attendanceStatus={getAttendanceStatus(event.id)}
+                      onUpdateAttendance={(status) => handleUpdateAttendance(event.id, status)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <h3 className="text-lg font-semibold mb-2">No events scheduled</h3>
+                  <p className="text-muted-foreground mb-6">
+                    There are no events scheduled for this team yet.
+                  </p>
+                  {isCoachOrAdmin && (
+                    <Button onClick={() => setCreateEventDialogOpen(true)}>
+                      <CalendarPlus className="h-4 w-4 mr-2" />
+                      Create Event
+                    </Button>
                   )}
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold">{team?.name}</h2>
-                  <p className="text-muted-foreground">
-                    {team?.level} • {team?.season}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <ShareButton 
-                  title={`${team?.name} - ${team?.level} Football Team`}
-                  text={`Check out my football team: ${team?.name} (${team?.level}) for the ${team?.season} season!`}
-                  size="sm"
-                />
-                {isCoach && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setLocation(`/teams/${teamId}/manage`)}
-                  >
-                    <Settings className="h-4 w-4 mr-1" />
-                    Manage
+              )}
+            </TabsContent>
+            
+            {/* Announcements tab */}
+            <TabsContent value="announcements" className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Team Announcements</h2>
+                {isCoachOrAdmin && (
+                  <Button onClick={() => setCreateAnnouncementDialogOpen(true)}>
+                    <BellPlus className="h-4 w-4 mr-2" />
+                    Create Announcement
                   </Button>
                 )}
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm mb-4">
-              {team?.description || `${team?.name} ${team?.level} football team for the ${team?.season} season.`}
-            </p>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Users className="h-4 w-4" />
-              <span>{members.length} Members</span>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Team Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="members">Members</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="announcements">Updates</TabsTrigger>
-          </TabsList>
-          
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="mt-4 space-y-6">
-            {/* Upcoming Events Section */}
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-lg font-semibold">Upcoming Events</h3>
-                <Button 
-                  variant="link" 
-                  className="p-0 h-auto"
-                  onClick={() => setActiveTab("events")}
-                >
-                  View All
-                </Button>
-              </div>
-              {isLoadingEvents ? (
-                <div className="py-4 flex justify-center">
-                  <LoadingSpinner size="sm" />
-                </div>
-              ) : upcomingEvents.length > 0 ? (
-                <div className="space-y-3">
-                  {upcomingEvents.map(event => (
-                    <EventCard 
-                      key={event.id} 
-                      event={event}
-                      onClick={() => setLocation(`/teams/${teamId}/events/${event.id}`)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 border rounded-lg">
-                  <Calendar className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground">No upcoming events</p>
-                </div>
-              )}
-            </div>
-            
-            {/* Recent Announcements Section */}
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-lg font-semibold">Recent Announcements</h3>
-                <Button 
-                  variant="link" 
-                  className="p-0 h-auto"
-                  onClick={() => setActiveTab("announcements")}
-                >
-                  View All
-                </Button>
-              </div>
+              
               {isLoadingAnnouncements ? (
-                <div className="py-4 flex justify-center">
-                  <LoadingSpinner size="sm" />
+                <div className="space-y-4">
+                  {Array(3).fill(0).map((_, idx) => (
+                    <Skeleton key={idx} className="h-40 w-full" />
+                  ))}
                 </div>
-              ) : recentAnnouncements.length > 0 ? (
-                <div className="space-y-3">
-                  {recentAnnouncements.map(announcement => (
-                    <AnnouncementCard 
-                      key={announcement.id} 
+              ) : teamAnnouncements && teamAnnouncements.length > 0 ? (
+                <div className="space-y-4">
+                  {teamAnnouncements.map((announcement) => (
+                    <TeamAnnouncementCard
+                      key={announcement.id}
                       announcement={announcement}
                     />
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 border rounded-lg">
-                  <Megaphone className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground">No announcements</p>
+                <div className="text-center py-12">
+                  <h3 className="text-lg font-semibold mb-2">No announcements</h3>
+                  <p className="text-muted-foreground mb-6">
+                    There are no announcements posted for this team yet.
+                  </p>
+                  {isCoachOrAdmin && (
+                    <Button onClick={() => setCreateAnnouncementDialogOpen(true)}>
+                      <BellPlus className="h-4 w-4 mr-2" />
+                      Create Announcement
+                    </Button>
+                  )}
                 </div>
               )}
-            </div>
-            
-            {/* Team Stats Summary */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Team Stats</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <StatCard title="Members" value={members.length} icon={<Users className="h-5 w-5" />} />
-                <StatCard title="Events" value={events.length} icon={<Calendar className="h-5 w-5" />} />
-                <StatCard title="Announcements" value={announcements.length} icon={<Megaphone className="h-5 w-5" />} />
-                <StatCard title="Season" value={team?.season || "-"} icon={<ChevronsUpDown className="h-5 w-5" />} />
-              </div>
-            </div>
-          </TabsContent>
-          
-          {/* Members Tab */}
-          <TabsContent value="members" className="mt-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Team Members</h3>
-              {isCoach && (
-                <Button 
-                  size="sm"
-                  onClick={() => setLocation(`/teams/${teamId}/manage/members`)}
-                >
-                  Manage Members
-                </Button>
-              )}
-            </div>
-            
-            {isLoadingMembers ? (
-              <div className="py-8 flex justify-center">
-                <LoadingSpinner size="md" />
-              </div>
-            ) : members.length > 0 ? (
-              <div className="space-y-3">
-                {members.map(member => (
-                  <MemberCard 
-                    key={member.id} 
-                    member={member}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 border rounded-lg">
-                <Users className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-muted-foreground">No team members yet</p>
-                {isCoach && (
-                  <Button 
-                    variant="link" 
-                    onClick={() => setLocation(`/teams/${teamId}/manage/members/add`)}
-                  >
-                    Add Members
-                  </Button>
-                )}
-              </div>
-            )}
-          </TabsContent>
-          
-          {/* Events Tab */}
-          <TabsContent value="events" className="mt-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Team Events</h3>
-              {isCoach && (
-                <Button 
-                  size="sm"
-                  onClick={() => setLocation(`/teams/${teamId}/events/create`)}
-                >
-                  Add Event
-                </Button>
-              )}
-            </div>
-            
-            {isLoadingEvents ? (
-              <div className="py-8 flex justify-center">
-                <LoadingSpinner size="md" />
-              </div>
-            ) : events.length > 0 ? (
-              <div className="space-y-3">
-                {events
-                  .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-                  .map(event => (
-                    <EventCard 
-                      key={event.id} 
-                      event={event}
-                      onClick={() => setLocation(`/teams/${teamId}/events/${event.id}`)}
-                    />
+            </TabsContent>
+          </Tabs>
+        </div>
+        
+        {/* Sidebar */}
+        <div className="w-full md:w-1/4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center justify-between">
+                <span>Team Members</span>
+                <Badge>{teamMembers?.length || 0}</Badge>
+              </CardTitle>
+              <CardDescription>
+                Players and coaches on this team
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+              {isLoadingMembers ? (
+                <div className="space-y-3">
+                  {Array(5).fill(0).map((_, idx) => (
+                    <div key={idx} className="flex items-center gap-3">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <div>
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-16 mt-1" />
+                      </div>
+                    </div>
                   ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 border rounded-lg">
-                <Calendar className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-muted-foreground">No events scheduled</p>
-                {isCoach && (
-                  <Button 
-                    variant="link" 
-                    onClick={() => setLocation(`/teams/${teamId}/events/create`)}
-                  >
-                    Schedule an Event
-                  </Button>
-                )}
-              </div>
-            )}
-          </TabsContent>
-          
-          {/* Announcements Tab */}
-          <TabsContent value="announcements" className="mt-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Team Announcements</h3>
-              {isCoach && (
-                <Button 
-                  size="sm"
-                  onClick={() => setLocation(`/teams/${teamId}/announcements/create`)}
-                >
-                  Post Announcement
+                </div>
+              ) : teamMembers && teamMembers.length > 0 ? (
+                <div className="space-y-3">
+                  {teamMembers.map((member) => (
+                    <div key={member.id} className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback>
+                          {`${member.firstName?.[0] || ''}${member.lastName?.[0] || ''}`}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">{member.firstName} {member.lastName}</p>
+                        <div className="flex items-center gap-1">
+                          <Badge variant="outline" className="text-xs h-5 px-1">
+                            {member.position || "Position unknown"}
+                          </Badge>
+                          {member.jerseyNumber && (
+                            <Badge variant="secondary" className="text-xs h-5 px-1">
+                              #{member.jerseyNumber}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-muted-foreground">No members yet</p>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter>
+              {isCoachOrAdmin && (
+                <Button variant="outline" size="sm" className="w-full">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Invite Players
                 </Button>
               )}
-            </div>
-            
-            {isLoadingAnnouncements ? (
-              <div className="py-8 flex justify-center">
-                <LoadingSpinner size="md" />
-              </div>
-            ) : announcements.length > 0 ? (
-              <div className="space-y-3">
-                {announcements
-                  .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-                  .map(announcement => (
-                    <AnnouncementCard 
-                      key={announcement.id} 
-                      announcement={announcement}
-                    />
-                  ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 border rounded-lg">
-                <Megaphone className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-muted-foreground">No announcements</p>
-                {isCoach && (
-                  <Button 
-                    variant="link" 
-                    onClick={() => setLocation(`/teams/${teamId}/announcements/create`)}
-                  >
-                    Post an Announcement
-                  </Button>
-                )}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </main>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
       
-      <BottomNav />
+      {/* Event creation dialog would go here */}
+      <Dialog open={createEventDialogOpen} onOpenChange={setCreateEventDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Team Event</DialogTitle>
+            <DialogDescription>
+              Add a new event to the team calendar
+            </DialogDescription>
+          </DialogHeader>
+          {/* Event creation form would go here */}
+          <div className="py-6 text-center">
+            <p className="text-muted-foreground">
+              Event creation form will be implemented here
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Announcement creation dialog would go here */}
+      <Dialog open={createAnnouncementDialogOpen} onOpenChange={setCreateAnnouncementDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Announcement</DialogTitle>
+            <DialogDescription>
+              Post a new announcement to the team
+            </DialogDescription>
+          </DialogHeader>
+          {/* Announcement creation form would go here */}
+          <div className="py-6 text-center">
+            <p className="text-muted-foreground">
+              Announcement creation form will be implemented here
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
-}
-
-function EventCard({ event, onClick }: { event: TeamEvent; onClick: () => void }) {
-  const isPast = new Date(event.startDate) < new Date();
-  
-  return (
-    <Card 
-      className={`hover:border-primary/50 cursor-pointer transition-all ${isPast ? 'opacity-70' : ''}`} 
-      onClick={onClick}
-    >
-      <CardContent className="p-4">
-        <div className="flex gap-3">
-          <div className="min-w-[50px] text-center">
-            <div className="bg-primary/10 rounded-md py-1 px-2">
-              <div className="text-xs text-muted-foreground">
-                {format(new Date(event.startDate), 'MMM')}
-              </div>
-              <div className="text-lg font-bold">
-                {format(new Date(event.startDate), 'd')}
-              </div>
-            </div>
-          </div>
-          <div className="flex-1">
-            <h4 className="font-medium mb-1">{event.title}</h4>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                <span>{format(new Date(event.startDate), 'h:mm a')}</span>
-              </div>
-              {event.location && (
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <MapPin className="h-3 w-3" />
-                  <span>{event.location}</span>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="text-xs font-medium">
-            {isPast ? (
-              <span className="text-muted">Past</span>
-            ) : (
-              <span className="text-primary">{event.eventType}</span>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function AnnouncementCard({ announcement }: { announcement: TeamAnnouncement }) {
-  const timeAgo = formatDistance(
-    new Date(announcement.publishedAt),
-    new Date(),
-    { addSuffix: true }
-  );
-  
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h4 className="font-medium">{announcement.title}</h4>
-          <div className="text-xs text-muted-foreground">{timeAgo}</div>
-        </div>
-        <p className="text-sm mb-2">{announcement.content}</p>
-        <div className="flex items-center justify-between">
-          <div className="text-xs text-muted-foreground">
-            {announcement.importance && announcement.importance !== "normal" && (
-              <span className={`
-                font-medium 
-                ${announcement.importance === "high" ? "text-amber-600" : ""} 
-                ${announcement.importance === "urgent" ? "text-red-600" : ""}
-              `}>
-                {(announcement.importance || "normal").charAt(0).toUpperCase() + (announcement.importance || "normal").slice(1)} Priority
-              </span>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function MemberCard({ member }: { member: TeamMember }) {
-  // This would be expanded with real user data in the actual implementation
-  const getInitials = (position: string) => {
-    return position?.substring(0, 2).toUpperCase() || 'ME';
-  };
-  
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <Avatar>
-            <AvatarFallback>{getInitials(member.position || '')}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <h4 className="font-medium">Player Name</h4>
-            <div className="text-xs text-muted-foreground">
-              {member.position} {member.jerseyNumber ? `• #${member.jerseyNumber}` : ''}
-            </div>
-          </div>
-          <div className="text-xs font-medium bg-primary/10 py-1 px-2 rounded-full">
-            {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function StatCard({ 
-  title, 
-  value, 
-  icon 
-}: { 
-  title: string; 
-  value: number | string;
-  icon: React.ReactNode;
-}) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex flex-col items-center text-center">
-          <div className="mb-2 bg-primary/10 p-2 rounded-full">
-            {icon}
-          </div>
-          <div className="text-2xl font-bold mb-1">{value}</div>
-          <div className="text-xs text-muted-foreground">{title}</div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
