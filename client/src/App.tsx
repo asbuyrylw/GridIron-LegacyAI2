@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
+import { AchievementProvider } from "@/components/achievements/achievement-provider";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import OnboardingPage from "@/pages/onboarding-page";
@@ -78,8 +79,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router />
-        <Toaster />
+        <AchievementProvider>
+          <Router />
+          <Toaster />
+        </AchievementProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
