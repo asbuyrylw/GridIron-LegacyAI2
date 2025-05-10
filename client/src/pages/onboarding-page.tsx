@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
@@ -10,6 +10,8 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { OnboardingData } from "@shared/schema";
 import { StepIndicator } from "@/components/onboarding/step-indicator";
+import { useOnboardingProgress } from "@/hooks/use-onboarding-progress";
+import { ProgressRestoreDialog } from "@/components/onboarding/progress-restore-dialog";
 
 // Import step components
 import PersonalInfoForm from "@/components/onboarding/personal-info-form";
@@ -38,14 +40,44 @@ export default function OnboardingPage() {
   const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<Partial<OnboardingData>>({});
+  const [showProgressDialog, setShowProgressDialog] = useState(false);
+  
+  // Use our custom hook for saving and loading progress
+  const { 
+    savedProgress, 
+    saveProgress: saveProgressToServer, 
+    isLoading: isProgressLoading 
+  } = useOnboardingProgress();
+  
   const isLastStep = currentStep === steps.length - 1;
   const progress = Math.round((currentStep / (steps.length - 1)) * 100);
+
+  // Check for saved progress on mount
+  useEffect(() => {
+    if (savedProgress?.exists && !showProgressDialog) {
+      setShowProgressDialog(true);
+    }
+  }, [savedProgress]);
 
   // Redirect to home if onboarding is already completed
   if (user?.athlete?.onboardingCompleted) {
     setLocation("/");
     return null;
   }
+  
+  // Restore progress handler
+  const handleRestoreProgress = () => {
+    if (savedProgress?.data) {
+      setFormData(savedProgress.data);
+      setCurrentStep(savedProgress.step);
+    }
+    setShowProgressDialog(false);
+  };
+  
+  // Start fresh handler
+  const handleStartFresh = () => {
+    setShowProgressDialog(false);
+  };
 
   const submitOnboardingMutation = useMutation({
     mutationFn: async (data: Partial<OnboardingData>) => {
@@ -102,15 +134,15 @@ export default function OnboardingPage() {
     }
     
     try {
-      await apiRequest("POST", `/api/athlete/${user.athlete.id}/onboarding/progress`, {
-        step: currentStep,
-        data: formData
-      });
+      await saveProgressToServer(currentStep, formData);
       
       toast({
         title: "Progress Saved",
         description: "You can continue your onboarding later",
       });
+      
+      // Wait a moment to show the toast before redirecting
+      setTimeout(() => setLocation("/"), 1500);
     } catch (error: any) {
       toast({
         title: "Error Saving Progress",
@@ -122,6 +154,16 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      {/* Progress Restore Dialog */}
+      <ProgressRestoreDialog 
+        open={showProgressDialog}
+        onRestore={handleRestoreProgress}
+        onStartFresh={handleStartFresh}
+        timestamp={savedProgress?.timestamp}
+        step={savedProgress?.step}
+        totalSteps={steps.length}
+      />
+      
       <div className="max-w-3xl mx-auto">
         <Card className="shadow-lg">
           <CardHeader className="text-center border-b pb-6">
