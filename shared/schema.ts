@@ -145,6 +145,24 @@ export const combineMetrics = pgTable("combine_metrics", {
   dateRecorded: timestamp("date_recorded").defaultNow().notNull(),
 });
 
+// Exercise library table with categorized football-specific exercises
+export const exerciseLibrary = pgTable("exercise_library", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(), // Speed, Strength, Agility, Position-Specific, Recovery, etc.
+  difficulty: text("difficulty").notNull(), // Beginner, Intermediate, Advanced
+  muscleGroups: json("muscle_groups").notNull(), // Array of targeted muscle groups
+  equipmentNeeded: json("equipment_needed").default('[]'), // Array of required equipment
+  videoUrl: text("video_url"), // Optional demonstration video
+  imageUrl: text("image_url"), // Optional image demonstration
+  instructions: json("instructions").notNull(), // Array of step-by-step instructions
+  tips: json("tips").default('[]'), // Array of coaching tips
+  positionSpecific: boolean("position_specific").default(false),
+  positions: json("positions").default('[]'), // Array of football positions this exercise is good for
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const trainingPlans = pgTable("training_plans", {
   id: serial("id").primaryKey(),
   athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
@@ -155,6 +173,28 @@ export const trainingPlans = pgTable("training_plans", {
   completed: boolean("completed").default(false),
   coachTip: text("coach_tip"),
   active: boolean("active").default(true), // Whether this plan is currently active
+  duration: integer("duration"), // Estimated duration in minutes
+  difficultyLevel: text("difficulty_level"), // Easy, Medium, Hard
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Table to track individual workout sessions
+export const workoutSessions = pgTable("workout_sessions", {
+  id: serial("id").primaryKey(),
+  athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
+  trainingPlanId: integer("training_plan_id").references(() => trainingPlans.id),
+  date: date("date").notNull(),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time"),
+  duration: integer("duration"), // In minutes
+  rating: integer("rating"), // Athlete's 1-5 rating of the workout
+  perceivedExertion: integer("perceived_exertion"), // 1-10 scale
+  notes: text("notes"),
+  location: text("location"),
+  completed: boolean("completed").default(false),
+  exercisesCompleted: json("exercises_completed").default('[]'), // Array of completed exercise details
+  energyLevel: integer("energy_level"), // 1-10 scale
+  weatherConditions: text("weather_conditions"),
 });
 
 export const performanceInsights = pgTable("performance_insights", {
