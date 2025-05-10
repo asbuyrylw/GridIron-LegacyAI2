@@ -12,7 +12,10 @@ import {
   achievements, type Achievement, type InsertAchievement,
   athleteAchievements, type AthleteAchievement, type InsertAthleteAchievement,
   leaderboards, type Leaderboard, type InsertLeaderboard,
-  leaderboardEntries, type LeaderboardEntry, type InsertLeaderboardEntry
+  leaderboardEntries, type LeaderboardEntry, type InsertLeaderboardEntry,
+  strengthConditioning, type StrengthConditioning, type InsertStrengthConditioning,
+  nutritionInfo, type NutritionInfo, type InsertNutritionInfo,
+  recruitingPreferences, type RecruitingPreferences, type InsertRecruitingPreferences
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -417,6 +420,132 @@ export class MemStorage implements IStorage {
     const updatedPlan: NutritionPlan = { ...plan, active };
     this.nutritionPlansMap.set(id, updatedPlan);
     return updatedPlan;
+  }
+  
+  // Strength & Conditioning Methods
+  async getStrengthConditioning(athleteId: number): Promise<StrengthConditioning | undefined> {
+    // Find the strength & conditioning profile for this athlete
+    for (const sc of this.strengthConditioningMap.values()) {
+      if (sc.athleteId === athleteId) {
+        return sc;
+      }
+    }
+    return undefined;
+  }
+  
+  async createStrengthConditioning(insertSC: InsertStrengthConditioning): Promise<StrengthConditioning> {
+    const id = this.currentStrengthConditioningId++;
+    const updatedAt = new Date();
+    
+    const sc: StrengthConditioning = {
+      ...insertSC,
+      id,
+      updatedAt
+    };
+    
+    this.strengthConditioningMap.set(id, sc);
+    return sc;
+  }
+  
+  async updateStrengthConditioning(id: number, scUpdate: Partial<InsertStrengthConditioning>): Promise<StrengthConditioning | undefined> {
+    const sc = this.strengthConditioningMap.get(id);
+    
+    if (!sc) {
+      return undefined;
+    }
+    
+    const updatedSC: StrengthConditioning = { 
+      ...sc, 
+      ...scUpdate,
+      updatedAt: new Date()
+    };
+    
+    this.strengthConditioningMap.set(id, updatedSC);
+    return updatedSC;
+  }
+  
+  // Nutrition Info Methods
+  async getNutritionInfo(athleteId: number): Promise<NutritionInfo | undefined> {
+    // Find the nutrition info for this athlete
+    for (const ni of this.nutritionInfoMap.values()) {
+      if (ni.athleteId === athleteId) {
+        return ni;
+      }
+    }
+    return undefined;
+  }
+  
+  async createNutritionInfo(insertNI: InsertNutritionInfo): Promise<NutritionInfo> {
+    const id = this.currentNutritionInfoId++;
+    const updatedAt = new Date();
+    
+    const ni: NutritionInfo = {
+      ...insertNI,
+      id,
+      updatedAt
+    };
+    
+    this.nutritionInfoMap.set(id, ni);
+    return ni;
+  }
+  
+  async updateNutritionInfo(id: number, niUpdate: Partial<InsertNutritionInfo>): Promise<NutritionInfo | undefined> {
+    const ni = this.nutritionInfoMap.get(id);
+    
+    if (!ni) {
+      return undefined;
+    }
+    
+    const updatedNI: NutritionInfo = { 
+      ...ni, 
+      ...niUpdate,
+      updatedAt: new Date()
+    };
+    
+    this.nutritionInfoMap.set(id, updatedNI);
+    return updatedNI;
+  }
+  
+  // Recruiting Preferences Methods
+  async getRecruitingPreferences(athleteId: number): Promise<RecruitingPreferences | undefined> {
+    // Find the recruiting preferences for this athlete
+    for (const rp of this.recruitingPreferencesMap.values()) {
+      if (rp.athleteId === athleteId) {
+        return rp;
+      }
+    }
+    return undefined;
+  }
+  
+  async createRecruitingPreferences(insertRP: InsertRecruitingPreferences): Promise<RecruitingPreferences> {
+    const id = this.currentRecruitingPreferencesId++;
+    const updatedAt = new Date();
+    
+    const rp: RecruitingPreferences = {
+      ...insertRP,
+      id,
+      updatedAt
+    };
+    
+    this.recruitingPreferencesMap.set(id, rp);
+    return rp;
+  }
+  
+  async updateRecruitingPreferences(id: number, rpUpdate: Partial<InsertRecruitingPreferences>): Promise<RecruitingPreferences | undefined> {
+    const rp = this.recruitingPreferencesMap.get(id);
+    
+    if (!rp) {
+      return undefined;
+    }
+    
+    const updatedRP: RecruitingPreferences = { 
+      ...rp, 
+      ...rpUpdate,
+      updatedAt: new Date()
+    };
+    
+    this.recruitingPreferencesMap.set(id, updatedRP);
+    return updatedRP;
   }
 
   // Meal Log Methods
