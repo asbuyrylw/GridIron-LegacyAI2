@@ -241,6 +241,8 @@ export class MemStorage implements IStorage {
     this.usersMap = new Map();
     this.athletesMap = new Map();
     this.combineMetricsMap = new Map();
+    this.exerciseLibraryMap = new Map();
+    this.workoutSessionsMap = new Map();
     this.strengthConditioningMap = new Map();
     this.nutritionInfoMap = new Map();
     this.recruitingPreferencesMap = new Map();
@@ -265,6 +267,8 @@ export class MemStorage implements IStorage {
     this.currentUserId = 1;
     this.currentAthleteId = 1;
     this.currentCombineMetricsId = 1;
+    this.currentExerciseLibraryId = 1;
+    this.currentWorkoutSessionId = 1;
     this.currentStrengthConditioningId = 1;
     this.currentNutritionInfoId = 1;
     this.currentRecruitingPreferencesId = 1;
@@ -435,6 +439,110 @@ export class MemStorage implements IStorage {
     const updatedPlan: TrainingPlan = { ...plan, ...planUpdate };
     this.trainingPlansMap.set(id, updatedPlan);
     return updatedPlan;
+  }
+  
+  async getTrainingPlanById(id: number): Promise<TrainingPlan | undefined> {
+    return this.trainingPlansMap.get(id);
+  }
+  
+  // Exercise Library Methods
+  async getExercises(category?: string, difficulty?: string, position?: string): Promise<ExerciseLibrary[]> {
+    let exercises = Array.from(this.exerciseLibraryMap.values());
+    
+    if (category) {
+      exercises = exercises.filter(ex => ex.category === category);
+    }
+    
+    if (difficulty) {
+      exercises = exercises.filter(ex => ex.difficulty === difficulty);
+    }
+    
+    if (position) {
+      exercises = exercises.filter(ex => {
+        // Check if exercise is position-specific and the position is in the positions array
+        if (ex.positionSpecific) {
+          const positions = ex.positions as string[];
+          return positions.includes(position);
+        }
+        return false;
+      });
+    }
+    
+    return exercises;
+  }
+  
+  async getExerciseById(id: number): Promise<ExerciseLibrary | undefined> {
+    return this.exerciseLibraryMap.get(id);
+  }
+  
+  async createExercise(insertExercise: InsertExerciseLibrary): Promise<ExerciseLibrary> {
+    const id = this.currentExerciseLibraryId++;
+    const createdAt = new Date();
+    const exercise: ExerciseLibrary = { 
+      ...insertExercise, 
+      id, 
+      createdAt
+    };
+    this.exerciseLibraryMap.set(id, exercise);
+    return exercise;
+  }
+  
+  async updateExercise(id: number, updates: Partial<InsertExerciseLibrary>): Promise<ExerciseLibrary | undefined> {
+    const existingExercise = this.exerciseLibraryMap.get(id);
+    if (!existingExercise) return undefined;
+    
+    const updatedExercise: ExerciseLibrary = {
+      ...existingExercise,
+      ...updates
+    };
+    
+    this.exerciseLibraryMap.set(id, updatedExercise);
+    return updatedExercise;
+  }
+  
+  // Workout Session Methods
+  async getWorkoutSessions(athleteId: number): Promise<WorkoutSession[]> {
+    return Array.from(this.workoutSessionsMap.values())
+      .filter(session => session.athleteId === athleteId)
+      .sort((a, b) => {
+        // Sort by date, most recent first
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
+  }
+  
+  async getWorkoutSessionById(id: number): Promise<WorkoutSession | undefined> {
+    return this.workoutSessionsMap.get(id);
+  }
+  
+  async createWorkoutSession(insertSession: InsertWorkoutSession): Promise<WorkoutSession> {
+    const id = this.currentWorkoutSessionId++;
+    const session: WorkoutSession = {
+      ...insertSession,
+      id,
+      endTime: insertSession.endTime ?? null,
+      duration: insertSession.duration ?? null,
+      rating: insertSession.rating ?? null,
+      perceivedExertion: insertSession.perceivedExertion ?? null,
+      notes: insertSession.notes ?? null,
+      location: insertSession.location ?? null,
+      energyLevel: insertSession.energyLevel ?? null,
+      weatherConditions: insertSession.weatherConditions ?? null
+    };
+    this.workoutSessionsMap.set(id, session);
+    return session;
+  }
+  
+  async updateWorkoutSession(id: number, updates: Partial<InsertWorkoutSession>): Promise<WorkoutSession | undefined> {
+    const existingSession = this.workoutSessionsMap.get(id);
+    if (!existingSession) return undefined;
+    
+    const updatedSession: WorkoutSession = {
+      ...existingSession,
+      ...updates
+    };
+    
+    this.workoutSessionsMap.set(id, updatedSession);
+    return updatedSession;
   }
   
   // Performance Insights Methods
