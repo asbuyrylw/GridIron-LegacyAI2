@@ -4,7 +4,9 @@ import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { ShareButton } from "@/components/social/share-button";
 import { Award, ChevronRight } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 /**
  * A simple achievement summary card that shows total progress and 
@@ -13,6 +15,7 @@ import { Award, ChevronRight } from "lucide-react";
 export function AchievementSummary() {
   const { achievements } = useAchievementProgress();
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
   
   // Get the total points
   const totalPoints = achievements
@@ -43,7 +46,15 @@ export function AchievementSummary() {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex justify-between items-center">
-          <span>Your Achievements</span>
+          <div className="flex items-center gap-2">
+            <span>Your Achievements</span>
+            <ShareButton 
+              title={`${user?.firstName || 'Player'}'s Football Achievements`}
+              text={`I've unlocked ${completedCount} achievements and earned ${totalPoints} points on GridIron LegacyAI! 🏈`}
+              size="icon"
+              variant="ghost"
+            />
+          </div>
           <span className="text-amber-600 font-bold">{totalPoints} pts</span>
         </CardTitle>
       </CardHeader>

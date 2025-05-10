@@ -143,9 +143,16 @@ export default function HomePage() {
             <div className="dashboard-card">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold">Recruiting Profile</h2>
-                <button className="text-sm font-medium text-primary flex items-center">
-                  Update Profile <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </button>
+                <div className="flex items-center gap-2">
+                  <ShareButton
+                    title={`${user?.firstName || 'Athlete'}'s Football Recruiting Profile`}
+                    text={`Check out my athlete profile on GridIron LegacyAI! ${user?.athlete?.position || 'Football player'} with ${user?.athlete?.yearsExperience || '0'} years experience.`}
+                    size="sm"
+                  />
+                  <button className="text-sm font-medium text-primary flex items-center">
+                    Update Profile <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  </button>
+                </div>
               </div>
               <RecruitingProfile />
             </div>
