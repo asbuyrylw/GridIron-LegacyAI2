@@ -1,133 +1,172 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ExerciseLibrary, WorkoutSession, InsertWorkoutSession } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-// Exercise Library Hooks
-export function useExercises(filters?: { 
+/**
+ * Hook to fetch exercise library entries with optional filters
+ */
+export function useExercises(filters?: {
   category?: string;
   difficulty?: string;
   position?: string;
 }) {
-  const queryParams = filters 
-    ? `?${Object.entries(filters)
-        .filter(([_, value]) => value)
-        .map(([key, value]) => `${key}=${encodeURIComponent(value as string)}`)
-        .join('&')}`
-    : '';
-
+  const queryKey = ["/api/exercises"];
+  
+  // Add filters to the query key if they exist
+  if (filters) {
+    if (filters.category) queryKey.push(`category=${filters.category}`);
+    if (filters.difficulty) queryKey.push(`difficulty=${filters.difficulty}`);
+    if (filters.position) queryKey.push(`position=${filters.position}`);
+  }
+  
   return useQuery<ExerciseLibrary[]>({
-    queryKey: ['/api/exercises', filters],
-    queryFn: async () => {
-      const res = await fetch(`/api/exercises${queryParams}`);
-      if (!res.ok) {
-        throw new Error('Failed to fetch exercises');
-      }
-      return res.json();
-    },
+    queryKey,
+    enabled: true,
   });
 }
 
-export function useExercise(id: number) {
+/**
+ * Hook to fetch a single exercise by ID
+ */
+export function useExercise(id: string | number) {
   return useQuery<ExerciseLibrary>({
-    queryKey: ['/api/exercises', id],
-    queryFn: async () => {
-      const res = await fetch(`/api/exercises/${id}`);
-      if (!res.ok) {
-        throw new Error('Failed to fetch exercise');
-      }
-      return res.json();
-    },
+    queryKey: [`/api/exercises/${id}`],
     enabled: !!id,
   });
 }
 
-// Workout Sessions Hooks
+/**
+ * Hook to fetch workout sessions for an athlete
+ */
 export function useWorkoutSessions(athleteId: number) {
   return useQuery<WorkoutSession[]>({
-    queryKey: ['/api/athlete', athleteId, 'workouts'],
-    queryFn: async () => {
-      const res = await fetch(`/api/athlete/${athleteId}/workouts`);
-      if (!res.ok) {
-        throw new Error('Failed to fetch workout sessions');
-      }
-      return res.json();
-    },
+    queryKey: [`/api/athlete/${athleteId}/workout-sessions`],
     enabled: !!athleteId,
   });
 }
 
-export function useWorkoutSession(athleteId: number, workoutId: number) {
+/**
+ * Hook to fetch a single workout session by ID
+ */
+export function useWorkoutSession(athleteId: number, sessionId: number) {
   return useQuery<WorkoutSession>({
-    queryKey: ['/api/athlete', athleteId, 'workouts', workoutId],
-    queryFn: async () => {
-      const res = await fetch(`/api/athlete/${athleteId}/workouts/${workoutId}`);
-      if (!res.ok) {
-        throw new Error('Failed to fetch workout session');
-      }
-      return res.json();
-    },
-    enabled: !!athleteId && !!workoutId,
+    queryKey: [`/api/athlete/${athleteId}/workout-sessions/${sessionId}`],
+    enabled: !!athleteId && !!sessionId,
   });
 }
 
+/**
+ * Hook to create a new workout session
+ */
 export function useCreateWorkoutSession(athleteId: number) {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
-
+  
   return useMutation({
-    mutationFn: async (workout: Omit<InsertWorkoutSession, 'athleteId'>) => {
-      const res = await apiRequest("POST", `/api/athlete/${athleteId}/workouts`, workout);
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || 'Failed to create workout session');
-      }
+    mutationFn: async (workoutData: Omit<InsertWorkoutSession, 'athleteId'>) => {
+      const data = {
+        ...workoutData,
+        athleteId
+      };
+      
+      const res = await apiRequest(
+        "POST", 
+        `/api/athlete/${athleteId}/workout-sessions`, 
+        data
+      );
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/athlete', athleteId, 'workouts'] });
+      // Invalidate workout sessions query to refresh the list
+      queryClient.invalidateQueries({
+        queryKey: [`/api/athlete/${athleteId}/workout-sessions`]
+      });
+      
       toast({
         title: "Workout saved",
-        description: "Your workout session has been recorded successfully.",
+        description: "Your workout has been successfully recorded",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error saving workout",
+        title: "Failed to save workout",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
-    },
+    }
   });
 }
 
-export function useUpdateWorkoutSession(athleteId: number, workoutId: number) {
-  const queryClient = useQueryClient();
+/**
+ * Hook to update an existing workout session
+ */
+export function useUpdateWorkoutSession(athleteId: number, sessionId: number) {
   const { toast } = useToast();
-
+  
   return useMutation({
-    mutationFn: async (updates: Partial<InsertWorkoutSession>) => {
-      const res = await apiRequest("PATCH", `/api/athlete/${athleteId}/workouts/${workoutId}`, updates);
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || 'Failed to update workout session');
-      }
+    mutationFn: async (workoutData: Partial<WorkoutSession>) => {
+      const res = await apiRequest(
+        "PATCH", 
+        `/api/athlete/${athleteId}/workout-sessions/${sessionId}`, 
+        workoutData
+      );
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/athlete', athleteId, 'workouts', workoutId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/athlete', athleteId, 'workouts'] });
+      // Invalidate both the list and the specific workout session
+      queryClient.invalidateQueries({
+        queryKey: [`/api/athlete/${athleteId}/workout-sessions`]
+      });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/athlete/${athleteId}/workout-sessions/${sessionId}`]
+      });
+      
       toast({
         title: "Workout updated",
-        description: "Your workout session has been updated successfully.",
+        description: "Your workout has been successfully updated",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error updating workout",
+        title: "Failed to update workout",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
+      });
+    }
+  });
+}
+
+/**
+ * Hook to delete a workout session
+ */
+export function useDeleteWorkoutSession(athleteId: number) {
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async (sessionId: number) => {
+      const res = await apiRequest(
+        "DELETE", 
+        `/api/athlete/${athleteId}/workout-sessions/${sessionId}`
+      );
+      return res.ok;
+    },
+    onSuccess: () => {
+      // Invalidate workout sessions query to refresh the list
+      queryClient.invalidateQueries({
+        queryKey: [`/api/athlete/${athleteId}/workout-sessions`]
+      });
+      
+      toast({
+        title: "Workout deleted",
+        description: "The workout has been successfully removed",
       });
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete workout",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 }
