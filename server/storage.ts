@@ -65,6 +65,17 @@ export interface IStorage {
   getCoachMessages(athleteId: number): Promise<CoachMessage[]>;
   createCoachMessage(message: InsertCoachMessage): Promise<CoachMessage>;
   markMessageAsRead(id: number): Promise<CoachMessage | undefined>;
+  
+  // Achievement Methods
+  getAchievements(): Promise<Achievement[]>;
+  getAchievement(id: number): Promise<Achievement | undefined>;
+  createAchievement(achievement: InsertAchievement): Promise<Achievement>;
+  
+  // Athlete Achievement Methods
+  getAthleteAchievements(athleteId: number): Promise<AthleteAchievement[]>;
+  getAthleteAchievement(athleteId: number, achievementId: number): Promise<AthleteAchievement | undefined>;
+  createAthleteAchievement(athleteAchievement: InsertAthleteAchievement): Promise<AthleteAchievement>;
+  updateAthleteAchievement(id: number, updates: Partial<InsertAthleteAchievement>): Promise<AthleteAchievement | undefined>;
 
   // Nutrition Plan Methods
   getNutritionPlans(athleteId: number): Promise<NutritionPlan[]>;
@@ -743,17 +754,12 @@ export class MemStorage implements IStorage {
   }
 
   // Achievement Methods
-  async getAchievements(category?: string): Promise<Achievement[]> {
-    let achievements = Array.from(this.achievementsMap.values());
-    
-    if (category) {
-      achievements = achievements.filter(achievement => achievement.category === category);
-    }
-    
+  async getAchievements(): Promise<Achievement[]> {
+    const achievements = Array.from(this.achievementsMap.values());
     return achievements.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  async getAchievementById(id: number): Promise<Achievement | undefined> {
+  async getAchievement(id: number): Promise<Achievement | undefined> {
     return this.achievementsMap.get(id);
   }
 
@@ -780,13 +786,20 @@ export class MemStorage implements IStorage {
         if (a.completed && !b.completed) return -1;
         if (!a.completed && b.completed) return 1;
         
-        // Then by earnedAt date (most recent first)
-        return b.earnedAt.getTime() - a.earnedAt.getTime();
+        // Then by earnedAt date (most recent first) if available
+        if (a.earnedAt && b.earnedAt) {
+          return b.earnedAt.getTime() - a.earnedAt.getTime();
+        }
+        return 0;
       });
   }
 
-  async getAthleteAchievementById(id: number): Promise<AthleteAchievement | undefined> {
-    return this.athleteAchievementsMap.get(id);
+  async getAthleteAchievement(athleteId: number, achievementId: number): Promise<AthleteAchievement | undefined> {
+    // Find the athlete achievement with the specified athleteId and achievementId
+    const athleteAchievements = Array.from(this.athleteAchievementsMap.values());
+    return athleteAchievements.find(aa => 
+      aa.athleteId === athleteId && aa.achievementId === achievementId
+    );
   }
 
   async createAthleteAchievement(insertAthleteAchievement: InsertAthleteAchievement): Promise<AthleteAchievement> {
@@ -804,16 +817,28 @@ export class MemStorage implements IStorage {
     return athleteAchievement;
   }
 
-  async updateAthleteAchievementProgress(id: number, progress: number, completed?: boolean): Promise<AthleteAchievement | undefined> {
+  async updateAthleteAchievement(id: number, updates: Partial<InsertAthleteAchievement>): Promise<AthleteAchievement | undefined> {
     const athleteAchievement = this.athleteAchievementsMap.get(id);
     if (!athleteAchievement) return undefined;
     
-    const isNewlyCompleted = completed ?? (progress >= 100);
+    // If progress is provided and reaches 100%, automatically set completed to true if not specified
+    if (updates.progress !== undefined && updates.progress >= 100 && updates.completed === undefined) {
+      updates.completed = true;
+    }
+    
+    // If completed is true and earnedAt isn't set, set it to now
+    if (updates.completed === true && !athleteAchievement.earnedAt) {
+      updates.earnedAt = new Date();
+    }
+    
+    // Ensure progress is between 0-100 if provided
+    if (updates.progress !== undefined) {
+      updates.progress = Math.min(Math.max(0, updates.progress), 100);
+    }
     
     const updatedAthleteAchievement: AthleteAchievement = {
       ...athleteAchievement,
-      progress: Math.min(Math.max(0, progress), 100), // Ensure progress is between 0-100
-      completed: isNewlyCompleted
+      ...updates
     };
     
     this.athleteAchievementsMap.set(id, updatedAthleteAchievement);
