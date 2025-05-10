@@ -1872,12 +1872,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const analysisResult = await analyzeAthleteMetrics(metrics, position);
         
-        // Store the insights in the database
+        // Store the insights in the database with our updated fields
         const updatedInsights = await storage.updatePerformanceInsights(athleteId, {
           strengths: analysisResult.strengths,
           weaknesses: analysisResult.weaknesses,
           recommendations: analysisResult.recommendations,
-          nextLevelRequirements: analysisResult.nextLevelRequirements,
+          performanceTrend: analysisResult.performanceTrend || "stable",
+          positionRanking: analysisResult.positionRanking || `Average ${position} with potential to improve`,
+          improvementAreas: analysisResult.improvementAreas || [],
+          recentAchievements: analysisResult.recentAchievements || [],
           lastUpdated: new Date()
         });
         
