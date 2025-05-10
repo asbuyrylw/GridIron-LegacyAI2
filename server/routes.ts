@@ -1720,6 +1720,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // -- Performance Insights Routes --
+  
+  // Get current performance insights for an athlete
+  app.get("/api/athlete/:id/performance-insights", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own insights unless profile is public
+      if (athlete.userId !== req.user.id && !athlete.profileVisibility) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const insights = await storage.getPerformanceInsights(athleteId);
+      
+      if (!insights) {
+        return res.status(404).json({ message: "No insights found" });
+      }
+      
+      res.json(insights);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Generate new performance insights for an athlete
+  app.post("/api/athlete/:id/generate-insights", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow generating insights for own profile
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Get the athlete's metrics
+      const metrics = await storage.getAthleteMetrics(athleteId);
+      
+      if (!metrics || metrics.length === 0) {
+        return res.status(400).json({ message: "No metrics available for analysis" });
+      }
+      
+      // Use OpenAI to analyze the metrics
+      const { position } = req.body;
+      
+      try {
+        const analysisResult = await analyzeAthleteMetrics(metrics, position);
+        
+        // Store the insights in the database
+        const updatedInsights = await storage.updatePerformanceInsights(athleteId, {
+          strengths: analysisResult.strengths,
+          weaknesses: analysisResult.weaknesses,
+          recommendations: analysisResult.recommendations,
+          nextLevelRequirements: analysisResult.nextLevelRequirements,
+          lastUpdated: new Date()
+        });
+        
+        res.json(updatedInsights);
+      } catch (error) {
+        console.error("Error generating insights:", error);
+        return res.status(500).json({ message: "Failed to generate insights" });
+      }
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   // -- Team Management Routes --
   
   // Get all teams

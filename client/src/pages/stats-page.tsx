@@ -1,5 +1,5 @@
 import { Header } from "@/components/layout/header";
-import { BottomNavigation } from "@/components/layout/bottom-navigation";
+import { BottomNav } from "@/components/layout/bottom-nav";
 import { CombineMetricsForm } from "@/components/training/combine-metrics-form";
 import { PerformanceTrends } from "@/components/stats/performance-trends";
 import { PositionPercentile } from "@/components/stats/position-percentile";
@@ -140,7 +140,7 @@ export default function StatsPage() {
         </Tabs>
       </main>
       
-      <BottomNavigation />
+      <BottomNav />
     </div>
   );
 }
