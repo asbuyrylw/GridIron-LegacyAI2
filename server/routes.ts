@@ -33,7 +33,8 @@ import {
   insertStrengthConditioningSchema,
   insertNutritionInfoSchema,
   insertRecruitingPreferencesSchema,
-  onboardingSchema
+  onboardingSchema,
+  type InsertAthleteAchievement
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -1298,6 +1299,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+  
+  // Create athlete achievement (award an achievement to an athlete)
+  app.post("/api/athlete/:id/achievements", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      if (isNaN(athleteId)) {
+        return res.status(400).json({ message: "Invalid athlete ID" });
+      }
+      
+      // Verify the athlete exists
+      const athlete = await storage.getAthlete(athleteId);
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only coaches or admins can award achievements or athletes for themselves
+      const isOwnAthlete = athlete.userId === req.user.id;
+      const isAdminOrCoach = req.user.role === 'admin' || req.user.role === 'coach';
+      
+      if (!isOwnAthlete && !isAdminOrCoach) {
+        return res.status(403).json({ message: "Not authorized to award achievements for this athlete" });
+      }
+      
+      // Validate request body
+      const achievementId = parseInt(req.body.achievementId);
+      if (isNaN(achievementId)) {
+        return res.status(400).json({ message: "Invalid achievement ID" });
+      }
+      
+      // Check if the achievement exists
+      const achievement = await storage.getAchievement(achievementId);
+      if (!achievement) {
+        return res.status(404).json({ message: "Achievement not found" });
+      }
+      
+      // Check if the athlete already has this achievement
+      const existingAchievement = await storage.getAthleteAchievement(athleteId, achievementId);
+      if (existingAchievement) {
+        return res.status(409).json({ message: "Athlete already has this achievement" });
+      }
+      
+      // Create new athlete achievement
+      const newAthleteAchievement = await storage.createAthleteAchievement({
+        athleteId,
+        achievementId,
+        progress: req.body.progress || 0,
+        completed: req.body.completed || false,
+        earnedAt: req.body.completed ? new Date() : null
+      });
+      
+      res.status(201).json(newAthleteAchievement);
+    } catch (error) {
+      next(error);
+    }
+  });
 
   // Update achievement progress
   app.patch("/api/athlete/achievements/:id", async (req, res, next) => {
@@ -1307,21 +1367,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const achievementId = parseInt(req.params.id);
-      const { progress, completed } = req.body;
-      
-      // Validate progress is a number between 0-100
-      if (typeof progress !== "number" || progress < 0 || progress > 100) {
-        return res.status(400).json({ message: "Progress must be a number between 0 and 100" });
+      if (isNaN(achievementId)) {
+        return res.status(400).json({ message: "Invalid achievement ID" });
       }
       
-      const updatedAchievement = await storage.updateAthleteAchievementProgress(
-        achievementId,
-        progress,
-        completed
+      const { progress, completed } = req.body;
+      const updates: Partial<InsertAthleteAchievement> = {};
+      
+      // Validate and add progress if provided
+      if (progress !== undefined) {
+        if (typeof progress !== "number" || progress < 0 || progress > 100) {
+          return res.status(400).json({ message: "Progress must be a number between 0 and 100" });
+        }
+        updates.progress = progress;
+      }
+      
+      // Add completed if provided
+      if (completed !== undefined) {
+        updates.completed = completed;
+      }
+      
+      // Get the athlete achievement to verify ownership
+      const athlete = await storage.getAthleteByUserId(req.user.id);
+      if (!athlete) {
+        return res.status(403).json({ message: "Not authorized to update this achievement" });
+      }
+      
+      // Verify this achievement belongs to the authenticated athlete
+      const achievementToUpdate = await storage.getAthleteAchievement(athlete.id, achievementId);
+      if (!achievementToUpdate) {
+        return res.status(404).json({ message: "Achievement not found" });
+      }
+      
+      const updatedAchievement = await storage.updateAthleteAchievement(
+        achievementToUpdate.id,
+        updates
       );
       
       if (!updatedAchievement) {
-        return res.status(404).json({ message: "Achievement not found" });
+        return res.status(404).json({ message: "Failed to update achievement" });
       }
       
       res.json(updatedAchievement);
