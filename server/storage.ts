@@ -2,7 +2,9 @@ import {
   users, type User, type InsertUser, 
   athletes, type Athlete, type InsertAthlete,
   combineMetrics, type CombineMetric, type InsertCombineMetric,
+  exerciseLibrary, type ExerciseLibrary, type InsertExerciseLibrary,
   trainingPlans, type TrainingPlan, type InsertTrainingPlan,
+  workoutSessions, type WorkoutSession, type InsertWorkoutSession,
   performanceInsights, type PerformanceInsights, type InsertPerformanceInsights,
   coachMessages, type CoachMessage, type InsertCoachMessage,
   nutritionPlans, type NutritionPlan, type InsertNutritionPlan,
@@ -69,11 +71,24 @@ export interface IStorage {
   createRecruitingPreferences(recruitingPreferences: InsertRecruitingPreferences): Promise<RecruitingPreferences>;
   updateRecruitingPreferences(id: number, recruitingPreferences: Partial<InsertRecruitingPreferences>): Promise<RecruitingPreferences | undefined>;
   
+  // Exercise Library Methods
+  getExercises(category?: string, difficulty?: string, position?: string): Promise<ExerciseLibrary[]>;
+  getExerciseById(id: number): Promise<ExerciseLibrary | undefined>;
+  createExercise(exercise: InsertExerciseLibrary): Promise<ExerciseLibrary>;
+  updateExercise(id: number, exercise: Partial<InsertExerciseLibrary>): Promise<ExerciseLibrary | undefined>;
+  
   // Training Plan Methods
   getTrainingPlans(athleteId: number): Promise<TrainingPlan[]>;
   getTrainingPlanByDate(athleteId: number, date: Date): Promise<TrainingPlan | undefined>;
+  getTrainingPlanById(id: number): Promise<TrainingPlan | undefined>;
   createTrainingPlan(plan: InsertTrainingPlan): Promise<TrainingPlan>;
   updateTrainingPlan(id: number, plan: Partial<InsertTrainingPlan>): Promise<TrainingPlan | undefined>;
+  
+  // Workout Session Methods
+  getWorkoutSessions(athleteId: number): Promise<WorkoutSession[]>;
+  getWorkoutSessionById(id: number): Promise<WorkoutSession | undefined>;
+  createWorkoutSession(session: InsertWorkoutSession): Promise<WorkoutSession>;
+  updateWorkoutSession(id: number, session: Partial<InsertWorkoutSession>): Promise<WorkoutSession | undefined>;
   
   // Coach Messages Methods
   getCoachMessages(athleteId: number): Promise<CoachMessage[]>;
@@ -172,6 +187,8 @@ export class MemStorage implements IStorage {
   private usersMap: Map<number, User>;
   private athletesMap: Map<number, Athlete>;
   private combineMetricsMap: Map<number, CombineMetric>;
+  private exerciseLibraryMap: Map<number, ExerciseLibrary>;
+  private workoutSessionsMap: Map<number, WorkoutSession>;
   private strengthConditioningMap: Map<number, StrengthConditioning>;
   private nutritionInfoMap: Map<number, NutritionInfo>;
   private recruitingPreferencesMap: Map<number, RecruitingPreferences>;
@@ -196,6 +213,8 @@ export class MemStorage implements IStorage {
   currentUserId: number;
   currentAthleteId: number;
   currentCombineMetricsId: number;
+  currentExerciseLibraryId: number;
+  currentWorkoutSessionId: number;
   currentStrengthConditioningId: number;
   currentNutritionInfoId: number;
   currentRecruitingPreferencesId: number;
