@@ -51,7 +51,6 @@ async function createTestUser() {
     // Create sample metrics
     const metrics = await storage.createCombineMetrics({
       athleteId: athlete.id,
-      dateRecorded: new Date(),
       fortyYard: 4.8,
       tenYardSplit: 1.6,
       shuttle: 4.2,
@@ -220,9 +219,7 @@ async function createTestUser() {
   }
 }
 
-// Only run directly
-if (require.main === module) {
-  createTestUser().then(() => process.exit(0));
-}
+// No need for direct execution check in ES modules
+// The function will be called from index.ts
 
 export { createTestUser };
