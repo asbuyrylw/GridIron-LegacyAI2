@@ -163,7 +163,10 @@ export const performanceInsights = pgTable("performance_insights", {
   strengths: json("strengths").notNull(), // Array of strings
   weaknesses: json("weaknesses").notNull(), // Array of strings
   recommendations: json("recommendations").notNull(), // Array of strings
-  nextLevelRequirements: json("next_level_requirements").notNull(), // Object with metric requirements
+  performanceTrend: text("performance_trend").default("stable"), // improving, stable, declining
+  positionRanking: text("position_ranking"), // e.g., "Top 15% of QBs in your region"
+  improvementAreas: json("improvement_areas").default('[]'), // Array of strings with specific areas
+  recentAchievements: json("recent_achievements").default('[]'), // Array of recent notable performances
   lastUpdated: timestamp("last_updated").defaultNow().notNull(),
 });
 

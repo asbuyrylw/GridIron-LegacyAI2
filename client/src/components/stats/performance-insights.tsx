@@ -47,10 +47,16 @@ export function PerformanceInsights({ className, athleteId }: PerformanceInsight
     isLoading: insightsLoading,
     isError: insightsError
   } = useQuery<{
+    id: number;
+    athleteId: number;
     strengths: string[];
     weaknesses: string[];
     recommendations: string[];
-    nextLevelRequirements: Record<string, string>;
+    performanceTrend: string;
+    positionRanking: string | null;
+    improvementAreas: string[];
+    recentAchievements: string[];
+    lastUpdated: Date;
   }>({
     queryKey: [`/api/athlete/${id}/performance-insights`],
     enabled: !!id && !!metrics && metrics.length > 0,

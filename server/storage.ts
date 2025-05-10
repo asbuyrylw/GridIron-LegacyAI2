@@ -417,6 +417,66 @@ export class MemStorage implements IStorage {
     this.trainingPlansMap.set(id, updatedPlan);
     return updatedPlan;
   }
+  
+  // Performance Insights Methods
+  async getPerformanceInsights(athleteId: number): Promise<PerformanceInsights | undefined> {
+    for (const insights of this.performanceInsightsMap.values()) {
+      if (insights.athleteId === athleteId) {
+        return insights;
+      }
+    }
+    return undefined;
+  }
+  
+  async createPerformanceInsights(insights: InsertPerformanceInsights): Promise<PerformanceInsights> {
+    const id = this.currentPerformanceInsightsId++;
+    const now = new Date();
+    
+    const newInsights: PerformanceInsights = {
+      id,
+      ...insights,
+      lastUpdated: now
+    };
+    
+    this.performanceInsightsMap.set(id, newInsights);
+    return newInsights;
+  }
+  
+  async updatePerformanceInsights(
+    athleteId: number, 
+    insights: Partial<InsertPerformanceInsights>
+  ): Promise<PerformanceInsights> {
+    const existingInsights = await this.getPerformanceInsights(athleteId);
+    
+    if (!existingInsights) {
+      // If no insights exist yet, create new ones
+      return this.createPerformanceInsights({
+        athleteId,
+        strengths: insights.strengths || [],
+        weaknesses: insights.weaknesses || [],
+        recommendations: insights.recommendations || [],
+        performanceTrend: insights.performanceTrend || "stable",
+        positionRanking: insights.positionRanking || null,
+        improvementAreas: insights.improvementAreas || [],
+        recentAchievements: insights.recentAchievements || []
+      });
+    }
+    
+    // Update existing insights
+    const updatedInsights: PerformanceInsights = {
+      ...existingInsights,
+      ...insights,
+      lastUpdated: new Date()
+    };
+    
+    this.performanceInsightsMap.set(existingInsights.id, updatedInsights);
+    return updatedInsights;
+  }
+  
+  // For API endpoint /api/athlete/:id/metrics
+  async getAthleteMetrics(athleteId: number): Promise<CombineMetric[]> {
+    return this.getCombineMetrics(athleteId);
+  }
 
   // Coach Messages Methods
   async getCoachMessages(athleteId: number): Promise<CoachMessage[]> {

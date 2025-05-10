@@ -512,6 +512,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get Performance Insights
+  app.get("/api/athlete/:id/performance-insights", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own insights
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const insights = await storage.getPerformanceInsights(athleteId);
+      
+      if (!insights) {
+        return res.status(404).json({ message: "Performance insights not found" });
+      }
+      
+      res.json(insights);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get athlete metrics
+  app.get("/api/athlete/:id/metrics", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own metrics
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const metrics = await storage.getAthleteMetrics(athleteId);
+      res.json(metrics);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update or create performance insights
+  app.post("/api/athlete/:id/performance-insights", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow updating own insights
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Update or create insights
+      const updatedInsights = await storage.updatePerformanceInsights(athleteId, req.body);
+      res.status(200).json(updatedInsights);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   // Mark a message as read
   app.patch("/api/messages/:id/read", async (req, res, next) => {
     try {
