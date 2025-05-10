@@ -588,8 +588,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      // Update or create insights
-      const updatedInsights = await storage.updatePerformanceInsights(athleteId, req.body);
+      // Update or create insights with all the new fields
+      const updatedInsights = await storage.updatePerformanceInsights(athleteId, {
+        ...req.body,
+        lastUpdated: new Date()
+      });
       res.status(200).json(updatedInsights);
     } catch (error) {
       next(error);

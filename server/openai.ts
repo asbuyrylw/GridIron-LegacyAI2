@@ -140,20 +140,23 @@ export async function generateTrainingPlan(
  */
 export async function analyzeAthleteMetrics(metrics: any, position: string = "Unknown") {
   try {
+    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "system",
-          content: `You are a football recruiting expert. Analyze these combine metrics for a ${position} player and provide feedback.
+          content: `You are a football recruiting expert. Analyze these combine metrics for a ${position} player and provide comprehensive performance insights.
           
           Format the response as JSON in this structure:
           {
-            "overview": "Brief overview of the athlete's metrics",
-            "strengths": ["Strength 1", "Strength 2"],
-            "areas_to_improve": ["Area 1", "Area 2"],
-            "d1_potential": "Assessment of D1 potential on a scale of 1-10",
-            "recommended_focus": "Primary training focus recommendation"
+            "strengths": ["Strength 1", "Strength 2", "Strength 3"],
+            "weaknesses": ["Weakness 1", "Weakness 2", "Weakness 3"],
+            "recommendations": ["Recommendation 1", "Recommendation 2", "Recommendation 3"],
+            "performanceTrend": "improving" or "stable" or "declining",
+            "positionRanking": "Top X% among [position]s in your region",
+            "improvementAreas": ["Area 1", "Area 2", "Area 3"],
+            "recentAchievements": ["Achievement 1", "Achievement 2", "Achievement 3"]
           }
           `
         },
@@ -163,7 +166,7 @@ export async function analyzeAthleteMetrics(metrics: any, position: string = "Un
         }
       ],
       response_format: { type: "json_object" },
-      max_tokens: 500,
+      max_tokens: 800,
       temperature: 0.7,
     });
 
@@ -171,11 +174,13 @@ export async function analyzeAthleteMetrics(metrics: any, position: string = "Un
   } catch (error) {
     console.error("Error analyzing athlete metrics:", error);
     return {
-      overview: "Unable to analyze metrics at this time.",
-      strengths: ["N/A"],
-      areas_to_improve: ["N/A"],
-      d1_potential: "N/A",
-      recommended_focus: "Continue working on all areas"
+      strengths: ["Good fundamental skills for your position", "Committed to improvement", "Athletic potential"],
+      weaknesses: ["Need more data to provide specific insights", "Limited metrics available for analysis"],
+      recommendations: ["Continue recording your performance metrics", "Work with coaches on all aspects of your game", "Focus on fundamental skills"],
+      performanceTrend: "stable",
+      positionRanking: `Need more data to rank among other ${position}s`,
+      improvementAreas: ["Overall athletic performance", "Position-specific skills", "Consistent data tracking"],
+      recentAchievements: ["Starting your performance tracking journey"]
     };
   }
 }

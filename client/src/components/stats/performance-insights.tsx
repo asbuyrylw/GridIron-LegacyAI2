@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { CombineMetric, TrainingPlan } from "@shared/schema";
-import { Loader2, RefreshCw, Brain, TrendingUp, Dumbbell, Target } from "lucide-react";
+import { Loader2, RefreshCw, Brain, TrendingUp, Dumbbell, Target, ArrowDown, Minus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -216,7 +216,7 @@ export function PerformanceInsights({ className, athleteId }: PerformanceInsight
           </TabsContent>
           
           <TabsContent value="nextLevel">
-            {insightsError || !insights || !insights.nextLevelRequirements ? (
+            {insightsError || !insights ? (
               <div className="text-center py-6">
                 <p className="text-muted-foreground mb-4">
                   Generate insights to see what you need to reach the next level.
@@ -230,21 +230,81 @@ export function PerformanceInsights({ className, athleteId }: PerformanceInsight
               </div>
             ) : (
               <div className="space-y-4">
-                <h3 className="text-sm font-medium">Requirements for Next Level</h3>
+                <h3 className="text-sm font-medium">Performance Analytics</h3>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {Object.entries(insights.nextLevelRequirements).map(([metric, requirement]) => (
-                    <div key={metric} className="rounded-lg border p-3">
-                      <h4 className="text-sm font-medium capitalize mb-1">{metric.replace(/([A-Z])/g, ' $1').trim()}</h4>
-                      <p className="text-sm text-muted-foreground">{requirement}</p>
-                    </div>
-                  ))}
+                {/* Position Ranking */}
+                {insights.positionRanking && (
+                  <div className="rounded-lg border p-4 bg-blue-50 dark:bg-blue-950/20">
+                    <h4 className="text-sm font-medium mb-2 text-blue-700 dark:text-blue-400">Position Ranking</h4>
+                    <p className="text-sm font-medium">{insights.positionRanking}</p>
+                  </div>
+                )}
+                
+                {/* Performance Trend */}
+                <div className="rounded-lg border p-4">
+                  <h4 className="text-sm font-medium mb-2">Performance Trend</h4>
+                  <div className="flex items-center gap-2">
+                    {insights.performanceTrend === 'improving' && (
+                      <>
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400">
+                          <TrendingUp className="h-4 w-4" />
+                        </span>
+                        <p className="text-sm font-medium text-green-600 dark:text-green-400">Improving</p>
+                      </>
+                    )}
+                    
+                    {insights.performanceTrend === 'stable' && (
+                      <>
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                          <Minus className="h-4 w-4" />
+                        </span>
+                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Stable</p>
+                      </>
+                    )}
+                    
+                    {insights.performanceTrend === 'declining' && (
+                      <>
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                          <ArrowDown className="h-4 w-4" />
+                        </span>
+                        <p className="text-sm font-medium text-red-600 dark:text-red-400">Declining</p>
+                      </>
+                    )}
+                  </div>
                 </div>
+                
+                {/* Improvement Areas */}
+                <div className="rounded-lg border p-4">
+                  <h4 className="text-sm font-medium mb-2">Key Areas to Improve</h4>
+                  <ul className="space-y-2">
+                    {insights.improvementAreas.map((area, index) => (
+                      <li key={index} className="text-sm flex items-start gap-2">
+                        <span className="text-amber-600 dark:text-amber-400">•</span>
+                        <span>{area}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                
+                {/* Recent Achievements */}
+                {insights.recentAchievements && insights.recentAchievements.length > 0 && (
+                  <div className="rounded-lg border p-4">
+                    <h4 className="text-sm font-medium mb-2">Recent Highlights</h4>
+                    <ul className="space-y-2">
+                      {insights.recentAchievements.map((achievement, index) => (
+                        <li key={index} className="text-sm flex items-start gap-2">
+                          <span className="text-green-600 dark:text-green-400">•</span>
+                          <span>{achievement}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 
                 <div className="mt-4">
                   <p className="text-xs text-muted-foreground">
-                    These requirements are based on analysis of athletes who successfully moved to higher competition levels.
-                    Individual results may vary based on other factors like game skills and team fit.
+                    These insights are based on AI analysis of your performance metrics and training history.
+                    Results are updated when you record new performance data.
                   </p>
                 </div>
               </div>
@@ -287,7 +347,7 @@ export function PerformanceInsights({ className, athleteId }: PerformanceInsight
                         .filter(plan => plan.active)
                         .map(plan => (
                           <Badge key={plan.id} variant="outline" className="px-3 py-1">
-                            {plan.title || plan.goal}
+                            {plan.title}
                           </Badge>
                         ))
                       }
