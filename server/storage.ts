@@ -104,16 +104,7 @@ export interface IStorage {
   createSocialPost(post: InsertSocialPost): Promise<SocialPost>;
   updateSocialPostStatus(id: number, status: string, postedAt?: Date, errorMessage?: string): Promise<SocialPost | undefined>;
 
-  // Achievement Methods
-  getAchievements(category?: string): Promise<Achievement[]>;
-  getAchievementById(id: number): Promise<Achievement | undefined>;
-  createAchievement(achievement: InsertAchievement): Promise<Achievement>;
-
-  // Athlete Achievement Methods
-  getAthleteAchievements(athleteId: number): Promise<AthleteAchievement[]>;
-  getAthleteAchievementById(id: number): Promise<AthleteAchievement | undefined>;
-  createAthleteAchievement(athleteAchievement: InsertAthleteAchievement): Promise<AthleteAchievement>;
-  updateAthleteAchievementProgress(id: number, progress: number, completed?: boolean): Promise<AthleteAchievement | undefined>;
+  // These duplicate methods are already defined earlier in the interface
 
   // Leaderboard Methods
   getLeaderboards(active?: boolean): Promise<Leaderboard[]>;
