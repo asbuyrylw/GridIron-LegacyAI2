@@ -41,7 +41,7 @@ export function useExercise(id: string | number) {
  */
 export function useWorkoutSessions(athleteId: number) {
   return useQuery<WorkoutSession[]>({
-    queryKey: [`/api/athlete/${athleteId}/workout-sessions`],
+    queryKey: [`/api/athlete/${athleteId}/workouts`],
     enabled: !!athleteId,
   });
 }
@@ -51,7 +51,7 @@ export function useWorkoutSessions(athleteId: number) {
  */
 export function useWorkoutSession(athleteId: number, sessionId: number) {
   return useQuery<WorkoutSession>({
-    queryKey: [`/api/athlete/${athleteId}/workout-sessions/${sessionId}`],
+    queryKey: [`/api/athlete/${athleteId}/workouts/${sessionId}`],
     enabled: !!athleteId && !!sessionId,
   });
 }
@@ -71,7 +71,7 @@ export function useCreateWorkoutSession(athleteId: number) {
       
       const res = await apiRequest(
         "POST", 
-        `/api/athlete/${athleteId}/workout-sessions`, 
+        `/api/athlete/${athleteId}/workouts`, 
         data
       );
       return await res.json();
@@ -79,7 +79,7 @@ export function useCreateWorkoutSession(athleteId: number) {
     onSuccess: () => {
       // Invalidate workout sessions query to refresh the list
       queryClient.invalidateQueries({
-        queryKey: [`/api/athlete/${athleteId}/workout-sessions`]
+        queryKey: [`/api/athlete/${athleteId}/workouts`]
       });
       
       toast({
@@ -107,7 +107,7 @@ export function useUpdateWorkoutSession(athleteId: number, sessionId: number) {
     mutationFn: async (workoutData: Partial<WorkoutSession>) => {
       const res = await apiRequest(
         "PATCH", 
-        `/api/athlete/${athleteId}/workout-sessions/${sessionId}`, 
+        `/api/athlete/${athleteId}/workouts/${sessionId}`, 
         workoutData
       );
       return await res.json();
@@ -115,10 +115,10 @@ export function useUpdateWorkoutSession(athleteId: number, sessionId: number) {
     onSuccess: () => {
       // Invalidate both the list and the specific workout session
       queryClient.invalidateQueries({
-        queryKey: [`/api/athlete/${athleteId}/workout-sessions`]
+        queryKey: [`/api/athlete/${athleteId}/workouts`]
       });
       queryClient.invalidateQueries({
-        queryKey: [`/api/athlete/${athleteId}/workout-sessions/${sessionId}`]
+        queryKey: [`/api/athlete/${athleteId}/workouts/${sessionId}`]
       });
       
       toast({
@@ -146,14 +146,14 @@ export function useDeleteWorkoutSession(athleteId: number) {
     mutationFn: async (sessionId: number) => {
       const res = await apiRequest(
         "DELETE", 
-        `/api/athlete/${athleteId}/workout-sessions/${sessionId}`
+        `/api/athlete/${athleteId}/workouts/${sessionId}`
       );
       return res.ok;
     },
     onSuccess: () => {
       // Invalidate workout sessions query to refresh the list
       queryClient.invalidateQueries({
-        queryKey: [`/api/athlete/${athleteId}/workout-sessions`]
+        queryKey: [`/api/athlete/${athleteId}/workouts`]
       });
       
       toast({
