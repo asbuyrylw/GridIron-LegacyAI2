@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { IconWrapper } from "@/components/ui/icon-wrapper";
 import { useQuery } from "@tanstack/react-query";
 import { SOCIAL_PLATFORMS, SocialPlatform } from "@/lib/social-platforms";
 import { formatDistance } from "date-fns";
@@ -87,9 +88,7 @@ export function SocialPostsFeed() {
           className="flex items-center gap-1"
           style={{ backgroundColor: `${platform.color}20`, color: platform.color }}
         >
-          <div className="h-3 w-3">
-            {React.createElement(platform.icon)}
-          </div>
+          <IconWrapper icon={platform.icon} className="h-3 w-3" />
           <span>{platform.name}</span>
         </Badge>
       );

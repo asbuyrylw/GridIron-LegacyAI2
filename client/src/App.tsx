@@ -84,7 +84,7 @@ function Router() {
       </Switch>
       
       {/* Only show bottom nav when user is logged in and has completed onboarding */}
-      {user && !needsOnboarding && !location.includes("/landing") && !location.includes("/auth") && <BottomNav />}
+      {user && !needsOnboarding && !location.startsWith("/landing") && location !== "/auth" && <BottomNav />}
     </>
   );
 }

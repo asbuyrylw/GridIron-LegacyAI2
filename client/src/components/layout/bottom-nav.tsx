@@ -1,4 +1,5 @@
 import React from "react";
+import { IconWrapper } from "@/components/ui/icon-wrapper";
 import { useLocation, Link } from "wouter";
 import { 
   Home, 
@@ -101,7 +102,7 @@ function NavItem({ label, href, icon: Icon, active }: NavItemProps) {
             active ? "bg-primary/10 text-primary" : "text-muted-foreground"
           )}
         >
-          <Icon className="h-5 w-5" />
+          <IconWrapper icon={Icon} className="h-5 w-5" />
         </div>
         <span className={cn(
           "text-[10px] font-medium",
