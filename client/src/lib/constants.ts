@@ -40,6 +40,23 @@ export const POSITIONS = [
   ...SPECIAL_TEAMS_POSITIONS,
 ];
 
+// Simple string list of football positions for filtering
+export const footballPositions = [
+  "Quarterback (QB)",
+  "Running Back (RB)",
+  "Fullback (FB)",
+  "Wide Receiver (WR)",
+  "Tight End (TE)",
+  "Offensive Line (OL)",
+  "Defensive Line (DL)",
+  "Linebacker (LB)",
+  "Cornerback (CB)",
+  "Safety (S)",
+  "Kicker (K)",
+  "Punter (P)",
+  "Long Snapper (LS)",
+];
+
 // Competition levels
 export const COMPETITION_LEVELS = [
   { value: "varsity", label: "Varsity" },
