@@ -1,6 +1,6 @@
 import { useAchievementProgress } from "@/hooks/use-achievement-progress";
 import { ACHIEVEMENT_BADGES } from "@/lib/achievement-badges";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { Award, ChevronRight } from "lucide-react";
  */
 export function AchievementSummary() {
   const { achievements } = useAchievementProgress();
-  const [, navigate] = useNavigate();
+  const [, setLocation] = useLocation();
   
   // Get the total points
   const totalPoints = achievements
@@ -87,7 +87,7 @@ export function AchievementSummary() {
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={() => navigate('/achievements')}
+            onClick={() => setLocation('/achievements')}
           >
             <Award className="mr-2 h-4 w-4" />
             View All Achievements

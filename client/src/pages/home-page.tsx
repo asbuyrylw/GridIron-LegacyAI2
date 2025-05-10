@@ -7,6 +7,7 @@ import { QuickActions } from "@/components/dashboard/quick-actions";
 import { CoachLegacyCard } from "@/components/dashboard/coach-legacy-card";
 import { RecruitingProfile } from "@/components/profile/recruiting-profile";
 import { TrainingPlanView } from "@/components/training/training-plan";
+import { AchievementSummary } from "@/components/achievements/achievement-summary";
 import { SubscriptionInfo } from "@/components/subscription-info";
 import { Header } from "@/components/layout/header";
 import { BottomNavigation } from "@/components/layout/bottom-navigation";
@@ -207,6 +208,11 @@ export default function HomePage() {
             <div className="dashboard-card">
               <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
               <QuickActions />
+            </div>
+            
+            {/* Achievements */}
+            <div className="dashboard-card">
+              <AchievementSummary />
             </div>
             
             {/* Upcoming Events */}

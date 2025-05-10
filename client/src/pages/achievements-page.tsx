@@ -1,117 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Redirect } from "wouter";
 import { Header } from "@/components/layout/header";
 import { BottomNavigation } from "@/components/layout/bottom-navigation";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Award, Trophy, Loader2, Info } from "lucide-react";
 import { AchievementGrid } from "@/components/achievements/achievement-grid";
-import { AchievementEarnedAnimation } from "@/components/achievements/achievement-earned-animation";
-import { Achievement, ACHIEVEMENT_BADGES, getAchievementById } from "@/lib/achievement-badges";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { ACHIEVEMENT_BADGES, getAchievementsByType } from "@/lib/achievement-badges";
+import { useAchievementProgress } from "@/hooks/use-achievement-progress";
 
 export default function AchievementsPage() {
   const { user, isLoading } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [showAchievementAnimation, setShowAchievementAnimation] = useState(false);
-  const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
-  
-  // Fetch all achievements from the database
-  const { data: allAchievements = [] } = useQuery<any[]>({
-    queryKey: [`/api/achievements`],
-    enabled: !!user?.athlete?.id,
-  });
-  
-  // Fetch athlete achievements
-  const { data: athleteAchievements = [] } = useQuery<any[]>({
-    queryKey: [`/api/athlete/${user?.athlete?.id}/achievements`],
-    enabled: !!user?.athlete?.id,
-  });
-
-  // Mutation to update an achievement's progress
-  const updateAchievementMutation = useMutation({
-    mutationFn: async ({ 
-      achievementId, 
-      progress, 
-      completed 
-    }: { 
-      achievementId: number; 
-      progress: number;
-      completed?: boolean;
-    }) => {
-      const res = await apiRequest(
-        "PATCH", 
-        `/api/athlete/${user?.athlete?.id}/achievements/${achievementId}`,
-        { progress, completed }
-      );
-      return await res.json();
-    },
-    onSuccess: () => {
-      // Invalidate the athlete achievements query to refetch
-      queryClient.invalidateQueries({
-        queryKey: [`/api/athlete/${user?.athlete?.id}/achievements`],
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to update achievement",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Mutation to create a new achievement for an athlete
-  const createAchievementMutation = useMutation({
-    mutationFn: async ({
-      achievementId,
-      progress = 0,
-      completed = false,
-    }: {
-      achievementId: number;
-      progress?: number;
-      completed?: boolean;
-    }) => {
-      const res = await apiRequest(
-        "POST",
-        `/api/athlete/${user?.athlete?.id}/achievements`,
-        { achievementId, progress, completed }
-      );
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [`/api/athlete/${user?.athlete?.id}/achievements`],
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to create achievement",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-  
-  // Map backend achievements to frontend format
-  const achievements = ACHIEVEMENT_BADGES.map(frontendAchievement => {
-    // Find if the athlete has this achievement
-    const athleteAchievement = athleteAchievements.find(
-      (aa: any) => aa.achievementId === parseInt(frontendAchievement.id)
-    );
-    
-    return {
-      ...frontendAchievement,
-      isEarned: !!athleteAchievement?.completed,
-      earnedDate: athleteAchievement?.earnedAt,
-      progress: athleteAchievement?.progress || 0
-    };
-  });
+  const { achievements, isCompleted } = useAchievementProgress();
+  const [activeTab, setActiveTab] = useState("all");
   
   // Loading state
   if (isLoading) {
@@ -133,76 +36,27 @@ export default function AchievementsPage() {
   }
   
   // Calculate achievement stats
-  const earnedCount = achievements.filter(a => a.isEarned).length;
+  const completedCount = achievements.filter(a => a.completed).length;
+  const totalCount = ACHIEVEMENT_BADGES.length;
+  
+  // Calculate total points
   const totalPoints = achievements
-    .filter(a => a.isEarned)
-    .reduce((sum, a) => sum + a.points, 0);
+    .filter(a => a.completed)
+    .reduce((sum, a) => {
+      const achievement = ACHIEVEMENT_BADGES.find(badge => badge.id === a.achievementId);
+      return sum + (achievement?.points || 0);
+    }, 0);
   
-  // Check if an athlete achievement record exists, if not create one
-  const handleAchievementClick = (achievement: Achievement) => {
-    const achievementId = parseInt(achievement.id);
-    const athleteAchievement = athleteAchievements.find(
-      (aa: any) => aa.achievementId === achievementId
-    );
-    
-    if (athleteAchievement) {
-      // If it exists, update it
-      if (!athleteAchievement.completed) {
-        // Only allow manual completion if progress is already at 100%
-        if (athleteAchievement.progress >= 100) {
-          updateAchievementMutation.mutate({
-            achievementId,
-            progress: 100,
-            completed: true
-          });
-          
-          // Show achievement animation
-          setSelectedAchievement(achievement);
-          setShowAchievementAnimation(true);
-        } else {
-          toast({
-            title: "Achievement progress updated",
-            description: `Keep working on this achievement! Current progress: ${athleteAchievement.progress}%`,
-          });
-        }
-      } else {
-        // Already completed, just show the animation
-        setSelectedAchievement(achievement);
-        setShowAchievementAnimation(true);
-      }
-    } else {
-      // If it doesn't exist, create it with initial progress
-      createAchievementMutation.mutate({
-        achievementId,
-        progress: 0,
-        completed: false
-      });
-      
-      toast({
-        title: "New achievement started",
-        description: `You've started tracking the "${achievement.name}" achievement!`,
-      });
-    }
-  };
-  
-  const handleCloseAnimation = () => {
-    setShowAchievementAnimation(false);
-  };
+  // Get in-progress achievements (not completed but has some progress)
+  const inProgressCount = achievements.filter(a => !a.completed && a.progress > 0).length;
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-16 relative">
       <Header />
       
-      {showAchievementAnimation && selectedAchievement && (
-        <AchievementEarnedAnimation 
-          achievement={selectedAchievement}
-          onClose={handleCloseAnimation}
-        />
-      )}
-      
       <main className="container mx-auto px-4 pt-6 pb-20">
         <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-montserrat font-bold mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">
             Achievements & Badges
           </h1>
           <p className="text-muted-foreground">
@@ -223,8 +77,8 @@ export default function AchievementsPage() {
                     Achievements Earned
                   </p>
                   <h2 className="text-3xl font-bold">
-                    {earnedCount} 
-                    <span className="text-xl text-muted-foreground ml-1">/ {achievements.length}</span>
+                    {completedCount} 
+                    <span className="text-xl text-muted-foreground ml-1">/ {totalCount}</span>
                   </h2>
                 </div>
               </div>
@@ -268,31 +122,38 @@ export default function AchievementsPage() {
         </div>
         
         {/* Achievement Grid */}
-        <Tabs defaultValue="all">
+        <Tabs defaultValue="all" onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="all">All Achievements</TabsTrigger>
-            <TabsTrigger value="earned">Earned</TabsTrigger>
-            <TabsTrigger value="in-progress">In Progress</TabsTrigger>
+            <TabsTrigger value="earned">
+              Earned ({completedCount})
+            </TabsTrigger>
+            <TabsTrigger value="in-progress">
+              In Progress ({inProgressCount})
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="all">
             <AchievementGrid 
-              achievements={achievements}
-              onAchievementClick={handleAchievementClick}
+              title="All Achievements" 
+              description="View all available achievements and your progress"
+              showTypeFilter={true}
             />
           </TabsContent>
           
           <TabsContent value="earned">
             <AchievementGrid 
-              achievements={achievements.filter(a => a.isEarned)}
-              onAchievementClick={handleAchievementClick}
+              title="Earned Achievements"
+              description="Achievements you've already completed"
+              showTypeFilter={true}
             />
           </TabsContent>
           
           <TabsContent value="in-progress">
             <AchievementGrid 
-              achievements={achievements.filter(a => !a.isEarned && a.progress > 0)}
-              onAchievementClick={handleAchievementClick}
+              title="In-Progress Achievements"
+              description="Achievements you're currently working towards"
+              showTypeFilter={true}
             />
           </TabsContent>
         </Tabs>
