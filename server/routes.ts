@@ -33,8 +33,17 @@ import {
   insertStrengthConditioningSchema,
   insertNutritionInfoSchema,
   insertRecruitingPreferencesSchema,
+  insertTeamSchema,
+  insertTeamMemberSchema,
+  insertTeamEventSchema,
+  insertTeamAnnouncementSchema,
+  insertTeamEventAttendanceSchema,
   onboardingSchema,
-  type InsertAthleteAchievement
+  type InsertAthleteAchievement,
+  type InsertTeam,
+  type InsertTeamMember,
+  type InsertTeamEvent,
+  type InsertTeamAnnouncement
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -1706,6 +1715,600 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw error;
       }
       
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // -- Team Management Routes --
+  
+  // Get all teams
+  app.get("/api/teams", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teams = await storage.getTeams();
+      res.json(teams);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get teams for a specific athlete
+  app.get("/api/athlete/:id/teams", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own teams unless profile is public
+      if (athlete.userId !== req.user.id && !athlete.profileVisibility) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const teams = await storage.getTeamsByAthlete(athleteId);
+      res.json(teams);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get a specific team by ID
+  app.get("/api/teams/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.id);
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      res.json(team);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Create a new team
+  app.post("/api/teams", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // For now, only users with isCoach flag can create teams
+      const user = await storage.getUser(req.user.id);
+      
+      if (!user.isCoach) {
+        return res.status(403).json({ message: "Only coaches can create teams" });
+      }
+      
+      // Validate the team data
+      try {
+        const validated = insertTeamSchema.parse({
+          ...req.body,
+          coachId: req.user.id
+        });
+        
+        const team = await storage.createTeam(validated);
+        res.status(201).json(team);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          const validationError = fromZodError(error);
+          return res.status(400).json({ message: validationError.message });
+        }
+        throw error;
+      }
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update a team
+  app.patch("/api/teams/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.id);
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      // Only coach or admin can update team
+      if (team.coachId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ message: "Only the coach can update this team" });
+      }
+      
+      const updatedTeam = await storage.updateTeam(teamId, req.body);
+      res.json(updatedTeam);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Delete a team
+  app.delete("/api/teams/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.id);
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      // Only coach or admin can delete team
+      if (team.coachId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ message: "Only the coach can delete this team" });
+      }
+      
+      await storage.deleteTeam(teamId);
+      res.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // -- Team Members Routes --
+  
+  // Get all members of a team
+  app.get("/api/teams/:id/members", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.id);
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      const members = await storage.getTeamMembers(teamId);
+      res.json(members);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Add member to a team
+  app.post("/api/teams/:id/members", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.id);
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      // Only coach can add members
+      if (team.coachId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ message: "Only the coach can add members" });
+      }
+      
+      try {
+        const validated = insertTeamMemberSchema.parse({
+          ...req.body,
+          teamId
+        });
+        
+        // Check if member already exists
+        const existingMember = await storage.getTeamMemberByAthlete(teamId, validated.athleteId);
+        
+        if (existingMember) {
+          return res.status(400).json({ message: "Athlete is already a member of this team" });
+        }
+        
+        const member = await storage.addTeamMember(validated);
+        res.status(201).json(member);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          const validationError = fromZodError(error);
+          return res.status(400).json({ message: validationError.message });
+        }
+        throw error;
+      }
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update a team member
+  app.patch("/api/teams/:teamId/members/:memberId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.teamId);
+      const memberId = parseInt(req.params.memberId);
+      
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      // Only coach can update members
+      if (team.coachId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ message: "Only the coach can update members" });
+      }
+      
+      const updatedMember = await storage.updateTeamMember(memberId, req.body);
+      
+      if (!updatedMember) {
+        return res.status(404).json({ message: "Team member not found" });
+      }
+      
+      res.json(updatedMember);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Remove member from team
+  app.delete("/api/teams/:teamId/members/:memberId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.teamId);
+      const memberId = parseInt(req.params.memberId);
+      
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      // Only coach can remove members
+      if (team.coachId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ message: "Only the coach can remove members" });
+      }
+      
+      await storage.removeTeamMember(memberId);
+      res.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // -- Team Events Routes --
+  
+  // Get all events for a team
+  app.get("/api/teams/:id/events", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.id);
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      const events = await storage.getTeamEvents(teamId);
+      res.json(events);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Create an event for a team
+  app.post("/api/teams/:id/events", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.id);
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      // Only coach can create events
+      if (team.coachId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ message: "Only the coach can create events" });
+      }
+      
+      try {
+        const validated = insertTeamEventSchema.parse({
+          ...req.body,
+          teamId,
+          createdBy: req.user.id
+        });
+        
+        const event = await storage.createTeamEvent(validated);
+        res.status(201).json(event);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          const validationError = fromZodError(error);
+          return res.status(400).json({ message: validationError.message });
+        }
+        throw error;
+      }
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update a team event
+  app.patch("/api/teams/:teamId/events/:eventId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.teamId);
+      const eventId = parseInt(req.params.eventId);
+      
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      // Only coach can update events
+      if (team.coachId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ message: "Only the coach can update events" });
+      }
+      
+      const updatedEvent = await storage.updateTeamEvent(eventId, req.body);
+      
+      if (!updatedEvent) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      res.json(updatedEvent);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Delete a team event
+  app.delete("/api/teams/:teamId/events/:eventId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.teamId);
+      const eventId = parseInt(req.params.eventId);
+      
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      // Only coach can delete events
+      if (team.coachId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ message: "Only the coach can delete events" });
+      }
+      
+      await storage.deleteTeamEvent(eventId);
+      res.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Record attendance for an event
+  app.post("/api/teams/:teamId/events/:eventId/attendance", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.teamId);
+      const eventId = parseInt(req.params.eventId);
+      
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      // Only coach can record attendance
+      if (team.coachId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ message: "Only the coach can record attendance" });
+      }
+      
+      try {
+        const { memberId, status } = req.body;
+        
+        const attendance = await storage.recordEventAttendance({
+          eventId,
+          memberId,
+          status,
+          recordedBy: req.user.id
+        });
+        
+        res.status(201).json(attendance);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          const validationError = fromZodError(error);
+          return res.status(400).json({ message: validationError.message });
+        }
+        throw error;
+      }
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get attendance for an event
+  app.get("/api/teams/:teamId/events/:eventId/attendance", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.teamId);
+      const eventId = parseInt(req.params.eventId);
+      
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      const attendance = await storage.getEventAttendance(eventId);
+      res.json(attendance);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // -- Team Announcements Routes --
+  
+  // Get all announcements for a team
+  app.get("/api/teams/:id/announcements", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.id);
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      const announcements = await storage.getTeamAnnouncements(teamId);
+      res.json(announcements);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Create an announcement for a team
+  app.post("/api/teams/:id/announcements", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.id);
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      // Only coach can create announcements
+      if (team.coachId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ message: "Only the coach can create announcements" });
+      }
+      
+      try {
+        const validated = insertTeamAnnouncementSchema.parse({
+          ...req.body,
+          teamId,
+          publishedBy: req.user.id
+        });
+        
+        const announcement = await storage.createTeamAnnouncement(validated);
+        res.status(201).json(announcement);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          const validationError = fromZodError(error);
+          return res.status(400).json({ message: validationError.message });
+        }
+        throw error;
+      }
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update a team announcement
+  app.patch("/api/teams/:teamId/announcements/:announcementId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.teamId);
+      const announcementId = parseInt(req.params.announcementId);
+      
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      // Only coach can update announcements
+      if (team.coachId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ message: "Only the coach can update announcements" });
+      }
+      
+      const updatedAnnouncement = await storage.updateTeamAnnouncement(announcementId, req.body);
+      
+      if (!updatedAnnouncement) {
+        return res.status(404).json({ message: "Announcement not found" });
+      }
+      
+      res.json(updatedAnnouncement);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Delete a team announcement
+  app.delete("/api/teams/:teamId/announcements/:announcementId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const teamId = parseInt(req.params.teamId);
+      const announcementId = parseInt(req.params.announcementId);
+      
+      const team = await storage.getTeam(teamId);
+      
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      // Only coach can delete announcements
+      if (team.coachId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({ message: "Only the coach can delete announcements" });
+      }
+      
+      await storage.deleteTeamAnnouncement(announcementId);
+      res.status(204).end();
     } catch (error) {
       next(error);
     }
