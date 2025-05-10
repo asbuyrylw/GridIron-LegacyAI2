@@ -17,8 +17,8 @@ export function AchievementProvider({ children }: AchievementProviderProps) {
   // Only activate when user is logged in and has an athlete profile
   const isAthlete = !!user?.athlete?.id;
   
-  // Use the achievement tracker hook to automatically track progress
-  useAchievementTracker();
+  // Temporarily disabled achievement tracker to prevent API errors
+  // useAchievementTracker();
   
   return (
     <>

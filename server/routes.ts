@@ -1705,10 +1705,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
-      const achievementId = parseInt(req.params.id);
-      if (isNaN(achievementId)) {
-        return res.status(400).json({ message: "Invalid achievement ID" });
-      }
+      // Support string IDs too
+      const achievementId = req.params.id;
       
       const { progress, completed } = req.body;
       const updates: Partial<InsertAthleteAchievement> = {};
