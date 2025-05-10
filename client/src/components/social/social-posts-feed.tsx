@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SOCIAL_PLATFORMS, SocialPlatform } from "@/lib/social-platforms";
 import { formatDistance } from "date-fns";
@@ -87,7 +87,9 @@ export function SocialPostsFeed() {
           className="flex items-center gap-1"
           style={{ backgroundColor: `${platform.color}20`, color: platform.color }}
         >
-          <platform.icon className="h-3 w-3" />
+          <div className="h-3 w-3">
+            {React.createElement(platform.icon)}
+          </div>
           <span>{platform.name}</span>
         </Badge>
       );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Redirect } from "wouter";
@@ -177,11 +177,15 @@ export default function SocialSettingsPage() {
       if (!newConnections.some(c => c.platform === platform.id)) {
         const existing = currentConnections.find(c => c.platform === platform.id);
         if (existing) {
-          newConnections.push(existing);
+          // Ensure username is always a string, not undefined
+          newConnections.push({
+            ...existing,
+            username: existing.username || ""
+          });
         } else {
           newConnections.push({
             platform: platform.id,
-            username: "",
+            username: "",  // Empty string instead of undefined
             connected: false,
           });
         }
@@ -296,7 +300,9 @@ export default function SocialSettingsPage() {
                               color: platform.color
                             }}
                           >
-                            <platform.icon className="h-5 w-5" />
+                            <div className="h-5 w-5">
+                              {React.createElement(platform.icon)}
+                            </div>
                             Connect {platform.name}
                           </Button>
                         ))}
