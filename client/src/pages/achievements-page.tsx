@@ -17,21 +17,31 @@ export default function AchievementsPage() {
   const [showAchievementAnimation, setShowAchievementAnimation] = useState(false);
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   
-  // For demo purposes, let's show some random achievements as earned
-  // In a real implementation, this would come from the API
-  const mockAchievements = ACHIEVEMENT_BADGES.map(achievement => ({
-    ...achievement,
-    isEarned: Math.random() > 0.7, // 30% chance of being earned
-    earnedDate: new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toISOString(),
-    progress: Math.random() > 0.7 ? 100 : Math.floor(Math.random() * 100)
-  }));
+  // Fetch all achievements
+  const { data: allAchievements = [] } = useQuery({
+    queryKey: [`/api/achievements`],
+    enabled: !!user?.athlete?.id,
+  });
   
-  // In a real implementation, this would be fetched from an API
-  const { data: achievements = mockAchievements } = useQuery({
+  // Fetch athlete achievements
+  const { data: athleteAchievements = [] } = useQuery({
     queryKey: [`/api/athlete/${user?.athlete?.id}/achievements`],
     enabled: !!user?.athlete?.id,
-    // This would normally hit the backend
-    queryFn: async () => mockAchievements
+  });
+  
+  // Map backend achievements to frontend format
+  const achievements = ACHIEVEMENT_BADGES.map(frontendAchievement => {
+    // Find if the athlete has this achievement
+    const athleteAchievement = athleteAchievements.find(
+      aa => aa.achievementId === parseInt(frontendAchievement.id)
+    );
+    
+    return {
+      ...frontendAchievement,
+      isEarned: !!athleteAchievement?.completed,
+      earnedDate: athleteAchievement?.earnedAt,
+      progress: athleteAchievement?.progress || 0
+    };
   });
   
   // Loading state
