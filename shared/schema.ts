@@ -154,6 +154,17 @@ export const trainingPlans = pgTable("training_plans", {
   exercises: json("exercises").notNull(),
   completed: boolean("completed").default(false),
   coachTip: text("coach_tip"),
+  active: boolean("active").default(true), // Whether this plan is currently active
+});
+
+export const performanceInsights = pgTable("performance_insights", {
+  id: serial("id").primaryKey(),
+  athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
+  strengths: json("strengths").notNull(), // Array of strings
+  weaknesses: json("weaknesses").notNull(), // Array of strings
+  recommendations: json("recommendations").notNull(), // Array of strings
+  nextLevelRequirements: json("next_level_requirements").notNull(), // Object with metric requirements
+  lastUpdated: timestamp("last_updated").defaultNow().notNull(),
 });
 
 export const coachMessages = pgTable("coach_messages", {
@@ -346,6 +357,7 @@ export const insertUserSchema = createInsertSchema(users).omit({ id: true, creat
 export const insertAthleteSchema = createInsertSchema(athletes).omit({ id: true });
 export const insertCombineMetricsSchema = createInsertSchema(combineMetrics).omit({ id: true, dateRecorded: true });
 export const insertTrainingPlanSchema = createInsertSchema(trainingPlans).omit({ id: true });
+export const insertPerformanceInsightsSchema = createInsertSchema(performanceInsights).omit({ id: true, lastUpdated: true });
 export const insertCoachMessageSchema = createInsertSchema(coachMessages).omit({ id: true, createdAt: true });
 export const insertNutritionPlanSchema = createInsertSchema(nutritionPlans).omit({ id: true, createdAt: true });
 export const insertMealLogSchema = createInsertSchema(mealLogs).omit({ id: true });
@@ -377,6 +389,7 @@ export type User = typeof users.$inferSelect & {
 export type Athlete = typeof athletes.$inferSelect;
 export type CombineMetric = typeof combineMetrics.$inferSelect;
 export type TrainingPlan = typeof trainingPlans.$inferSelect;
+export type PerformanceInsights = typeof performanceInsights.$inferSelect;
 export type CoachMessage = typeof coachMessages.$inferSelect;
 export type NutritionPlan = typeof nutritionPlans.$inferSelect;
 export type MealLog = typeof mealLogs.$inferSelect;
@@ -401,6 +414,7 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertAthlete = z.infer<typeof insertAthleteSchema>;
 export type InsertCombineMetric = z.infer<typeof insertCombineMetricsSchema>;
 export type InsertTrainingPlan = z.infer<typeof insertTrainingPlanSchema>;
+export type InsertPerformanceInsights = z.infer<typeof insertPerformanceInsightsSchema>;
 export type InsertCoachMessage = z.infer<typeof insertCoachMessageSchema>;
 export type InsertNutritionPlan = z.infer<typeof insertNutritionPlanSchema>;
 export type InsertMealLog = z.infer<typeof insertMealLogSchema>;
