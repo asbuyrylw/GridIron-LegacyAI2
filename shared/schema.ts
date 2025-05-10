@@ -281,6 +281,11 @@ export const teams = pgTable("teams", {
   logoUrl: text("logo_url"),
   description: text("description"),
   isActive: boolean("is_active").default(true),
+  bannerImage: text("banner_image"),
+  logoImage: text("logo_image"),
+  website: text("website"),
+  location: text("location"),
+  homeField: text("home_field"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -292,6 +297,8 @@ export const teamMembers = pgTable("team_members", {
   position: text("position"),
   jerseyNumber: text("jersey_number"),
   isActive: boolean("is_active").default(true),
+  status: text("status").default("active"), // active, inactive, injured
+  number: text("number"), // alias for jerseyNumber for compatibility
   joinedAt: timestamp("joined_at").defaultNow().notNull(),
 });
 
@@ -306,6 +313,9 @@ export const teamEvents = pgTable("team_events", {
   endDate: timestamp("end_date"),
   isRequired: boolean("is_required").default(true),
   createdBy: integer("created_by").references(() => users.id).notNull(),
+  eventDate: timestamp("event_date"), // alias for startDate for compatibility
+  opponent: text("opponent"),
+  requiredEquipment: text("required_equipment"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -327,6 +337,8 @@ export const teamAnnouncements = pgTable("team_announcements", {
   publishedBy: integer("published_by").references(() => users.id).notNull(),
   publishedAt: timestamp("published_at").defaultNow().notNull(),
   expiresAt: timestamp("expires_at"),
+  image: text("image"),
+  attachmentLink: text("attachment_link"),
 });
 
 // Insert Schemas
