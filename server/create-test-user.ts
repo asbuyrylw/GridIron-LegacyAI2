@@ -212,6 +212,82 @@ async function createTestUser() {
       console.log(`Created exercise: ${created.name}`);
     }
     
+    // Create sample teams
+    const varsityTeam = await storage.createTeam({
+      name: "Central High Varsity",
+      level: "Varsity",
+      season: "Fall 2025",
+      sport: "football",
+      coachId: user.id,
+      description: "The varsity football team at Central High School.",
+      location: "Central City",
+      homeField: "Memorial Stadium",
+      isActive: true
+    });
+    
+    const jvTeam = await storage.createTeam({
+      name: "Central High JV",
+      level: "JV",
+      season: "Fall 2025",
+      sport: "football", 
+      coachId: user.id,
+      description: "The junior varsity football team at Central High School.",
+      location: "Central City",
+      homeField: "Practice Field",
+      isActive: true
+    });
+    
+    // Add athlete to varsity team
+    const teamMember = await storage.createTeamMember({
+      teamId: varsityTeam.id,
+      athleteId: athlete.id,
+      role: "player",
+      position: athlete.position,
+      jerseyNumber: "12",
+      isActive: true,
+      status: "active"
+    });
+    
+    // Create team event
+    const practiceEvent = await storage.createTeamEvent({
+      teamId: varsityTeam.id,
+      title: "Team Practice",
+      description: "Weekly team practice focusing on offensive plays",
+      eventType: "practice",
+      location: "Memorial Stadium",
+      startDate: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // Tomorrow
+      endDate: new Date(new Date().getTime() + 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000), // 2 hours later
+      isRequired: true,
+      createdBy: user.id
+    });
+    
+    const gameEvent = await storage.createTeamEvent({
+      teamId: varsityTeam.id,
+      title: "Game vs Jefferson High",
+      description: "Home game against Jefferson High School",
+      eventType: "game",
+      location: "Memorial Stadium",
+      startDate: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+      endDate: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000), // 3 hours later
+      isRequired: true,
+      createdBy: user.id,
+      opponent: "Jefferson High"
+    });
+    
+    // Create team announcement
+    const announcement = await storage.createTeamAnnouncement({
+      teamId: varsityTeam.id,
+      title: "New Practice Schedule",
+      content: "Starting next week, we will have additional practice sessions on Thursdays to prepare for the upcoming season.",
+      importance: "high",
+      publishedBy: user.id
+    });
+    
+    console.log("Created sample team:", varsityTeam.name);
+    console.log("Added team member:", teamMember.id);
+    console.log("Created team events:", practiceEvent.title, gameEvent.title);
+    console.log("Created team announcement:", announcement.title);
+    
     console.log("Test user setup complete!");
     
   } catch (error) {

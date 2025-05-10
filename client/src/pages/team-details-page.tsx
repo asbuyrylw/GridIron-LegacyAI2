@@ -462,11 +462,11 @@ export default function TeamDetailsPage() {
                     <div key={member.id} className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback>
-                          {`${member.firstName?.[0] || ''}${member.lastName?.[0] || ''}`}
+                          {member.position ? member.position[0] : "A"}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="text-sm font-medium">{member.firstName} {member.lastName}</p>
+                        <p className="text-sm font-medium">Athlete #{member.athleteId}</p>
                         <div className="flex items-center gap-1">
                           <Badge variant="outline" className="text-xs h-5 px-1">
                             {member.position || "Position unknown"}
