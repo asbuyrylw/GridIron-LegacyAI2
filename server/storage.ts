@@ -37,6 +37,21 @@ export interface IStorage {
   getLatestCombineMetrics(athleteId: number): Promise<CombineMetric | undefined>;
   createCombineMetrics(metrics: InsertCombineMetric): Promise<CombineMetric>;
   
+  // Strength & Conditioning Methods
+  getStrengthConditioning(athleteId: number): Promise<StrengthConditioning | undefined>;
+  createStrengthConditioning(strengthConditioning: InsertStrengthConditioning): Promise<StrengthConditioning>;
+  updateStrengthConditioning(id: number, strengthConditioning: Partial<InsertStrengthConditioning>): Promise<StrengthConditioning | undefined>;
+  
+  // Nutrition Info Methods
+  getNutritionInfo(athleteId: number): Promise<NutritionInfo | undefined>;
+  createNutritionInfo(nutritionInfo: InsertNutritionInfo): Promise<NutritionInfo>;
+  updateNutritionInfo(id: number, nutritionInfo: Partial<InsertNutritionInfo>): Promise<NutritionInfo | undefined>;
+  
+  // Recruiting Preferences Methods
+  getRecruitingPreferences(athleteId: number): Promise<RecruitingPreferences | undefined>;
+  createRecruitingPreferences(recruitingPreferences: InsertRecruitingPreferences): Promise<RecruitingPreferences>;
+  updateRecruitingPreferences(id: number, recruitingPreferences: Partial<InsertRecruitingPreferences>): Promise<RecruitingPreferences | undefined>;
+  
   // Training Plan Methods
   getTrainingPlans(athleteId: number): Promise<TrainingPlan[]>;
   getTrainingPlanByDate(athleteId: number, date: Date): Promise<TrainingPlan | undefined>;
@@ -106,6 +121,9 @@ export class MemStorage implements IStorage {
   private usersMap: Map<number, User>;
   private athletesMap: Map<number, Athlete>;
   private combineMetricsMap: Map<number, CombineMetric>;
+  private strengthConditioningMap: Map<number, StrengthConditioning>;
+  private nutritionInfoMap: Map<number, NutritionInfo>;
+  private recruitingPreferencesMap: Map<number, RecruitingPreferences>;
   private trainingPlansMap: Map<number, TrainingPlan>;
   private coachMessagesMap: Map<number, CoachMessage>;
   private nutritionPlansMap: Map<number, NutritionPlan>;
@@ -121,6 +139,9 @@ export class MemStorage implements IStorage {
   currentUserId: number;
   currentAthleteId: number;
   currentCombineMetricsId: number;
+  currentStrengthConditioningId: number;
+  currentNutritionInfoId: number;
+  currentRecruitingPreferencesId: number;
   currentTrainingPlanId: number;
   currentCoachMessageId: number;
   currentNutritionPlanId: number;
@@ -138,6 +159,9 @@ export class MemStorage implements IStorage {
     this.usersMap = new Map();
     this.athletesMap = new Map();
     this.combineMetricsMap = new Map();
+    this.strengthConditioningMap = new Map();
+    this.nutritionInfoMap = new Map();
+    this.recruitingPreferencesMap = new Map();
     this.trainingPlansMap = new Map();
     this.coachMessagesMap = new Map();
     this.nutritionPlansMap = new Map();
@@ -153,6 +177,9 @@ export class MemStorage implements IStorage {
     this.currentUserId = 1;
     this.currentAthleteId = 1;
     this.currentCombineMetricsId = 1;
+    this.currentStrengthConditioningId = 1;
+    this.currentNutritionInfoId = 1;
+    this.currentRecruitingPreferencesId = 1;
     this.currentTrainingPlanId = 1;
     this.currentCoachMessageId = 1;
     this.currentNutritionPlanId = 1;
