@@ -3,6 +3,20 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
+import session from "express-session";
+
+// Extend the Express Session type to include our onboarding progress
+declare module "express-session" {
+  interface SessionData {
+    onboardingProgress?: {
+      [athleteId: number]: {
+        step: number;
+        data: any;
+        timestamp: string;
+      };
+    };
+  }
+}
 import { 
   insertCombineMetricsSchema, 
   insertTrainingPlanSchema, 
@@ -1435,6 +1449,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Onboarding progress saved",
         step,
         timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get athlete onboarding progress
+  app.get("/api/athlete/:id/onboarding/progress", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own profile progress
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Get progress from session
+      const progress = req.session.onboardingProgress?.[athleteId];
+      
+      if (!progress) {
+        return res.status(200).json({ 
+          exists: false,
+          message: "No saved progress found"
+        });
+      }
+      
+      res.status(200).json({ 
+        exists: true,
+        step: progress.step,
+        data: progress.data,
+        timestamp: progress.timestamp
       });
     } catch (error) {
       next(error);
