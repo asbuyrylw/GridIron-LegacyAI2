@@ -175,7 +175,7 @@ export function SocialLinks({
                         <div key={link.platform} className="flex items-center justify-between gap-2 p-3 rounded-md bg-muted/50">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full flex items-center justify-center" style={{ backgroundColor: `${platform.color}20` }}>
-                              <platform.icon className="h-5 w-5" style={{ color: platform.color }} />
+                              {React.createElement(platform.icon, { className: "h-5 w-5", style: { color: platform.color } })}
                             </div>
                             <div>
                               <div className="font-medium flex items-center gap-2">

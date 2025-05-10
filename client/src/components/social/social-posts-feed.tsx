@@ -98,7 +98,7 @@ export function SocialPostsFeed() {
   const renderPostStatus = (post: SocialPost) => {
     if (post.status === "posted") {
       return (
-        <Badge variant="success" className="gap-1">
+        <Badge variant="secondary" style={{ backgroundColor: "#ecfdf5", color: "#047857" }} className="gap-1">
           <span className="h-2 w-2 rounded-full bg-green-400"></span>
           Posted
         </Badge>
