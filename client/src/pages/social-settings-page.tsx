@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { IconWrapper } from "@/components/ui/icon-wrapper";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Redirect } from "wouter";
@@ -300,9 +301,7 @@ export default function SocialSettingsPage() {
                               color: platform.color
                             }}
                           >
-                            <div className="h-5 w-5">
-                              {React.createElement(platform.icon)}
-                            </div>
+                            <IconWrapper icon={platform.icon} className="h-5 w-5" />
                             Connect {platform.name}
                           </Button>
                         ))}

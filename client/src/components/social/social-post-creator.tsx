@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { IconWrapper } from "@/components/ui/icon-wrapper";
 import { SOCIAL_PLATFORMS, SocialPlatform } from "@/lib/social-platforms";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -211,9 +212,11 @@ export function SocialPostCreator({ connections }: SocialPostCreatorProps) {
                       backgroundColor: selectedPlatforms.includes(platform.id) ? `${platform.color}20` : undefined
                     }}
                   >
-                    <div className="h-4 w-4 mr-2" style={{ color: platform.color }}>
-                      {React.createElement(platform.icon)}
-                    </div>
+                    <IconWrapper 
+                      icon={platform.icon} 
+                      style={{ color: platform.color }} 
+                      className="h-4 w-4 mr-2" 
+                    />
                     {platform.name}
                   </Toggle>
                 ))

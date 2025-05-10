@@ -2,6 +2,7 @@ import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
@@ -31,8 +32,13 @@ function Router() {
   const { user, isLoading } = useAuth();
   const [location] = useLocation();
   
+  // Loading state - show an empty div instead of null
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center" />;
+  }
+  
   // If not logged in, redirect to landing page instead of auth page
-  if (!isLoading && !user) {
+  if (!user) {
     return (
       <Switch>
         {/* Public Routes */}
@@ -52,7 +58,7 @@ function Router() {
   }
   
   // Check if user needs to complete onboarding
-  const needsOnboarding = user && user.athlete && !user.athlete.onboardingCompleted;
+  const needsOnboarding = user.athlete && !user.athlete.onboardingCompleted;
   
   return (
     <>
@@ -84,7 +90,7 @@ function Router() {
       </Switch>
       
       {/* Only show bottom nav when user is logged in and has completed onboarding */}
-      {user && !needsOnboarding && !location.startsWith("/landing") && location !== "/auth" && <BottomNav />}
+      {!needsOnboarding && !location.startsWith("/landing") && location !== "/auth" && <BottomNav />}
     </>
   );
 }
