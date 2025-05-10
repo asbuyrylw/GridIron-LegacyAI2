@@ -37,7 +37,7 @@ export function useAchievementProgress() {
   // Mutation to update achievement progress
   const progressMutation = useMutation({
     mutationFn: async ({ achievementId, progress }: UpdateProgressParams) => {
-      const url = `/api/athlete/${athleteId}/achievements/${achievementId}`;
+      const url = `/api/athlete/achievements/${achievementId}`;
       const res = await apiRequest("PATCH", url, { progress });
       return await res.json();
     },
