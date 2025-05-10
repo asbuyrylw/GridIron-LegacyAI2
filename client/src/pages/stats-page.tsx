@@ -1,6 +1,8 @@
 import { Header } from "@/components/layout/header";
 import { BottomNavigation } from "@/components/layout/bottom-navigation";
 import { CombineMetricsForm } from "@/components/training/combine-metrics-form";
+import { PerformanceTrends } from "@/components/stats/performance-trends";
+import { PositionPercentile } from "@/components/stats/position-percentile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
@@ -63,7 +65,14 @@ export default function StatsPage() {
           </TabsList>
           
           <TabsContent value="current">
-            <CombineMetricsForm />
+            <div className="space-y-6">
+              <CombineMetricsForm />
+              
+              {/* Position Percentile Ranking */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <PositionPercentile />
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="history">
@@ -76,71 +85,55 @@ export default function StatsPage() {
               </Card>
             ) : (
               <div className="space-y-6">
-                <Card className="p-4">
-                  <h3 className="font-montserrat font-semibold mb-4">40-Yard Dash Progress</h3>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis domain={['dataMin', 'dataMax']} />
-                        <Tooltip />
-                        <Legend />
-                        <Line 
-                          type="monotone" 
-                          dataKey="fortyYard" 
-                          name="40-Yard (sec)" 
-                          stroke="hsl(var(--primary))" 
-                          activeDot={{ r: 8 }} 
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </Card>
+                {/* Enhanced Performance Trends */}
+                <PerformanceTrends />
                 
-                <Card className="p-4">
-                  <h3 className="font-montserrat font-semibold mb-4">Strength Progress</h3>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis domain={['auto', 'auto']} />
-                        <Tooltip />
-                        <Legend />
-                        <Line 
-                          type="monotone" 
-                          dataKey="benchPress" 
-                          name="Bench Press (reps)" 
-                          stroke="#8884d8" 
-                          activeDot={{ r: 8 }} 
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </Card>
-                
-                <Card className="p-4">
-                  <h3 className="font-montserrat font-semibold mb-4">Jump Metrics</h3>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis domain={['auto', 'auto']} />
-                        <Tooltip />
-                        <Legend />
-                        <Line 
-                          type="monotone" 
-                          dataKey="verticalJump" 
-                          name="Vertical Jump (in)" 
-                          stroke="#82ca9d" 
-                          activeDot={{ r: 8 }} 
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </Card>
+                {/* Legacy charts - keeping for reference */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card className="p-4">
+                    <h3 className="font-montserrat font-semibold mb-4">40-Yard Dash Progress</h3>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" />
+                          <YAxis domain={['dataMin', 'dataMax']} />
+                          <Tooltip />
+                          <Legend />
+                          <Line 
+                            type="monotone" 
+                            dataKey="fortyYard" 
+                            name="40-Yard (sec)" 
+                            stroke="hsl(var(--primary))" 
+                            activeDot={{ r: 8 }} 
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+                  
+                  <Card className="p-4">
+                    <h3 className="font-montserrat font-semibold mb-4">Jump Metrics</h3>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" />
+                          <YAxis domain={['auto', 'auto']} />
+                          <Tooltip />
+                          <Legend />
+                          <Line 
+                            type="monotone" 
+                            dataKey="verticalJump" 
+                            name="Vertical Jump (in)" 
+                            stroke="#82ca9d" 
+                            activeDot={{ r: 8 }} 
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+                </div>
               </div>
             )}
           </TabsContent>
