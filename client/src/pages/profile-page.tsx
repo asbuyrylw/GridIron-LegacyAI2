@@ -321,12 +321,12 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
-                        name="grade"
+                        name="teamLevel"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Grade Level</FormLabel>
+                            <FormLabel>Team Level</FormLabel>
                             <FormControl>
-                              <Input placeholder="Junior, Senior, etc." {...field} />
+                              <Input placeholder="Varsity Starter, JV, etc." {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -388,10 +388,10 @@ export default function ProfilePage() {
                     
                     <FormField
                       control={form.control}
-                      name="targetDivision"
+                      name="preferredDivision"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Target Division</FormLabel>
+                          <FormLabel>Preferred Division</FormLabel>
                           <FormControl>
                             <Input placeholder="D1, D2, D3, etc." {...field} />
                           </FormControl>
