@@ -15,7 +15,12 @@ import {
   leaderboardEntries, type LeaderboardEntry, type InsertLeaderboardEntry,
   strengthConditioning, type StrengthConditioning, type InsertStrengthConditioning,
   nutritionInfo, type NutritionInfo, type InsertNutritionInfo,
-  recruitingPreferences, type RecruitingPreferences, type InsertRecruitingPreferences
+  recruitingPreferences, type RecruitingPreferences, type InsertRecruitingPreferences,
+  teams, type Team, type InsertTeam,
+  teamMembers, type TeamMember, type InsertTeamMember,
+  teamEvents, type TeamEvent, type InsertTeamEvent,
+  teamEventAttendance, type TeamEventAttendance, type InsertTeamEventAttendance,
+  teamAnnouncements, type TeamAnnouncement, type InsertTeamAnnouncement
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -117,6 +122,38 @@ export interface IStorage {
   getAthleteLeaderboardEntry(leaderboardId: number, athleteId: number): Promise<LeaderboardEntry | undefined>;
   createLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry>;
   updateLeaderboardEntry(id: number, value: number, rank?: number): Promise<LeaderboardEntry | undefined>;
+  
+  // Team Methods
+  getTeam(id: number): Promise<Team | undefined>;
+  getAthleteTeams(athleteId: number): Promise<Team[]>;
+  getCoachTeams(coachId: number): Promise<Team[]>;
+  createTeam(team: InsertTeam): Promise<Team>;
+  updateTeam(id: number, team: Partial<InsertTeam>): Promise<Team | undefined>;
+  
+  // Team Member Methods
+  getTeamMembers(teamId: number): Promise<TeamMember[]>;
+  getTeamMember(teamId: number, athleteId: number): Promise<TeamMember | undefined>;
+  createTeamMember(member: InsertTeamMember): Promise<TeamMember>;
+  updateTeamMember(id: number, member: Partial<InsertTeamMember>): Promise<TeamMember | undefined>;
+  removeTeamMember(id: number): Promise<boolean>;
+  
+  // Team Event Methods
+  getTeamEvents(teamId: number): Promise<TeamEvent[]>;
+  getTeamEvent(id: number): Promise<TeamEvent | undefined>;
+  createTeamEvent(event: InsertTeamEvent): Promise<TeamEvent>;
+  updateTeamEvent(id: number, event: Partial<InsertTeamEvent>): Promise<TeamEvent | undefined>;
+  
+  // Team Event Attendance Methods
+  getTeamEventAttendance(eventId: number): Promise<TeamEventAttendance[]>;
+  getAthleteTeamEventAttendance(eventId: number, athleteId: number): Promise<TeamEventAttendance | undefined>;
+  createTeamEventAttendance(attendance: InsertTeamEventAttendance): Promise<TeamEventAttendance>;
+  updateTeamEventAttendance(id: number, attendance: Partial<InsertTeamEventAttendance>): Promise<TeamEventAttendance | undefined>;
+  
+  // Team Announcement Methods
+  getTeamAnnouncements(teamId: number): Promise<TeamAnnouncement[]>;
+  getTeamAnnouncement(id: number): Promise<TeamAnnouncement | undefined>;
+  createTeamAnnouncement(announcement: InsertTeamAnnouncement): Promise<TeamAnnouncement>;
+  updateTeamAnnouncement(id: number, announcement: Partial<InsertTeamAnnouncement>): Promise<TeamAnnouncement | undefined>;
 
   // Session Store
   sessionStore: any; // Use any for session store to avoid type issues
@@ -140,6 +177,11 @@ export class MemStorage implements IStorage {
   private athleteAchievementsMap: Map<number, AthleteAchievement>;
   private leaderboardsMap: Map<number, Leaderboard>;
   private leaderboardEntriesMap: Map<number, LeaderboardEntry>;
+  private teamsMap: Map<number, Team>;
+  private teamMembersMap: Map<number, TeamMember>;
+  private teamEventsMap: Map<number, TeamEvent>;
+  private teamEventAttendanceMap: Map<number, TeamEventAttendance>;
+  private teamAnnouncementsMap: Map<number, TeamAnnouncement>;
   
   currentUserId: number;
   currentAthleteId: number;
@@ -158,6 +200,11 @@ export class MemStorage implements IStorage {
   currentAthleteAchievementId: number;
   currentLeaderboardId: number;
   currentLeaderboardEntryId: number;
+  currentTeamId: number;
+  currentTeamMemberId: number;
+  currentTeamEventId: number;
+  currentTeamEventAttendanceId: number;
+  currentTeamAnnouncementId: number;
   sessionStore: any;
 
   constructor() {
@@ -178,6 +225,11 @@ export class MemStorage implements IStorage {
     this.athleteAchievementsMap = new Map();
     this.leaderboardsMap = new Map();
     this.leaderboardEntriesMap = new Map();
+    this.teamsMap = new Map();
+    this.teamMembersMap = new Map();
+    this.teamEventsMap = new Map();
+    this.teamEventAttendanceMap = new Map();
+    this.teamAnnouncementsMap = new Map();
     
     this.currentUserId = 1;
     this.currentAthleteId = 1;
@@ -196,6 +248,11 @@ export class MemStorage implements IStorage {
     this.currentAthleteAchievementId = 1;
     this.currentLeaderboardId = 1;
     this.currentLeaderboardEntryId = 1;
+    this.currentTeamId = 1;
+    this.currentTeamMemberId = 1;
+    this.currentTeamEventId = 1;
+    this.currentTeamEventAttendanceId = 1;
+    this.currentTeamAnnouncementId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // prune expired entries every 24h
@@ -970,6 +1027,221 @@ export class MemStorage implements IStorage {
       const rank = index + 1; // Ranks start at 1
       this.leaderboardEntriesMap.set(entry.id, { ...entry, rank });
     });
+  }
+  
+  // Team Methods
+  async getTeam(id: number): Promise<Team | undefined> {
+    return this.teamsMap.get(id);
+  }
+  
+  async getAthleteTeams(athleteId: number): Promise<Team[]> {
+    // First, get all team memberships for this athlete
+    const teamMemberships = Array.from(this.teamMembersMap.values()).filter(
+      (member) => member.athleteId === athleteId
+    );
+    
+    // Then, get all teams this athlete is a member of
+    const teamIds = teamMemberships.map(membership => membership.teamId);
+    const teams = teamIds.map(teamId => this.teamsMap.get(teamId)).filter(Boolean) as Team[];
+    
+    return teams;
+  }
+  
+  async getCoachTeams(coachId: number): Promise<Team[]> {
+    return Array.from(this.teamsMap.values()).filter(
+      (team) => team.coachId === coachId
+    );
+  }
+  
+  async createTeam(insertTeam: InsertTeam): Promise<Team> {
+    const id = this.currentTeamId++;
+    const createdAt = new Date();
+    
+    const team: Team = {
+      ...insertTeam,
+      id,
+      createdAt,
+      bannerImage: insertTeam.bannerImage ?? null,
+      logoImage: insertTeam.logoImage ?? null,
+      description: insertTeam.description ?? null,
+      website: insertTeam.website ?? null,
+      location: insertTeam.location ?? null,
+      homeField: insertTeam.homeField ?? null
+    };
+    
+    this.teamsMap.set(id, team);
+    return team;
+  }
+  
+  async updateTeam(id: number, teamUpdate: Partial<InsertTeam>): Promise<Team | undefined> {
+    const team = this.teamsMap.get(id);
+    if (!team) return undefined;
+    
+    const updatedTeam: Team = { ...team, ...teamUpdate };
+    this.teamsMap.set(id, updatedTeam);
+    return updatedTeam;
+  }
+  
+  // Team Member Methods
+  async getTeamMembers(teamId: number): Promise<TeamMember[]> {
+    return Array.from(this.teamMembersMap.values()).filter(
+      (member) => member.teamId === teamId
+    );
+  }
+  
+  async getTeamMember(teamId: number, athleteId: number): Promise<TeamMember | undefined> {
+    return Array.from(this.teamMembersMap.values()).find(
+      (member) => member.teamId === teamId && member.athleteId === athleteId
+    );
+  }
+  
+  async createTeamMember(insertMember: InsertTeamMember): Promise<TeamMember> {
+    const id = this.currentTeamMemberId++;
+    const joinedAt = new Date();
+    
+    const member: TeamMember = {
+      ...insertMember,
+      id,
+      joinedAt,
+      role: insertMember.role ?? "player",
+      number: insertMember.number ?? null,
+      position: insertMember.position ?? null,
+      status: insertMember.status ?? "active"
+    };
+    
+    this.teamMembersMap.set(id, member);
+    return member;
+  }
+  
+  async updateTeamMember(id: number, memberUpdate: Partial<InsertTeamMember>): Promise<TeamMember | undefined> {
+    const member = this.teamMembersMap.get(id);
+    if (!member) return undefined;
+    
+    const updatedMember: TeamMember = { ...member, ...memberUpdate };
+    this.teamMembersMap.set(id, updatedMember);
+    return updatedMember;
+  }
+  
+  async removeTeamMember(id: number): Promise<boolean> {
+    return this.teamMembersMap.delete(id);
+  }
+  
+  // Team Event Methods
+  async getTeamEvents(teamId: number): Promise<TeamEvent[]> {
+    return Array.from(this.teamEventsMap.values())
+      .filter((event) => event.teamId === teamId)
+      .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
+  }
+  
+  async getTeamEvent(id: number): Promise<TeamEvent | undefined> {
+    return this.teamEventsMap.get(id);
+  }
+  
+  async createTeamEvent(insertEvent: InsertTeamEvent): Promise<TeamEvent> {
+    const id = this.currentTeamEventId++;
+    const createdAt = new Date();
+    
+    const event: TeamEvent = {
+      ...insertEvent,
+      id,
+      createdAt,
+      location: insertEvent.location ?? null,
+      description: insertEvent.description ?? null,
+      opponent: insertEvent.opponent ?? null,
+      requiredEquipment: insertEvent.requiredEquipment ?? null
+    };
+    
+    this.teamEventsMap.set(id, event);
+    return event;
+  }
+  
+  async updateTeamEvent(id: number, eventUpdate: Partial<InsertTeamEvent>): Promise<TeamEvent | undefined> {
+    const event = this.teamEventsMap.get(id);
+    if (!event) return undefined;
+    
+    const updatedEvent: TeamEvent = { ...event, ...eventUpdate };
+    this.teamEventsMap.set(id, updatedEvent);
+    return updatedEvent;
+  }
+  
+  // Team Event Attendance Methods
+  async getTeamEventAttendance(eventId: number): Promise<TeamEventAttendance[]> {
+    return Array.from(this.teamEventAttendanceMap.values()).filter(
+      (attendance) => attendance.eventId === eventId
+    );
+  }
+  
+  async getAthleteTeamEventAttendance(eventId: number, athleteId: number): Promise<TeamEventAttendance | undefined> {
+    return Array.from(this.teamEventAttendanceMap.values()).find(
+      (attendance) => attendance.eventId === eventId && attendance.athleteId === athleteId
+    );
+  }
+  
+  async createTeamEventAttendance(insertAttendance: InsertTeamEventAttendance): Promise<TeamEventAttendance> {
+    const id = this.currentTeamEventAttendanceId++;
+    const updatedAt = new Date();
+    
+    const attendance: TeamEventAttendance = {
+      ...insertAttendance,
+      id,
+      updatedAt,
+      status: insertAttendance.status ?? "undecided",
+      notes: insertAttendance.notes ?? null
+    };
+    
+    this.teamEventAttendanceMap.set(id, attendance);
+    return attendance;
+  }
+  
+  async updateTeamEventAttendance(id: number, attendanceUpdate: Partial<InsertTeamEventAttendance>): Promise<TeamEventAttendance | undefined> {
+    const attendance = this.teamEventAttendanceMap.get(id);
+    if (!attendance) return undefined;
+    
+    const updatedAt = new Date();
+    const updatedAttendance: TeamEventAttendance = { 
+      ...attendance, 
+      ...attendanceUpdate,
+      updatedAt
+    };
+    
+    this.teamEventAttendanceMap.set(id, updatedAttendance);
+    return updatedAttendance;
+  }
+  
+  // Team Announcement Methods
+  async getTeamAnnouncements(teamId: number): Promise<TeamAnnouncement[]> {
+    return Array.from(this.teamAnnouncementsMap.values())
+      .filter((announcement) => announcement.teamId === teamId)
+      .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime()); // newest first
+  }
+  
+  async getTeamAnnouncement(id: number): Promise<TeamAnnouncement | undefined> {
+    return this.teamAnnouncementsMap.get(id);
+  }
+  
+  async createTeamAnnouncement(insertAnnouncement: InsertTeamAnnouncement): Promise<TeamAnnouncement> {
+    const id = this.currentTeamAnnouncementId++;
+    const publishedAt = new Date();
+    
+    const announcement: TeamAnnouncement = {
+      ...insertAnnouncement,
+      id,
+      publishedAt,
+      image: insertAnnouncement.image ?? null,
+      attachmentLink: insertAnnouncement.attachmentLink ?? null
+    };
+    
+    this.teamAnnouncementsMap.set(id, announcement);
+    return announcement;
+  }
+  
+  async updateTeamAnnouncement(id: number, announcementUpdate: Partial<InsertTeamAnnouncement>): Promise<TeamAnnouncement | undefined> {
+    const announcement = this.teamAnnouncementsMap.get(id);
+    if (!announcement) return undefined;
+    
+    const updatedAnnouncement: TeamAnnouncement = { ...announcement, ...announcementUpdate };
+    this.teamAnnouncementsMap.set(id, updatedAnnouncement);
+    return updatedAnnouncement;
   }
 }
 
