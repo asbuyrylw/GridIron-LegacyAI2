@@ -20,87 +20,83 @@ import {
   Utensils,
   Award,
   Users,
+  BookOpen,
+  Building,
+  User,
 } from "lucide-react";
 import { ProgressRing } from "@/components/ui/progress-ring";
+import { 
+  Achievement, 
+  AchievementType, 
+  ACHIEVEMENT_BADGES, 
+  getAchievementById 
+} from "@/lib/achievement-badges";
 
-// Achievement category icons
-const categoryIcons = {
+// Achievement type to icon mapping
+const typeIcons = {
   performance: Activity,
   training: Dumbbell,
   nutrition: Utensils,
   social: Users,
-  general: Award,
+  profile: User,
+  recruiting: Building,
+  academic: BookOpen,
 };
 
-// Achievement color by category
-const categoryColors = {
+// Achievement colors by type
+const typeColors = {
   performance: "#3b82f6", // blue
   training: "#10b981", // green
   nutrition: "#f59e0b", // amber
   social: "#8b5cf6", // purple
-  general: "#6366f1", // indigo
+  profile: "#ec4899", // pink
+  recruiting: "#f43f5e", // rose
+  academic: "#6366f1", // indigo
 };
 
 export function AchievementsShowcase() {
   const { user } = useAuth();
   
-  // Get athlete id from user (access using optional chaining with appropriate type checks)
-  const athleteId = user && 'athlete' in user ? (user as any).athlete?.id : undefined;
-  
-  // Query for getting all achievements
-  const {
-    data: allAchievements,
-    isLoading: achievementsLoading,
-  } = useQuery({
-    queryKey: ["/api/achievements"],
-    queryFn: async () => {
-      const res = await fetch("/api/achievements");
-      if (!res.ok) return [];
-      return res.json();
-    },
+  // Fetch athlete achievements
+  const { data: athleteAchievements = [], isLoading: athleteAchievementsLoading } = useQuery<any[]>({
+    queryKey: [`/api/athlete/${user?.athlete?.id}/achievements`],
+    enabled: !!user?.athlete?.id,
   });
   
-  // Query for getting athlete's achievement progress
-  const {
-    data: athleteAchievements,
-    isLoading: athleteAchievementsLoading,
-  } = useQuery({
-    queryKey: ["/api/athlete", athleteId, "achievements"],
-    queryFn: async () => {
-      if (!athleteId) return [];
-      const res = await fetch(`/api/athlete/${athleteId}/achievements`);
-      if (!res.ok) return [];
-      return res.json();
-    },
-    enabled: !!athleteId,
-  });
-  
-  // Group achievements by category
-  const achievementsByCategory = !achievementsLoading && allAchievements
-    ? allAchievements.reduce((acc: Record<string, any[]>, achievement: any) => {
-        if (!acc[achievement.category]) {
-          acc[achievement.category] = [];
-        }
-        acc[achievement.category].push(achievement);
-        return acc;
-      }, {})
-    : {};
+  // Group frontend achievements by type
+  const achievementsByType = ACHIEVEMENT_BADGES.reduce((acc: Record<string, Achievement[]>, achievement) => {
+    if (!acc[achievement.type]) {
+      acc[achievement.type] = [];
+    }
+    acc[achievement.type].push(achievement);
+    return acc;
+  }, {});
   
   // Create a map of athlete achievements by achievement ID for easier lookup
-  const athleteAchievementMap = !athleteAchievementsLoading && athleteAchievements
-    ? athleteAchievements.reduce((acc: Record<number, any>, achievement: any) => {
-        acc[achievement.achievementId] = achievement;
-        return acc;
-      }, {})
-    : {};
+  const athleteAchievementMap = athleteAchievements.reduce((acc: Record<string, any>, achievement: any) => {
+    acc[achievement.achievementId] = achievement;
+    return acc;
+  }, {});
+  
+  // Map frontend achievements with progress data
+  const achievementsWithProgress = ACHIEVEMENT_BADGES.map(achievement => {
+    const achievementId = parseInt(achievement.id);
+    const athleteAchievement = athleteAchievementMap[achievementId];
+    return {
+      ...achievement,
+      progress: athleteAchievement?.progress || 0,
+      isCompleted: athleteAchievement?.completed || false,
+      earnedDate: athleteAchievement?.earnedAt,
+    };
+  });
   
   // Calculate overall completion percentages
-  const totalAchievements = allAchievements?.length || 0;
-  const completedAchievements = athleteAchievements?.filter((a: any) => a.completed)?.length || 0;
+  const totalAchievements = ACHIEVEMENT_BADGES.length;
+  const completedAchievements = achievementsWithProgress.filter(a => a.isCompleted).length;
   const overallProgress = totalAchievements ? Math.round((completedAchievements / totalAchievements) * 100) : 0;
   
-  // If loading or no achievements
-  if (achievementsLoading || athleteAchievementsLoading) {
+  // If loading
+  if (athleteAchievementsLoading) {
     return (
       <Card>
         <CardHeader>
@@ -144,11 +140,11 @@ export function AchievementsShowcase() {
       
       <Tabs defaultValue="all" className="pb-1">
         <div className="px-6">
-          <TabsList className="w-full grid grid-cols-6">
+          <TabsList className="w-full grid grid-cols-5 lg:grid-cols-7">
             <TabsTrigger value="all">All</TabsTrigger>
-            {Object.keys(achievementsByCategory).map(category => (
-              <TabsTrigger key={category} value={category} className="capitalize">
-                {category}
+            {Object.keys(achievementsByType).map(type => (
+              <TabsTrigger key={type} value={type} className="capitalize">
+                {type}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -157,12 +153,11 @@ export function AchievementsShowcase() {
         <CardContent className="pt-4">
           <TabsContent value="all" className="m-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {allAchievements?.map((achievement: any) => {
-                const athleteAchievement = athleteAchievementMap[achievement.id];
-                const progress = athleteAchievement?.progress || 0;
-                const isCompleted = athleteAchievement?.completed || false;
-                const CategoryIcon = categoryIcons[achievement.category as keyof typeof categoryIcons] || Trophy;
-                const color = categoryColors[achievement.category as keyof typeof categoryColors] || "#6366f1";
+              {achievementsWithProgress.map((achievement) => {
+                const progress = achievement.progress;
+                const isCompleted = achievement.isCompleted;
+                const TypeIcon = typeIcons[achievement.type as keyof typeof typeIcons] || Trophy;
+                const color = typeColors[achievement.type as keyof typeof typeColors] || "#6366f1";
                 
                 return (
                   <div 
@@ -177,13 +172,13 @@ export function AchievementsShowcase() {
                           className="p-2 rounded-full mr-3" 
                           style={{ background: `${color}15`, color }}
                         >
-                          <CategoryIcon className="h-5 w-5" />
+                          <TypeIcon className="h-5 w-5" />
                         </div>
                         <div>
                           <h3 className="font-medium">{achievement.name}</h3>
                           <p className="text-sm text-muted-foreground">{achievement.description}</p>
                           <div className="flex items-center mt-1 text-xs text-muted-foreground">
-                            <span className="capitalize mr-2">{achievement.category}</span>
+                            <span className="capitalize mr-2">{achievement.type}</span>
                             <span>•</span>
                             <span className="ml-2">{achievement.points} points</span>
                           </div>
@@ -209,15 +204,15 @@ export function AchievementsShowcase() {
             </div>
           </TabsContent>
           
-          {Object.keys(achievementsByCategory).map(category => (
-            <TabsContent key={category} value={category} className="m-0">
+          {Object.keys(achievementsByType).map(type => (
+            <TabsContent key={type} value={type} className="m-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {achievementsByCategory[category]?.map((achievement: any) => {
-                  const athleteAchievement = athleteAchievementMap[achievement.id];
-                  const progress = athleteAchievement?.progress || 0;
-                  const isCompleted = athleteAchievement?.completed || false;
-                  const CategoryIcon = categoryIcons[category as keyof typeof categoryIcons] || Trophy;
-                  const color = categoryColors[category as keyof typeof categoryColors] || "#6366f1";
+                {achievementsByType[type].map((achievement) => {
+                  const achievementWithProgress = achievementsWithProgress.find(a => a.id === achievement.id);
+                  const progress = achievementWithProgress?.progress || 0;
+                  const isCompleted = achievementWithProgress?.isCompleted || false;
+                  const TypeIcon = typeIcons[type as keyof typeof typeIcons] || Trophy;
+                  const color = typeColors[type as keyof typeof typeColors] || "#6366f1";
                   
                   return (
                     <div 
@@ -232,13 +227,13 @@ export function AchievementsShowcase() {
                             className="p-2 rounded-full mr-3" 
                             style={{ background: `${color}15`, color }}
                           >
-                            <CategoryIcon className="h-5 w-5" />
+                            <TypeIcon className="h-5 w-5" />
                           </div>
                           <div>
                             <h3 className="font-medium">{achievement.name}</h3>
                             <p className="text-sm text-muted-foreground">{achievement.description}</p>
                             <div className="flex items-center mt-1 text-xs text-muted-foreground">
-                              <span className="capitalize mr-2">{category}</span>
+                              <span className="capitalize mr-2">{type}</span>
                               <span>•</span>
                               <span className="ml-2">{achievement.points} points</span>
                             </div>
