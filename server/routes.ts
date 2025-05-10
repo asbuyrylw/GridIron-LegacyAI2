@@ -33,6 +33,8 @@ import {
   insertStrengthConditioningSchema,
   insertNutritionInfoSchema,
   insertRecruitingPreferencesSchema,
+  insertExerciseLibrarySchema,
+  insertWorkoutSessionSchema,
   insertTeamSchema,
   insertTeamMemberSchema,
   insertTeamEventSchema,
@@ -316,6 +318,247 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(updatedPlan);
     } catch (error) {
+      next(error);
+    }
+  });
+  
+  // -- Exercise Library Routes --
+  // Get all exercises with optional filters
+  app.get("/api/exercises", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const { category, difficulty, position } = req.query;
+      
+      const exercises = await storage.getExercises(
+        category as string | undefined,
+        difficulty as string | undefined,
+        position as string | undefined
+      );
+      
+      res.json(exercises);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get a specific exercise
+  app.get("/api/exercises/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const exerciseId = parseInt(req.params.id);
+      const exercise = await storage.getExerciseById(exerciseId);
+      
+      if (!exercise) {
+        return res.status(404).json({ message: "Exercise not found" });
+      }
+      
+      res.json(exercise);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Create a new exercise (admin only)
+  app.post("/api/exercises", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // In a real app, you'd check if user is admin
+      // For now, we'll allow any authenticated user to create exercises
+      
+      // Validate the exercise data
+      const validated = insertExerciseLibrarySchema.parse(req.body);
+      
+      const exercise = await storage.createExercise(validated);
+      res.status(201).json(exercise);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      next(error);
+    }
+  });
+  
+  // Update an exercise (admin only)
+  app.patch("/api/exercises/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // In a real app, you'd check if user is admin
+      
+      const exerciseId = parseInt(req.params.id);
+      const exercise = await storage.getExerciseById(exerciseId);
+      
+      if (!exercise) {
+        return res.status(404).json({ message: "Exercise not found" });
+      }
+      
+      // Validate the update data
+      const validated = insertExerciseLibrarySchema.partial().parse(req.body);
+      
+      const updatedExercise = await storage.updateExercise(exerciseId, validated);
+      res.json(updatedExercise);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      next(error);
+    }
+  });
+  
+  // -- Workout Session Routes --
+  // Get workout sessions for an athlete
+  app.get("/api/athlete/:id/workouts", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own workout sessions
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const workouts = await storage.getWorkoutSessions(athleteId);
+      res.json(workouts);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get a specific workout session
+  app.get("/api/athlete/:athleteId/workouts/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.athleteId);
+      const workoutId = parseInt(req.params.id);
+      
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own workout sessions
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const workout = await storage.getWorkoutSessionById(workoutId);
+      
+      if (!workout) {
+        return res.status(404).json({ message: "Workout session not found" });
+      }
+      
+      if (workout.athleteId !== athleteId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      res.json(workout);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Create a workout session
+  app.post("/api/athlete/:id/workouts", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow creating sessions for own profile
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Validate the workout data
+      const validated = insertWorkoutSessionSchema.parse({
+        ...req.body,
+        athleteId
+      });
+      
+      const workout = await storage.createWorkoutSession(validated);
+      res.status(201).json(workout);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      next(error);
+    }
+  });
+  
+  // Update a workout session
+  app.patch("/api/athlete/:athleteId/workouts/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.athleteId);
+      const workoutId = parseInt(req.params.id);
+      
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow updating own workout sessions
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const workout = await storage.getWorkoutSessionById(workoutId);
+      
+      if (!workout) {
+        return res.status(404).json({ message: "Workout session not found" });
+      }
+      
+      if (workout.athleteId !== athleteId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Validate the update data
+      const validated = insertWorkoutSessionSchema.partial().parse(req.body);
+      
+      const updatedWorkout = await storage.updateWorkoutSession(workoutId, validated);
+      res.json(updatedWorkout);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
       next(error);
     }
   });
