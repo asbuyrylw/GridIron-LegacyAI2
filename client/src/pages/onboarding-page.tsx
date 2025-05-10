@@ -89,15 +89,57 @@ export default function OnboardingPage() {
   const prevStep = () => {
     setCurrentStep(Math.max(0, currentStep - 1));
   };
+  
+  // Save onboarding progress
+  const saveProgress = async () => {
+    if (!user?.athlete?.id) {
+      toast({
+        title: "Error",
+        description: "Cannot save progress - user not authenticated",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      await apiRequest("POST", `/api/athlete/${user.athlete.id}/onboarding/progress`, {
+        step: currentStep,
+        data: formData
+      });
+      
+      toast({
+        title: "Progress Saved",
+        description: "You can continue your onboarding later",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error Saving Progress",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <Card className="shadow-lg">
           <CardHeader className="text-center border-b pb-6">
-            <CardTitle className="text-3xl font-extrabold">
-              Player Onboarding
-            </CardTitle>
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex-1"></div>
+              <div className="text-center flex-1">
+                <CardTitle className="text-3xl font-extrabold">
+                  Player Onboarding
+                </CardTitle>
+              </div>
+              <div className="flex-1 flex justify-end">
+                {currentStep > 0 && currentStep < steps.length - 1 && (
+                  <Button variant="ghost" size="sm" onClick={saveProgress} className="text-xs">
+                    Save & Exit
+                  </Button>
+                )}
+              </div>
+            </div>
             <CardDescription>
               Let's set up your profile to get personalized training, nutrition, and recruiting plans
             </CardDescription>

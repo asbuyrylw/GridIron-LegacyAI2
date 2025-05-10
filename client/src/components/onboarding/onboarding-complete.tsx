@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2 } from "lucide-react";
 
 interface OnboardingCompleteProps {
-  onSubmit: () => void;
+  onSubmit: (data?: any) => void;
   prevStep: () => void;
   isPending: boolean;
 }
@@ -63,7 +63,7 @@ export default function OnboardingComplete({
           <Button type="button" variant="outline" onClick={prevStep}>
             Previous
           </Button>
-          <Button onClick={onSubmit} disabled={isPending}>
+          <Button onClick={() => onSubmit({})} disabled={isPending}>
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 

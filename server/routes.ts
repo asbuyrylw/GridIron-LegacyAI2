@@ -1395,6 +1395,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Save athlete onboarding progress
+  app.post("/api/athlete/:id/onboarding/progress", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow saving progress for own profile
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const { step, data } = req.body;
+      
+      // Save progress in session for now since we don't have a dedicated table
+      if (!req.session.onboardingProgress) {
+        req.session.onboardingProgress = {};
+      }
+      
+      req.session.onboardingProgress[athleteId] = {
+        step,
+        data,
+        timestamp: new Date().toISOString()
+      };
+      
+      await new Promise<void>((resolve) => {
+        req.session.save(() => resolve());
+      });
+      
+      res.status(200).json({ 
+        message: "Onboarding progress saved",
+        step,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   // Complete athlete onboarding
   app.post("/api/athlete/:id/onboarding", async (req, res, next) => {
     try {
