@@ -4,12 +4,34 @@ import { TrainingPlanView } from "@/components/training/training-plan";
 import { GeneratePlan } from "@/components/training/generate-plan";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { format, addDays, subDays } from "date-fns";
+import { useAuth } from "@/hooks/use-auth";
+import { Redirect } from "wouter";
 
 export default function TrainingPage() {
+  const { user, isLoading } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
+  
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  // Redirect if not authenticated
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
+  
+  // Redirect to onboarding if not completed
+  if (user?.athlete && !user.athlete.onboardingCompleted) {
+    return <Redirect to="/onboarding" />;
+  }
   
   const nextDay = () => {
     setSelectedDate(current => addDays(current, 1));

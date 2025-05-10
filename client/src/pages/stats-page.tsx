@@ -8,10 +8,31 @@ import { useQuery } from "@tanstack/react-query";
 import { CombineMetric } from "@shared/schema";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { format } from "date-fns";
+import { Redirect } from "wouter";
+import { Loader2 } from "lucide-react";
 
 export default function StatsPage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const athleteId = user?.athlete?.id;
+  
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  // Redirect if not authenticated
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
+  
+  // Redirect to onboarding if not completed
+  if (user?.athlete && !user.athlete.onboardingCompleted) {
+    return <Redirect to="/onboarding" />;
+  }
   
   const { data: metrics } = useQuery<CombineMetric[]>({
     queryKey: [`/api/athlete/${athleteId}/metrics`],

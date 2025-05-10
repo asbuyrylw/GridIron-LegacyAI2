@@ -12,13 +12,33 @@ import { NutritionOverview } from "@/components/nutrition/nutrition-overview";
 import { MealSuggestions } from "@/components/nutrition/meal-suggestions";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { Redirect } from "wouter";
 
 export default function NutritionPage() {
   const [activeTab, setActiveTab] = useState("overview");
-  const { user } = useAuth();
+  const { user, isLoading: isLoadingAuth } = useAuth();
   const { toast } = useToast();
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [isAddingMeal, setIsAddingMeal] = useState(false);
+  
+  // Loading auth state
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  // Redirect if not authenticated
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
+  
+  // Redirect to onboarding if not completed
+  if (user?.athlete && !user.athlete.onboardingCompleted) {
+    return <Redirect to="/onboarding" />;
+  }
 
   const { data: athlete, isLoading: isLoadingAthlete } = useQuery({
     queryKey: ["/api/athlete/me"],

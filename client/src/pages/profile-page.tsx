@@ -8,6 +8,7 @@ import {
   CardTitle,
   CardFooter
 } from "@/components/ui/card";
+import { Redirect } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { 
@@ -32,7 +33,8 @@ import {
   Calendar,
   Building,
   GraduationCap,
-  BookOpen
+  BookOpen,
+  Loader2
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,14 +50,14 @@ const profileFormSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   position: z.string().min(1, "Position is required"),
   school: z.string().optional(),
-  grade: z.string().optional(),
+  teamLevel: z.string().optional(), // replacing grade with teamLevel
   graduationYear: z.coerce.number().optional(),
   height: z.string().optional(),
   weight: z.coerce.number().optional(),
   bodyFat: z.coerce.number().optional(),
   gpa: z.coerce.number().optional(),
   actScore: z.coerce.number().optional(),
-  targetDivision: z.string().optional(),
+  preferredDivision: z.string().optional(), // replacing targetDivision
   hudlLink: z.string().url().optional().or(z.string().length(0)),
   maxPrepsLink: z.string().url().optional().or(z.string().length(0)),
   profileVisibility: z.boolean().default(true)
@@ -64,9 +66,28 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const athleteId = user?.athlete?.id;
+  
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  // Redirect if not authenticated
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
+  
+  // Redirect to onboarding if not completed
+  if (user?.athlete && !user.athlete.onboardingCompleted) {
+    return <Redirect to="/onboarding" />;
+  }
   
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -75,14 +96,14 @@ export default function ProfilePage() {
       lastName: user?.athlete?.lastName || "",
       position: user?.athlete?.position || "",
       school: user?.athlete?.school || "",
-      grade: user?.athlete?.grade || "",
+      teamLevel: user?.athlete?.teamLevel || "",
       graduationYear: user?.athlete?.graduationYear || undefined,
       height: user?.athlete?.height || "",
       weight: user?.athlete?.weight || undefined,
       bodyFat: user?.athlete?.bodyFat || undefined,
       gpa: user?.athlete?.gpa || undefined,
       actScore: user?.athlete?.actScore || undefined,
-      targetDivision: user?.athlete?.targetDivision || "",
+      preferredDivision: "", // No direct field, would come from recruitingPreferences
       hudlLink: user?.athlete?.hudlLink || "",
       maxPrepsLink: user?.athlete?.maxPrepsLink || "",
       profileVisibility: user?.athlete?.profileVisibility !== false
