@@ -54,6 +54,7 @@ function Router() {
         {/* Public Routes */}
         <Route path="/auth" component={AuthPage} />
         <Route path="/parent-view" component={ParentViewPage} />
+        <Route path="/parent-access-tester" component={ParentAccessTester} />
         
         {/* Landing Pages */}
         <Route path="/landing/players" component={LandingPlayers} />
