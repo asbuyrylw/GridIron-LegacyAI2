@@ -140,12 +140,24 @@ export interface IStorage {
   createSocialConnection(connection: InsertSocialConnection): Promise<SocialConnection>;
   updateSocialConnection(id: number, connection: Partial<InsertSocialConnection>): Promise<SocialConnection | undefined>;
   disconnectSocialConnection(id: number): Promise<SocialConnection | undefined>;
+  getAthleteConnections(athleteId: number): Promise<SocialConnection[]>;
+  upsertAthleteConnection(athleteId: number, connection: any): Promise<SocialConnection>;
 
   // Social Post Methods
-  getSocialPosts(userId: number): Promise<SocialPost[]>;
+  getSocialPosts(options: any): Promise<SocialPost[]>;
   getSocialPostById(id: number): Promise<SocialPost | undefined>;
-  createSocialPost(post: InsertSocialPost): Promise<SocialPost>;
+  createSocialPost(post: any): Promise<SocialPost>;
+  updateSocialPost(id: number, post: any): Promise<SocialPost | undefined>;
   updateSocialPostStatus(id: number, status: string, postedAt?: Date, errorMessage?: string): Promise<SocialPost | undefined>;
+  deleteSocialPost(id: number): Promise<boolean>;
+  toggleSocialPostLike(postId: number, userId: number): Promise<boolean>;
+  
+  // Social Comments Methods
+  getSocialPostComments(postId: number): Promise<any[]>;
+  getSocialCommentById(id: number): Promise<any | undefined>;
+  createSocialComment(comment: any): Promise<any>;
+  toggleSocialCommentLike(commentId: number, userId: number): Promise<boolean>;
+  deleteSocialComment(id: number): Promise<boolean>;
 
   // These duplicate methods are already defined earlier in the interface
 

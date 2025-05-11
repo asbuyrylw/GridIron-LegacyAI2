@@ -55,6 +55,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
   
+  // Social API endpoints
+  registerSocialRoutes(app);
+  
   // Get current athlete (for logged-in user)
   app.get("/api/athlete/me", async (req, res, next) => {
     try {
@@ -3818,4 +3821,339 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Register social media related routes
+function registerSocialRoutes(app: Express): void {
+  // Get social feed posts
+  app.get("/api/social/feed", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Optional filter parameter (all, team, achievements)
+      const filter = req.query.filter as string || "all";
+      
+      // Get posts with pagination
+      const page = parseInt(req.query.page as string || "1");
+      const limit = 10;
+      const offset = (page - 1) * limit;
+      
+      // Get posts from the database
+      const posts = await storage.getSocialPosts({
+        filter,
+        userId: req.user.id,
+        limit,
+        offset
+      });
+      
+      res.json(posts);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Create a new social post
+  app.post("/api/social/posts", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const userId = req.user.id;
+      
+      // Process post data
+      const postData = {
+        userId,
+        content: req.body.content,
+        media: req.body.media || null,
+        mediaType: req.body.mediaType || null,
+        achievementId: req.body.achievementId || null,
+        trainingPlanId: req.body.trainingPlanId || null,
+        gameStatsId: req.body.gameStatsId || null,
+        combineMetricsId: req.body.combineMetricsId || null,
+      };
+      
+      // Create the post
+      const post = await storage.createSocialPost(postData);
+      
+      res.status(201).json(post);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get post by ID
+  app.get("/api/social/posts/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const postId = parseInt(req.params.id);
+      const post = await storage.getSocialPostById(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      res.json(post);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update post
+  app.patch("/api/social/posts/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const postId = parseInt(req.params.id);
+      const post = await storage.getSocialPostById(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Only allow the post owner to update it
+      if (post.userId !== req.user.id) {
+        return res.status(403).json({ message: "You don't have permission to update this post" });
+      }
+      
+      // Update the post
+      const updatedPost = await storage.updateSocialPost(postId, req.body);
+      
+      res.json(updatedPost);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Delete post
+  app.delete("/api/social/posts/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const postId = parseInt(req.params.id);
+      const post = await storage.getSocialPostById(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Only allow the post owner to delete it
+      if (post.userId !== req.user.id) {
+        return res.status(403).json({ message: "You don't have permission to delete this post" });
+      }
+      
+      // Delete the post
+      await storage.deleteSocialPost(postId);
+      
+      res.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Like a post
+  app.post("/api/social/posts/:id/like", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const postId = parseInt(req.params.id);
+      const userId = req.user.id;
+      
+      // Check if post exists
+      const post = await storage.getSocialPostById(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Toggle like
+      const liked = await storage.toggleSocialPostLike(postId, userId);
+      
+      res.json({ liked });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get post comments
+  app.get("/api/social/posts/:id/comments", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const postId = parseInt(req.params.id);
+      
+      // Check if post exists
+      const post = await storage.getSocialPostById(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Get comments
+      const comments = await storage.getSocialPostComments(postId);
+      
+      res.json(comments);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Add a comment to a post
+  app.post("/api/social/posts/:id/comments", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const postId = parseInt(req.params.id);
+      const userId = req.user.id;
+      
+      // Check if post exists
+      const post = await storage.getSocialPostById(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Create the comment
+      const commentData = {
+        postId,
+        userId,
+        content: req.body.content,
+        parentId: req.body.parentId || null
+      };
+      
+      const comment = await storage.createSocialComment(commentData);
+      
+      res.status(201).json(comment);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Like a comment
+  app.post("/api/social/comments/:id/like", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const commentId = parseInt(req.params.id);
+      const userId = req.user.id;
+      
+      // Check if comment exists
+      const comment = await storage.getSocialCommentById(commentId);
+      
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      
+      // Toggle like
+      const liked = await storage.toggleSocialCommentLike(commentId, userId);
+      
+      res.json({ liked });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Delete a comment
+  app.delete("/api/social/comments/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const commentId = parseInt(req.params.id);
+      const userId = req.user.id;
+      
+      // Check if comment exists
+      const comment = await storage.getSocialCommentById(commentId);
+      
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      
+      // Only allow the comment owner to delete it
+      if (comment.userId !== userId) {
+        return res.status(403).json({ message: "You don't have permission to delete this comment" });
+      }
+      
+      // Delete the comment
+      await storage.deleteSocialComment(commentId);
+      
+      res.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get athlete's social connections
+  app.get("/api/athlete/:id/social-connections", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow viewing own connections
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Get connections
+      const connections = await storage.getAthleteConnections(athleteId);
+      
+      res.json(connections);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update athlete's social connection
+  app.post("/api/athlete/:id/social-connections", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow updating own connections
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Update the connection
+      const connection = await storage.upsertAthleteConnection(athleteId, req.body);
+      
+      res.status(201).json(connection);
+    } catch (error) {
+      next(error);
+    }
+  });
 }
