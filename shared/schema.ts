@@ -288,6 +288,9 @@ export const performanceInsights = pgTable("performance_insights", {
   lastUpdated: timestamp("last_updated").defaultNow().notNull(),
 });
 
+// Type for performance insights
+export type PerformanceInsights = typeof performanceInsights.$inferSelect;
+
 export const coachMessages = pgTable("coach_messages", {
   id: serial("id").primaryKey(),
   athleteId: integer("athlete_id").references(() => athletes.id).notNull(),

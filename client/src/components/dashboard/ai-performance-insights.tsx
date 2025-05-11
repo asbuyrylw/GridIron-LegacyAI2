@@ -12,6 +12,17 @@ import { Brain, ChevronRight, RefreshCw, Lightbulb, TrendingUp, Target, AlertCir
 import { CombineMetric } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
+// Define the type for performance insights
+interface PerformanceInsights {
+  athleteId: number;
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  performanceTrend?: string;
+  positionRanking?: string;
+  lastUpdated?: string;
+}
+
 interface AiPerformanceInsightsProps {
   athleteId?: number;
   className?: string;
@@ -31,7 +42,7 @@ export function AiPerformanceInsights({ athleteId, className }: AiPerformanceIns
     enabled: !!id,
   });
   
-  const { data: insights, isLoading: isInsightsLoading } = useQuery({
+  const { data: insights, isLoading: isInsightsLoading } = useQuery<PerformanceInsights>({
     queryKey: [`/api/athlete/${id}/insights`],
     enabled: !!id,
   });
