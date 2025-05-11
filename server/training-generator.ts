@@ -1,4 +1,11 @@
-import { InsertTrainingPlan, InsertExerciseLibrary, CombineMetric, Athlete, StrengthConditioning } from "@shared/schema";
+import { 
+  InsertTrainingPlan, 
+  InsertExerciseLibrary, 
+  CombineMetric, 
+  Athlete, 
+  StrengthConditioning,
+  StrengthConditioningForm
+} from "@shared/schema";
 import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -39,11 +46,27 @@ export async function generateAITrainingPlan(
     
     // Add strength profile information if available
     if (strengthProfile) {
+      // Extract training focus as an array of strings or convert from JSON if necessary
+      const trainingFocus = strengthProfile.trainingFocus 
+        ? (Array.isArray(strengthProfile.trainingFocus) 
+            ? strengthProfile.trainingFocus 
+            : JSON.parse(String(strengthProfile.trainingFocus)))
+        : [];
+      
+      // Extract areas to improve as an array of strings or convert from JSON if necessary
+      const areasToImprove = strengthProfile.areasToImprove
+        ? (Array.isArray(strengthProfile.areasToImprove)
+            ? strengthProfile.areasToImprove
+            : JSON.parse(String(strengthProfile.areasToImprove)))
+        : [];
+        
       prompt += `\nStrength profile:
-      - Primary strengths: ${strengthProfile.primaryStrengths?.join(', ') || 'Not specified'}
-      - Training limitations: ${strengthProfile.trainingLimitations?.join(', ') || 'None'}
-      - Preferred training style: ${strengthProfile.trainingPreference || 'Not specified'}
-      - Current fitness level: ${strengthProfile.fitnessLevel || 'Not specified'}`;
+      - Years training: ${strengthProfile.yearsTraining || 'Not specified'}
+      - Days per week: ${strengthProfile.daysPerWeek || 'Not specified'}
+      - Training focus: ${trainingFocus.join(', ') || 'Not specified'}
+      - Areas to improve: ${areasToImprove.join(', ') || 'Not specified'}
+      - Gym access: ${strengthProfile.gymAccess || 'Not specified'}
+      - Sleep hours: ${strengthProfile.sleepHours || 'Not specified'}`;
     }
     
     // Add recent performance data if available
@@ -119,7 +142,9 @@ export async function generateAITrainingPlan(
   } catch (error) {
     console.error("Error generating AI training plan:", error);
     // Fallback to basic training plan if AI generation fails
-    return generateInitialTrainingPlan(athleteId, position, focusAreas || []);
+    const posFromData = athleteData?.position || "Unknown";
+    const focusFromData = athleteData?.focusAreas || [];
+    return generateInitialTrainingPlan(athleteId, posFromData, focusFromData);
   }
 }
 

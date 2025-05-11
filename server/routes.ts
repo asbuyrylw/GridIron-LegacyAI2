@@ -323,6 +323,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Generate AI training plan
+  app.post("/api/athlete/:id/plans/generate", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow generating plans for own profile
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Get athlete metrics if available
+      const metrics = await storage.getLatestCombineMetrics(athleteId);
+      
+      // Get strength profile if available
+      const strengthProfile = await storage.getStrengthConditioning(athleteId);
+      
+      // Get training history data
+      const allWorkouts = await storage.getWorkoutSessions(athleteId);
+      // Filter to get only recent workouts (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const recentWorkouts = allWorkouts.filter(workout => {
+        const workoutDate = new Date(workout.date);
+        return workoutDate >= thirtyDaysAgo;
+      });
+      
+      const completedWorkouts = recentWorkouts.filter(workout => workout.completed).length;
+      
+      // Calculate average exertion from completed workouts
+      const exertionValues = recentWorkouts
+        .filter((workout) => workout.completed && workout.perceivedExertion !== null)
+        .map((workout) => workout.perceivedExertion || 0);
+      
+      const averageExertion = exertionValues.length > 0
+        ? exertionValues.reduce((sum: number, val: number) => sum + val, 0) / exertionValues.length
+        : 5; // Default to mid-range if no data
+      
+      // Identify common issues from workout notes
+      const commonIssues: string[] = [];
+      const notesWithIssues = recentWorkouts
+        .filter((workout) => typeof workout.notes === 'string' && workout.notes.toLowerCase().includes("issue"))
+        .map((workout) => workout.notes as string);
+      
+      if (notesWithIssues.length > 0) {
+        // Simple analysis - just extract the most common words in issue notes
+        // A more sophisticated analysis would be implemented in a real system
+        commonIssues.push("Identified from workout notes");
+      }
+      
+      // Get focus areas from request body or default to general development
+      const { focusAreas } = req.body;
+      
+      // Generate AI training plan using the training generator
+      const { generateAITrainingPlan } = await import("./training-generator");
+      
+      const plan = await generateAITrainingPlan(athleteId, {
+        position: athlete.position,
+        metrics,
+        profile: athlete,
+        strengthProfile,
+        focusAreas,
+        recentPerformance: {
+          completedWorkouts,
+          averageExertion,
+          commonIssues
+        }
+      });
+      
+      // Save the generated plan to the database
+      const savedPlan = await storage.createTrainingPlan(plan);
+      res.status(201).json(savedPlan);
+    } catch (error) {
+      console.error("Error generating AI training plan:", error);
+      
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      
+      // If we hit OpenAI API errors, return a more user-friendly message
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes("OpenAI")) {
+        return res.status(500).json({ 
+          message: "AI service is currently unavailable. Please try again later or create a manual training plan."
+        });
+      }
+      
+      next(error);
+    }
+  });
+  
   // -- Exercise Library Routes --
   // Get all exercises with optional filters
   app.get("/api/exercises", async (req, res, next) => {
