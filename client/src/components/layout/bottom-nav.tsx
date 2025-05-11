@@ -11,7 +11,8 @@ import {
   Share2,
   Settings,
   Users,
-  GraduationCap
+  GraduationCap,
+  School
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +69,12 @@ export function BottomNav() {
       active: location.includes("/teams")
     },
     {
+      label: "College",
+      href: "/college-matcher",
+      icon: School,
+      active: location === "/college-matcher"
+    },
+    {
       label: "Settings",
       href: "/settings",
       icon: Settings,
@@ -83,7 +90,7 @@ export function BottomNav() {
             <NavItem key={item.href} {...item} />
           ))}
         </div>
-        <div className="mt-1 grid grid-cols-4 gap-1">
+        <div className="mt-1 grid grid-cols-5 gap-1">
           {navItems.slice(5).map((item) => (
             <NavItem key={item.href} {...item} />
           ))}

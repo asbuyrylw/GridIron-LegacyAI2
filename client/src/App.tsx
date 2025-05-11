@@ -82,6 +82,7 @@ function Router() {
         <ProtectedRoute path="/teams" component={TeamsPage} />
         <ProtectedRoute path="/teams/:id" component={TeamDetailsPage} />
         <ProtectedRoute path="/recruiting" component={RecruitingPage} />
+        <ProtectedRoute path="/college-matcher" component={CollegeMatcherPage} />
         
         {/* Public Routes */}
         <Route path="/auth" component={AuthPage} />
