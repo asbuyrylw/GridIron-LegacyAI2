@@ -561,11 +561,24 @@ export const personalInfoSchema = z.object({
     required_error: "Date of birth is required",
   }),
   phoneNumber: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
   zipCode: z.string().optional(),
   school: z.string().min(1, "School name is required"),
   graduationYear: z.number().int().min(2024).max(2035),
   jerseyNumber: z.string().optional(),
   coachName: z.string().optional(),
+  
+  // Parent/Guardian Information
+  parentFirstName: z.string().optional(),
+  parentLastName: z.string().optional(),
+  parentEmail: z.string().email("Invalid email address").optional(),
+  parentPhone: z.string().optional(),
+  parentHeight: z.number().optional().describe("For height prediction calculations"),
+  secondaryContactName: z.string().optional(),
+  secondaryContactPhone: z.string().optional(),
+  secondaryContactRelationship: z.string().optional(),
 });
 
 // Football Information Form
@@ -582,6 +595,8 @@ export const athleticMetricsSchema = z.object({
   height: z.string().min(1, "Height is required"),
   weight: z.number().int().min(50, "Valid weight is required"),
   projectedHeight: z.string().optional(),
+  
+  // Core combine metrics
   fortyYard: z.number().positive().optional(),
   tenYardSplit: z.number().positive().optional(),
   shuttle: z.number().positive().optional(),
@@ -593,6 +608,28 @@ export const athleticMetricsSchema = z.object({
   squatMax: z.number().int().positive().optional(),
   powerClean: z.number().int().positive().optional(),
   deadlift: z.number().int().positive().optional(),
+  
+  // Expanded metrics
+  bodyFat: z.number().min(0).max(40).optional(),
+  wingspanInches: z.number().int().positive().optional(),
+  handSize: z.number().positive().optional(),
+  chestSize: z.number().positive().optional(),
+  waistSize: z.number().positive().optional(),
+  neckSize: z.number().positive().optional(),
+  
+  // Position-specific metrics
+  positionSpecificMetrics: z.array(z.object({
+    name: z.string(),
+    value: z.number().or(z.string()),
+    unit: z.string().optional(),
+    notes: z.string().optional()
+  })).optional().default([]),
+  
+  // Verification
+  isVerified: z.boolean().optional().default(false),
+  verifiedBy: z.string().optional(),
+  verificationDate: z.string().optional(), // ISO date string
+  combineEventId: z.number().int().positive().optional(),
   pullUps: z.number().int().min(0).optional(),
 });
 
@@ -607,6 +644,17 @@ export const academicProfileSchema = z.object({
   apHonorsClasses: z.string().optional(),
   volunteerWork: z.string().optional(),
   intendedMajors: z.string().optional(),
+  
+  // Enhanced academic info
+  currentSchedule: z.string().optional().describe("Current class schedule"),
+  transcriptUploaded: z.boolean().default(false),
+  academicAwards: z.string().optional().describe("Academic awards and honors"),
+  schoolActivities: z.string().optional().describe("School clubs and activities"),
+  counselorName: z.string().optional(),
+  counselorEmail: z.string().email("Invalid email address").optional(),
+  counselorPhone: z.string().optional(),
+  preferredLearningStyle: z.string().optional(),
+  studyHoursPerWeek: z.number().int().min(0).max(100).optional(),
 });
 
 // Strength and Conditioning Form
@@ -618,7 +666,32 @@ export const strengthConditioningSchema = z.object({
   gymAccess: z.string().optional(),
   sleepHours: z.number().int().min(0).max(24).optional(),
   recoveryMethods: z.array(z.string()).optional(),
+  
+  // Basic injuries field (to maintain compatibility with existing data)
   injuriesSurgeries: z.string().optional(),
+  
+  // Enhanced injury tracking
+  currentInjuries: z.array(z.object({
+    type: z.string(),
+    location: z.string(),
+    date: z.string(), // ISO date string
+    fullyRecovered: z.boolean(),
+    treatmentNotes: z.string().optional()
+  })).optional().default([]),
+  pastSurgeries: z.array(z.object({
+    type: z.string(),
+    date: z.string(), // ISO date string
+    notes: z.string().optional()
+  })).optional().default([]),
+  concussionHistory: z.array(z.object({
+    date: z.string(), // ISO date string
+    severity: z.string(),
+    returnToPlayDays: z.number().optional(),
+    notes: z.string().optional()
+  })).optional().default([]),
+  medicalClearance: z.boolean().optional(),
+  medicalNotes: z.string().optional(),
+  trainingBehavior: z.string().optional().describe("Training behavior intake responses"),
 });
 
 // Nutrition Form
