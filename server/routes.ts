@@ -2030,6 +2030,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           read: false
         });
         
+        // 8. Create an initial training plan based on athlete position and strength/conditioning data
+        try {
+          const { generateInitialTrainingPlan } = require('./training-generator');
+          
+          // Get position from football info or default
+          const position = data.footballInfo?.position || "Unknown";
+          
+          // Get focus areas from strength & conditioning form if available
+          const focusAreas = data.strengthConditioning?.focusAreas || [];
+          
+          // Generate and create the initial training plan
+          const trainingPlan = generateInitialTrainingPlan(athleteId, position, focusAreas);
+          await storage.createTrainingPlan(trainingPlan);
+          
+          console.log(`Created initial training plan for athlete ${athleteId}`);
+        } catch (err) {
+          console.error("Error creating initial training plan:", err);
+          // Continue with onboarding completion even if plan creation fails
+        }
+        
         res.status(200).json({ 
           message: "Onboarding completed successfully",
           athleteId

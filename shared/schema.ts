@@ -656,10 +656,6 @@ export const personalInfoSchema = z.object({
   // Height prediction data points
   fatherHeight: z.number().optional().describe("Father's height in inches for growth prediction"),
   motherHeight: z.number().optional().describe("Mother's height in inches for growth prediction"),
-  
-  secondaryContactName: z.string().optional(),
-  secondaryContactPhone: z.string().optional(),
-  secondaryContactRelationship: z.string().optional(),
 });
 
 // Football Information Form
