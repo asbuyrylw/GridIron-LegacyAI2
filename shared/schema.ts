@@ -151,6 +151,21 @@ export const recruitingPreferences = pgTable("recruiting_preferences", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Recruiting profile table for extended information
+export const recruitingProfiles = pgTable("recruiting_profiles", {
+  id: serial("id").primaryKey(),
+  athleteId: integer("athlete_id").references(() => athletes.id).notNull().unique(),
+  city: text("city"),
+  state: text("state"),
+  achievements: json("achievements").default('[]'), // Array of achievements/awards
+  personalStatement: text("personal_statement"),
+  coachReferenceName: text("coach_reference_name"),
+  coachReferenceEmail: text("coach_reference_email"),
+  highlightVideoUrl: text("highlight_video_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Expanded combine metrics table to include more athletic tests
 export const combineMetrics = pgTable("combine_metrics", {
   id: serial("id").primaryKey(),
@@ -532,6 +547,7 @@ export const insertLeaderboardEntrySchema = createInsertSchema(leaderboardEntrie
 export const insertStrengthConditioningSchema = createInsertSchema(strengthConditioning).omit({ id: true, updatedAt: true });
 export const insertNutritionInfoSchema = createInsertSchema(nutritionInfo).omit({ id: true, updatedAt: true });
 export const insertRecruitingPreferencesSchema = createInsertSchema(recruitingPreferences).omit({ id: true, updatedAt: true });
+export const insertRecruitingProfileSchema = createInsertSchema(recruitingProfiles).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Insert schemas for recruiting
 export const insertRecruitingAnalyticsSchema = createInsertSchema(recruitingAnalytics).omit({ id: true, lastUpdated: true });
@@ -576,6 +592,7 @@ export type LeaderboardEntry = typeof leaderboardEntries.$inferSelect;
 export type StrengthConditioning = typeof strengthConditioning.$inferSelect;
 export type NutritionInfo = typeof nutritionInfo.$inferSelect;
 export type RecruitingPreferences = typeof recruitingPreferences.$inferSelect;
+export type RecruitingProfile = typeof recruitingProfiles.$inferSelect;
 export type Team = typeof teams.$inferSelect;
 export type TeamMember = typeof teamMembers.$inferSelect;
 export type TeamEvent = typeof teamEvents.$inferSelect;
@@ -604,6 +621,7 @@ export type InsertLeaderboardEntry = z.infer<typeof insertLeaderboardEntrySchema
 export type InsertStrengthConditioning = z.infer<typeof insertStrengthConditioningSchema>;
 export type InsertNutritionInfo = z.infer<typeof insertNutritionInfoSchema>;
 export type InsertRecruitingPreferences = z.infer<typeof insertRecruitingPreferencesSchema>;
+export type InsertRecruitingProfile = z.infer<typeof insertRecruitingProfileSchema>;
 export type InsertTeam = z.infer<typeof insertTeamSchema>;
 export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
 export type InsertTeamEvent = z.infer<typeof insertTeamEventSchema>;
