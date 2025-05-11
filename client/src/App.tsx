@@ -22,6 +22,7 @@ import SocialFeedPage from "@/pages/social-feed-page";
 import SocialSettingsPage from "@/pages/social-settings-page";
 import TeamsPage from "@/pages/teams-page";
 import TeamDetailsPage from "@/pages/team-details-page";
+import RecruitingPage from "@/pages/recruiting-page";
 
 // Landing Pages
 import LandingIndex from "@/pages/landing/index";
@@ -79,6 +80,7 @@ function Router() {
         <ProtectedRoute path="/social-settings" component={SocialSettingsPage} />
         <ProtectedRoute path="/teams" component={TeamsPage} />
         <ProtectedRoute path="/teams/:id" component={TeamDetailsPage} />
+        <ProtectedRoute path="/recruiting" component={RecruitingPage} />
         
         {/* Public Routes */}
         <Route path="/auth" component={AuthPage} />

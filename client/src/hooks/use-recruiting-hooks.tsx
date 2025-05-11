@@ -52,7 +52,7 @@ export interface ShareProfileData {
 export function useRecruitingAnalytics(athleteId: number) {
   const { toast } = useToast();
   
-  return useQuery({
+  const query = useQuery({
     queryKey: ['/api/recruiting/analytics', athleteId],
     queryFn: async () => {
       const response = await apiRequest('GET', `/api/recruiting/analytics/${athleteId}`);
@@ -61,15 +61,19 @@ export function useRecruitingAnalytics(athleteId: number) {
         throw new Error(errorData.message || "Failed to fetch recruiting analytics");
       }
       return await response.json() as RecruitingAnalytics;
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error loading recruiting analytics",
-        description: error.message,
-        variant: "destructive",
-      });
     }
   });
+  
+  // Handle error separately
+  if (query.error) {
+    toast({
+      title: "Error loading recruiting analytics",
+      description: query.error.message,
+      variant: "destructive",
+    });
+  }
+  
+  return query;
 }
 
 /**
@@ -78,7 +82,7 @@ export function useRecruitingAnalytics(athleteId: number) {
 export function useRecruitingMessages(athleteId: number) {
   const { toast } = useToast();
   
-  return useQuery({
+  const query = useQuery({
     queryKey: ['/api/recruiting/messages', athleteId],
     queryFn: async () => {
       const response = await apiRequest('GET', `/api/recruiting/messages/${athleteId}`);
@@ -87,15 +91,19 @@ export function useRecruitingMessages(athleteId: number) {
         throw new Error(errorData.message || "Failed to fetch recruiting messages");
       }
       return await response.json() as RecruitingMessage[];
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error loading recruiting messages",
-        description: error.message,
-        variant: "destructive",
-      });
     }
   });
+  
+  // Handle error separately
+  if (query.error) {
+    toast({
+      title: "Error loading recruiting messages",
+      description: query.error.message,
+      variant: "destructive",
+    });
+  }
+  
+  return query;
 }
 
 /**
@@ -104,7 +112,7 @@ export function useRecruitingMessages(athleteId: number) {
 export function useRecruitingMessageDetails(messageId: number) {
   const { toast } = useToast();
   
-  return useQuery({
+  const query = useQuery({
     queryKey: ['/api/recruiting/messages/detail', messageId],
     queryFn: async () => {
       const response = await apiRequest('GET', `/api/recruiting/messages/detail/${messageId}`);
@@ -114,15 +122,19 @@ export function useRecruitingMessageDetails(messageId: number) {
       }
       return await response.json() as RecruitingMessage;
     },
-    enabled: !!messageId, // Only run if messageId is provided
-    onError: (error: Error) => {
-      toast({
-        title: "Error loading message details",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    enabled: !!messageId // Only run if messageId is provided
   });
+  
+  // Handle error separately
+  if (query.error) {
+    toast({
+      title: "Error loading message details",
+      description: query.error.message,
+      variant: "destructive",
+    });
+  }
+  
+  return query;
 }
 
 /**

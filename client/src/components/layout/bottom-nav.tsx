@@ -10,7 +10,8 @@ import {
   CandlestickChart, 
   Share2,
   Settings,
-  Users
+  Users,
+  GraduationCap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
