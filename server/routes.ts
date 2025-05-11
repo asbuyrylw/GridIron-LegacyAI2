@@ -3172,6 +3172,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // -- Recruiting Routes --
+  
+  // Get recruiting analytics
+  app.get("/api/athlete/:id/recruiting/analytics", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Increment profile views if accessed by someone other than the athlete
+      if (athlete.userId !== req.user.id) {
+        await storage.incrementProfileViews(athleteId);
+      }
+      
+      // Get analytics data
+      let analytics = await storage.getRecruitingAnalytics(athleteId);
+      
+      // Create analytics if doesn't exist yet
+      if (!analytics) {
+        analytics = await storage.createRecruitingAnalytics({
+          athleteId,
+          profileViews: 0,
+          uniqueViewers: 0,
+          interestLevel: 0,
+          bookmarksCount: 0,
+          messagesSent: 0,
+          connectionsCount: 0,
+          viewsOverTime: [],
+          interestBySchoolType: [],
+          interestByPosition: [],
+          interestByRegion: [],
+          topSchools: []
+        });
+      }
+      
+      res.json(analytics);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get recruiting messages
+  app.get("/api/athlete/:id/recruiting/messages", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Check if user is authorized to view messages
+      if (athlete.userId !== req.user.id && req.user.userType !== "coach" && req.user.userType !== "admin") {
+        return res.status(403).json({ message: "Not authorized to view messages" });
+      }
+      
+      // Get messages
+      const messages = await storage.getRecruitingMessages(req.user.id);
+      res.json(messages);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Send recruiting message
+  app.post("/api/athlete/:id/recruiting/messages", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const recipientAthleteId = parseInt(req.params.id);
+      const recipientAthlete = await storage.getAthlete(recipientAthleteId);
+      
+      if (!recipientAthlete) {
+        return res.status(404).json({ message: "Recipient athlete not found" });
+      }
+      
+      // Create the message
+      const message = await storage.createRecruitingMessage({
+        senderId: req.user.id,
+        recipientId: recipientAthlete.userId,
+        subject: req.body.subject,
+        content: req.body.content,
+        attachments: req.body.attachments || [],
+        read: false
+      });
+      
+      res.status(201).json(message);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Mark message as read
+  app.patch("/api/recruiting/messages/:id/read", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const messageId = parseInt(req.params.id);
+      const message = await storage.getRecruitingMessageById(messageId);
+      
+      if (!message) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+      
+      // Check if user is authorized to mark as read
+      if (message.recipientId !== req.user.id) {
+        return res.status(403).json({ message: "Not authorized to mark this message as read" });
+      }
+      
+      const updatedMessage = await storage.markRecruitingMessageAsRead(messageId);
+      res.json(updatedMessage);
+    } catch (error) {
+      next(error);
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
