@@ -86,6 +86,28 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
   const [isAddingSurgery, setIsAddingSurgery] = useState(false);
   const [isAddingConcussion, setIsAddingConcussion] = useState(false);
   
+  // Temporary form state for modals
+  const [tempInjury, setTempInjury] = useState({
+    type: "",
+    location: "",
+    date: new Date().toISOString().split('T')[0],
+    fullyRecovered: false,
+    treatmentNotes: ""
+  });
+  
+  const [tempSurgery, setTempSurgery] = useState({
+    type: "",
+    date: new Date().toISOString().split('T')[0],
+    notes: ""
+  });
+  
+  const [tempConcussion, setTempConcussion] = useState({
+    date: new Date().toISOString().split('T')[0],
+    severity: "moderate",
+    returnToPlayDays: 0,
+    notes: ""
+  });
+  
   const form = useFormContext<StrengthConditioningForm>();
   
   const { fields: currentInjuries, append: appendInjury, remove: removeInjury } = 

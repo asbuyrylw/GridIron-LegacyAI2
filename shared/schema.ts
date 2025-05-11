@@ -92,7 +92,15 @@ export const strengthConditioning = pgTable("strength_conditioning", {
   gymAccess: text("gym_access"),
   sleepHours: integer("sleep_hours"),
   recoveryMethods: json("recovery_methods"), // Array of methods
-  injuriesSurgeries: text("injuries_surgeries"),
+  injuriesSurgeries: text("injuries_surgeries"), // Legacy field
+  
+  // Enhanced injury tracking
+  currentInjuries: json("current_injuries").default('[]'), // Array of injury objects
+  pastSurgeries: json("past_surgeries").default('[]'), // Array of surgery objects
+  concussionHistory: json("concussion_history").default('[]'), // Array of concussion objects
+  medicalClearance: boolean("medical_clearance").default(false),
+  medicalNotes: text("medical_notes"),
+  
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
