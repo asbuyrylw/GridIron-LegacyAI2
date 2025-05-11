@@ -6,12 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useAuth } from "@/hooks/use-auth";
-import { athleteRegistrationSchema, loginSchema } from "@shared/schema";
+import { 
+  athleteRegistrationSchema, 
+  parentRegistrationSchema, 
+  coachRegistrationSchema, 
+  loginSchema 
+} from "@shared/schema";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, User, UsersRound, GraduationCap } from "lucide-react";
 
 export default function AuthPage() {
   const [authTab, setAuthTab] = useState<string>("login");

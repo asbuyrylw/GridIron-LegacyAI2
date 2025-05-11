@@ -286,38 +286,38 @@ export class MemStorage implements IStorage {
   private teamEventAttendanceMap: Map<number, TeamEventAttendance>;
   private teamAnnouncementsMap: Map<number, TeamAnnouncement>;
   
-  currentUserId: number;
-  currentAthleteId: number;
-  currentParentId: number;
-  currentCoachId: number;
-  currentParentAthleteRelationshipId: number;
-  currentCombineMetricsId: number;
-  currentExerciseLibraryId: number;
-  currentWorkoutSessionId: number;
-  currentStrengthConditioningId: number;
-  currentNutritionInfoId: number;
-  currentRecruitingPreferencesId: number;
-  currentRecruitingProfileId: number;
-  currentTrainingPlanId: number;
-  currentPerformanceInsightsId: number;
-  currentCoachMessageId: number;
-  currentNutritionPlanId: number;
-  currentMealLogId: number;
-  currentAiMealSuggestionId: number;
-  currentSocialConnectionId: number;
-  currentSocialPostId: number;
-  currentSocialCommentId: number;
-  currentAchievementId: number;
-  currentAthleteAchievementId: number;
-  currentLeaderboardId: number;
-  currentLeaderboardEntryId: number;
-  currentTeamId: number;
-  currentTeamMemberId: number;
-  currentTeamEventId: number;
-  currentTeamEventAttendanceId: number;
-  currentTeamAnnouncementId: number;
-  currentRecruitingAnalyticsId: number;
-  currentRecruitingMessageId: number;
+  currentUserId: number = 0;
+  currentAthleteId: number = 0;
+  currentParentId: number = 0;
+  currentCoachId: number = 0;
+  currentParentAthleteRelationshipId: number = 0;
+  currentCombineMetricsId: number = 0;
+  currentExerciseLibraryId: number = 0;
+  currentWorkoutSessionId: number = 0;
+  currentStrengthConditioningId: number = 0;
+  currentNutritionInfoId: number = 0;
+  currentRecruitingPreferencesId: number = 0;
+  currentRecruitingProfileId: number = 0;
+  currentTrainingPlanId: number = 0;
+  currentPerformanceInsightsId: number = 0;
+  currentCoachMessageId: number = 0;
+  currentNutritionPlanId: number = 0;
+  currentMealLogId: number = 0;
+  currentAiMealSuggestionId: number = 0;
+  currentSocialConnectionId: number = 0;
+  currentSocialPostId: number = 0;
+  currentSocialCommentId: number = 0;
+  currentAchievementId: number = 0;
+  currentAthleteAchievementId: number = 0;
+  currentLeaderboardId: number = 0;
+  currentLeaderboardEntryId: number = 0;
+  currentTeamId: number = 0;
+  currentTeamMemberId: number = 0;
+  currentTeamEventId: number = 0;
+  currentTeamEventAttendanceId: number = 0;
+  currentTeamAnnouncementId: number = 0;
+  currentRecruitingAnalyticsId: number = 0;
+  currentRecruitingMessageId: number = 0;
   sessionStore: any;
 
   constructor() {
@@ -1980,5 +1980,46 @@ export class MemStorage implements IStorage {
     return updated;
   }
 }
+
+// Import parent and coach methods
+import * as parentCoachMethods from './parent-coach-storage';
+
+// Add parent/coach methods to MemStorage prototype
+MemStorage.prototype.getParent = parentCoachMethods.getParent;
+MemStorage.prototype.getParentByUserId = parentCoachMethods.getParentByUserId;
+MemStorage.prototype.createParent = parentCoachMethods.createParent;
+MemStorage.prototype.updateParent = parentCoachMethods.updateParent;
+MemStorage.prototype.getAllParents = parentCoachMethods.getAllParents;
+MemStorage.prototype.deleteParent = parentCoachMethods.deleteParent;
+MemStorage.prototype.getParentAthleteRelationship = parentCoachMethods.getParentAthleteRelationship;
+MemStorage.prototype.getParentAthleteRelationshipsByParentId = parentCoachMethods.getParentAthleteRelationshipsByParentId;
+MemStorage.prototype.getParentAthleteRelationshipsByAthleteId = parentCoachMethods.getParentAthleteRelationshipsByAthleteId;
+MemStorage.prototype.getParentAthleteRelationships = parentCoachMethods.getParentAthleteRelationships;
+MemStorage.prototype.getAthleteParents = parentCoachMethods.getAthleteParents;
+MemStorage.prototype.createParentAthleteRelationship = parentCoachMethods.createParentAthleteRelationship;
+MemStorage.prototype.updateParentAthleteRelationship = parentCoachMethods.updateParentAthleteRelationship;
+MemStorage.prototype.deleteParentAthleteRelationship = parentCoachMethods.deleteParentAthleteRelationship;
+MemStorage.prototype.getCoach = parentCoachMethods.getCoach;
+MemStorage.prototype.getCoachByUserId = parentCoachMethods.getCoachByUserId;
+MemStorage.prototype.createCoach = parentCoachMethods.createCoach;
+MemStorage.prototype.updateCoach = parentCoachMethods.updateCoach;
+MemStorage.prototype.getCoachesByTeam = parentCoachMethods.getCoachesByTeam;
+MemStorage.prototype.getAllCoaches = parentCoachMethods.getAllCoaches;
+MemStorage.prototype.deleteCoach = parentCoachMethods.deleteCoach;
+
+// Add a method to add team members (not defined elsewhere)
+MemStorage.prototype.addTeamMember = async function(teamMember: InsertTeamMember): Promise<TeamMember> {
+  const id = ++this.currentTeamMemberId;
+  const joinedAt = new Date();
+  
+  const newTeamMember: TeamMember = {
+    id,
+    ...teamMember,
+    joinedAt
+  };
+  
+  this.teamMembersMap.set(id, newTeamMember);
+  return newTeamMember;
+};
 
 export const storage = new MemStorage();
