@@ -98,8 +98,32 @@ const recruitingProfileSchema = z.object({
   highlightVideoUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
 });
 
-// Corresponding type
-type RecruitingProfileData = z.infer<typeof recruitingProfileSchema>;
+// Interfaces for data types
+interface AthleteData {
+  firstName?: string;
+  lastName?: string;
+  position?: string;
+  height?: string | null;
+  weight?: number | null;
+  graduationYear?: number | null;
+  gpa?: number | null;
+  actScore?: number | null;
+  school?: string | null;
+  hudlLink?: string | null;
+  maxPrepsLink?: string | null;
+  [key: string]: any;
+}
+
+interface RecruitingProfileData extends z.infer<typeof recruitingProfileSchema> {
+  city?: string;
+  state?: string;
+  achievements: string[];
+  personalStatement?: string;
+  coachReferenceEmail?: string;
+  coachReferenceName?: string;
+  highlightVideoUrl?: string;
+  [key: string]: any;
+}
 
 export default function RecruitingProfileBuilderPage() {
   const { user } = useAuth();
@@ -109,13 +133,13 @@ export default function RecruitingProfileBuilderPage() {
   const [isEditing, setIsEditing] = useState(false);
 
   // Fetch athlete profile data
-  const { data: athlete, isLoading: isLoadingAthlete } = useQuery({
+  const { data: athlete, isLoading: isLoadingAthlete } = useQuery<AthleteData>({
     queryKey: ["/api/athlete/me"],
     enabled: Boolean(user),
   });
 
   // Fetch recruiting profile specific data
-  const { data: recruitingProfile, isLoading: isLoadingProfile } = useQuery({
+  const { data: recruitingProfile, isLoading: isLoadingProfile } = useQuery<RecruitingProfileData>({
     queryKey: ["/api/recruiting/profile"],
     enabled: Boolean(user),
   });
@@ -184,12 +208,12 @@ export default function RecruitingProfileBuilderPage() {
         state: recruitingProfile.state || "",
         hudlLink: athlete.hudlLink || "",
         maxPrepsLink: athlete.maxPrepsLink || "",
-        achievements: recruitingProfile.achievements || [],
+        achievements: Array.isArray(recruitingProfile.achievements) ? recruitingProfile.achievements : [],
         personalStatement: recruitingProfile.personalStatement || "",
         coachReferenceEmail: recruitingProfile.coachReferenceEmail || "",
         coachReferenceName: recruitingProfile.coachReferenceName || "",
         highlightVideoUrl: recruitingProfile.highlightVideoUrl || "",
-      });
+      } as RecruitingProfileData);
 
       // Calculate profile completeness
       const combinedData = {
