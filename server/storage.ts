@@ -218,6 +218,8 @@ export class MemStorage implements IStorage {
   private athleteAchievementsMap: Map<number, AthleteAchievement>;
   private leaderboardsMap: Map<number, Leaderboard>;
   private leaderboardEntriesMap: Map<number, LeaderboardEntry>;
+  private recruitingAnalyticsMap: Map<number, RecruitingAnalytics>;
+  private recruitingMessagesMap: Map<number, RecruitingMessage>;
   private teamsMap: Map<number, Team>;
   private teamMembersMap: Map<number, TeamMember>;
   private teamEventsMap: Map<number, TeamEvent>;
@@ -249,6 +251,8 @@ export class MemStorage implements IStorage {
   currentTeamEventId: number;
   currentTeamEventAttendanceId: number;
   currentTeamAnnouncementId: number;
+  currentRecruitingAnalyticsId: number;
+  currentRecruitingMessageId: number;
   sessionStore: any;
 
   constructor() {
@@ -277,6 +281,8 @@ export class MemStorage implements IStorage {
     this.teamEventsMap = new Map();
     this.teamEventAttendanceMap = new Map();
     this.teamAnnouncementsMap = new Map();
+    this.recruitingAnalyticsMap = new Map();
+    this.recruitingMessagesMap = new Map();
     
     this.currentUserId = 1;
     this.currentAthleteId = 1;
@@ -303,6 +309,8 @@ export class MemStorage implements IStorage {
     this.currentTeamEventId = 1;
     this.currentTeamEventAttendanceId = 1;
     this.currentTeamAnnouncementId = 1;
+    this.currentRecruitingAnalyticsId = 1;
+    this.currentRecruitingMessageId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // prune expired entries every 24h
