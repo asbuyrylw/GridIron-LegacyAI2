@@ -1,4 +1,5 @@
 import { generateCoachingResponse, generateTrainingPlan, analyzeAthleteMetrics, generateMealSuggestion } from "./openai";
+import { generatePerformanceInsights } from "./performance-insights";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
