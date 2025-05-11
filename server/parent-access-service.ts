@@ -82,15 +82,42 @@ class ParentAccessService {
 
   // Handle sending an email to parent
   async sendEmail(parentAccess: ParentAccess, type: EmailNotificationType, data: any): Promise<boolean> {
-    // This is a placeholder for email sending functionality
-    // We'll implement the actual email sending later with SendGrid
-    console.log(`Email of type ${type} would be sent to ${parentAccess.email} with data:`, data);
+    // Get the athlete information from storage
+    const athlete = await storage.getAthlete(parentAccess.athleteId);
+    if (!athlete) {
+      console.error(`Cannot send email: Athlete with ID ${parentAccess.athleteId} not found`);
+      return false;
+    }
     
-    // Update last email sent timestamp
-    parentAccess.lastEmailSent = new Date();
-    this.parentAccessMap.set(parentAccess.id, parentAccess);
+    // Get the user information (to get name)
+    const user = await storage.getUser(athlete.userId);
+    if (!user) {
+      console.error(`Cannot send email: User associated with athlete ID ${parentAccess.athleteId} not found`);
+      return false;
+    }
     
-    return true;
+    // Prepare the athlete's full name
+    const athleteName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    
+    // Import the email service here to avoid circular dependencies
+    const { emailService } = await import('./email-service');
+    
+    // Send the email using the email service
+    const success = await emailService.sendNotification(
+      type, 
+      parentAccess.email, 
+      parentAccess.name,
+      athleteName,
+      data
+    );
+    
+    // Update last email sent timestamp if successful
+    if (success) {
+      parentAccess.lastEmailSent = new Date();
+      this.parentAccessMap.set(parentAccess.id, parentAccess);
+    }
+    
+    return success;
   }
 
   // Process a parent invitation
@@ -119,7 +146,10 @@ class ParentAccessService {
       receiveNutritionInfo: invite.receiveNutritionInfo,
     });
 
-    // Send invitation email (will be implemented later)
+    // Send invitation email
+    await this.sendEmail(parentAccess, EmailNotificationType.INVITE, {
+      accessToken: parentAccess.accessToken
+    });
     
     return parentAccess;
   }
