@@ -254,6 +254,9 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private usersMap: Map<number, User>;
   private athletesMap: Map<number, Athlete>;
+  private parentsMap: Map<number, Parent>;
+  private coachesMap: Map<number, Coach>;
+  private parentAthleteRelationshipsMap: Map<number, ParentAthleteRelationship>;
   private combineMetricsMap: Map<number, CombineMetric>;
   private exerciseLibraryMap: Map<number, ExerciseLibrary>;
   private workoutSessionsMap: Map<number, WorkoutSession>;
@@ -284,6 +287,9 @@ export class MemStorage implements IStorage {
   
   currentUserId: number;
   currentAthleteId: number;
+  currentParentId: number;
+  currentCoachId: number;
+  currentParentAthleteRelationshipId: number;
   currentCombineMetricsId: number;
   currentExerciseLibraryId: number;
   currentWorkoutSessionId: number;
@@ -316,6 +322,9 @@ export class MemStorage implements IStorage {
   constructor() {
     this.usersMap = new Map();
     this.athletesMap = new Map();
+    this.parentsMap = new Map();
+    this.coachesMap = new Map();
+    this.parentAthleteRelationshipsMap = new Map();
     this.combineMetricsMap = new Map();
     this.exerciseLibraryMap = new Map();
     this.workoutSessionsMap = new Map();
