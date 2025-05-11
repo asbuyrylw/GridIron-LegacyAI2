@@ -6,7 +6,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import session from "express-session";
-import { collegeMatcher } from "./college-matcher";
+import { registerCollegeMatcherRoutes } from "./routes/college-matcher-routes";
 
 // Extend the Express Session type to include our onboarding progress
 declare module "express-session" {
