@@ -27,6 +27,8 @@ import CollegeMatcherPage from "@/pages/college-matcher-page";
 import RecruitingProfileBuilderPage from "@/pages/recruiting-profile-builder-page";
 import ParentDashboard from "@/pages/parent-dashboard";
 import CoachDashboard from "@/pages/coach-dashboard";
+import ParentManagementPage from "@/pages/parent-management";
+import ParentViewPage from "@/pages/parent-view";
 
 // Landing Pages
 import LandingIndex from "@/pages/landing/index";
@@ -50,6 +52,7 @@ function Router() {
       <Switch>
         {/* Public Routes */}
         <Route path="/auth" component={AuthPage} />
+        <Route path="/parent-view" component={ParentViewPage} />
         
         {/* Landing Pages */}
         <Route path="/landing/players" component={LandingPlayers} />
@@ -89,9 +92,11 @@ function Router() {
         <ProtectedRoute path="/college-matcher" component={CollegeMatcherPage} />
         <ProtectedRoute path="/parent-dashboard" component={ParentDashboard} />
         <ProtectedRoute path="/coach-dashboard" component={CoachDashboard} />
+        <ProtectedRoute path="/parent-management" component={ParentManagementPage} />
         
         {/* Public Routes */}
         <Route path="/auth" component={AuthPage} />
+        <Route path="/parent-view" component={ParentViewPage} />
         
         {/* Landing Pages (still accessible when logged in) */}
         <Route path="/landing" component={LandingIndex} />
