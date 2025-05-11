@@ -368,24 +368,52 @@ export default function PersonalInfoForm({
             />
           </div>
           
-          <FormField
-            control={form.control}
-            name="parentHeight"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Parent Height (inches) - Used for growth prediction</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="72" 
-                    {...field} 
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="space-y-4 mt-4">
+            <h4 className="text-md font-semibold">Height Data for Growth Prediction</h4>
+            <p className="text-sm text-muted-foreground">
+              This information helps us provide more accurate height projections for your athlete's future development.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="fatherHeight"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Father's Height (inches)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="72" 
+                        {...field} 
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="motherHeight"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mother's Height (inches)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="65" 
+                        {...field} 
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField
