@@ -37,8 +37,18 @@ export const athletes = pgTable("athletes", {
   dateOfBirth: date("date_of_birth"),
   phoneNumber: text("phone_number"),
   zipCode: text("zip_code"),
+  
+  // Parent/Guardian Info
+  parentGuardianName: text("parent_guardian_name"),
+  parentGuardianEmail: text("parent_guardian_email"),
+  parentGuardianPhone: text("parent_guardian_phone"),
+  parentGuardianRelationship: text("parent_guardian_relationship"),
+  
+  // School Info
   school: text("school"),
   graduationYear: integer("graduation_year"),
+  
+  // Football Info
   jerseyNumber: text("jersey_number"),
   position: text("position").notNull(),
   secondaryPositions: json("secondary_positions"), // Array of positions
@@ -158,6 +168,59 @@ export const combineMetrics = pgTable("combine_metrics", {
   deadlift: integer("deadlift"),
   pullUps: integer("pull_ups"),
   dateRecorded: timestamp("date_recorded").defaultNow().notNull(),
+});
+
+// Table for tracking game stats by year and position
+export const gameStats = pgTable("game_stats", {
+  id: serial("id").primaryKey(),
+  athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
+  season: integer("season").notNull(), // Year, e.g., 2025
+  position: text("position").notNull(), // QB, WR, RB, etc.
+  
+  // General stats (apply to all positions)
+  gamesPlayed: integer("games_played").notNull().default(0),
+  gamesStarted: integer("games_started").notNull().default(0),
+  
+  // Offensive stats
+  passingYards: integer("passing_yards").default(0),
+  passingTouchdowns: integer("passing_touchdowns").default(0),
+  passingCompletions: integer("passing_completions").default(0),
+  passingAttempts: integer("passing_attempts").default(0),
+  passingInterceptions: integer("passing_interceptions").default(0),
+  
+  rushingYards: integer("rushing_yards").default(0),
+  rushingAttempts: integer("rushing_attempts").default(0),
+  rushingTouchdowns: integer("rushing_touchdowns").default(0),
+  
+  receivingYards: integer("receiving_yards").default(0),
+  receivingReceptions: integer("receiving_receptions").default(0),
+  receivingTouchdowns: integer("receiving_touchdowns").default(0),
+  receivingTargets: integer("receiving_targets").default(0),
+  
+  // Defensive stats
+  tackles: integer("tackles").default(0),
+  soloTackles: integer("solo_tackles").default(0),
+  assistedTackles: integer("assisted_tackles").default(0),
+  tacklesForLoss: integer("tackles_for_loss").default(0),
+  sacks: integer("sacks").default(0),
+  interceptions: integer("interceptions").default(0),
+  passesDefended: integer("passes_defended").default(0),
+  forcedFumbles: integer("forced_fumbles").default(0),
+  fumbleRecoveries: integer("fumble_recoveries").default(0),
+  
+  // Special teams
+  fieldGoalsMade: integer("field_goals_made").default(0),
+  fieldGoalsAttempted: integer("field_goals_attempted").default(0),
+  extraPointsMade: integer("extra_points_made").default(0),
+  extraPointsAttempted: integer("extra_points_attempted").default(0),
+  puntingYards: integer("punting_yards").default(0),
+  puntingAttempts: integer("punting_attempts").default(0),
+  
+  notes: text("notes"),
+  verified: boolean("verified").default(false),
+  verifiedBy: integer("verified_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Exercise library table with categorized football-specific exercises
