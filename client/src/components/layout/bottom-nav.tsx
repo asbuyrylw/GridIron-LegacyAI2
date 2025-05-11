@@ -12,7 +12,8 @@ import {
   Settings,
   Users,
   GraduationCap,
-  School
+  School,
+  ClipboardCopy
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +70,12 @@ export function BottomNav() {
       active: location.includes("/teams")
     },
     {
+      label: "Recruiting",
+      href: "/recruiting",
+      icon: ClipboardCopy,
+      active: location.includes("/recruiting")
+    },
+    {
       label: "College",
       href: "/college-matcher",
       icon: School,
@@ -90,8 +97,8 @@ export function BottomNav() {
             <NavItem key={item.href} {...item} />
           ))}
         </div>
-        <div className="mt-1 grid grid-cols-5 gap-1">
-          {navItems.slice(5, 10).map((item) => (
+        <div className="mt-1 grid grid-cols-6 gap-1">
+          {navItems.slice(5, 11).map((item) => (
             <NavItem key={item.href} {...item} />
           ))}
         </div>

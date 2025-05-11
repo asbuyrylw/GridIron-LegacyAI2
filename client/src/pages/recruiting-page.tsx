@@ -166,10 +166,22 @@ export default function RecruitingPage() {
   
   return (
     <div className="container py-6 space-y-6">
-      <PageHeader 
-        title="Recruiting Dashboard" 
-        description="Track your recruiting analytics and manage communications with coaches"
-      />
+      <div className="flex items-center justify-between">
+        <PageHeader 
+          title="Recruiting Dashboard" 
+          description="Track your recruiting analytics and manage communications with coaches"
+        />
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => window.location.href = "/recruiting-profile-builder"}>
+            <ClipboardCopy className="h-4 w-4 mr-2" />
+            Edit Profile
+          </Button>
+          <Button variant="outline" onClick={() => window.location.href = "/college-matcher"}>
+            <School className="h-4 w-4 mr-2" />
+            College Matcher
+          </Button>
+        </div>
+      </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
@@ -705,11 +717,17 @@ export default function RecruitingPage() {
         {/* Profile Sharing Tab */}
         <TabsContent value="profile" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Share Your Recruiting Profile</CardTitle>
-              <CardDescription>
-                Distribute your profile to coaches and recruiters through different platforms
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Share Your Recruiting Profile</CardTitle>
+                <CardDescription>
+                  Distribute your profile to coaches and recruiters through different platforms
+                </CardDescription>
+              </div>
+              <Button onClick={() => window.location.href = "/recruiting-profile-builder"} className="flex items-center">
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Edit Profile
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -907,11 +925,17 @@ export default function RecruitingPage() {
         {/* College Matcher Tab */}
         <TabsContent value="college-matcher" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>College Matcher Tool</CardTitle>
-              <CardDescription>
-                Find the right college fit based on your athletic and academic profile
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>College Matcher Tool</CardTitle>
+                <CardDescription>
+                  Find the right college fit based on your athletic and academic profile
+                </CardDescription>
+              </div>
+              <Button onClick={() => window.location.href = "/college-matcher"} className="flex items-center">
+                <School className="mr-2 h-4 w-4" />
+                Open College Matcher
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="p-4 bg-muted rounded-md">
