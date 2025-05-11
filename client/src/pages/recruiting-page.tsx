@@ -13,7 +13,9 @@ import {
   Bookmark,
   CheckCircle2,
   AlertCircle,
-  Mail 
+  Mail,
+  School,
+  ClipboardCopy
 } from "lucide-react";
 import { 
   Dialog, 
@@ -170,7 +172,7 @@ export default function RecruitingPage() {
       />
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="analytics">
             <BarChart3 className="h-4 w-4 mr-2" />
             Analytics
@@ -182,6 +184,10 @@ export default function RecruitingPage() {
           <TabsTrigger value="profile">
             <Share2 className="h-4 w-4 mr-2" />
             Profile Sharing
+          </TabsTrigger>
+          <TabsTrigger value="college-matcher">
+            <School className="h-4 w-4 mr-2" />
+            College Matcher
           </TabsTrigger>
         </TabsList>
         
@@ -893,6 +899,83 @@ export default function RecruitingPage() {
                     </ul>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* College Matcher Tab */}
+        <TabsContent value="college-matcher" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>College Matcher Tool</CardTitle>
+              <CardDescription>
+                Find the right college fit based on your athletic and academic profile
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 bg-muted rounded-md">
+                <h3 className="text-lg font-semibold mb-2 flex items-center">
+                  <School className="h-5 w-5 mr-2 text-primary" />
+                  Find Your Perfect College Match
+                </h3>
+                <p className="text-sm mb-4">
+                  Our College Matcher tool analyzes your athletic metrics, academic performance, and 
+                  preferences to suggest colleges that are the right fit for your football career.
+                </p>
+                <ul className="mb-4 space-y-2">
+                  <li className="flex items-start">
+                    <div className="rounded-full bg-primary/10 p-1 mt-0.5 mr-2">
+                      <CheckCircle2 className="h-3 w-3 text-primary" />
+                    </div>
+                    <span className="text-sm">Get division recommendations (D1, D2, D3, NAIA, JUCO)</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="rounded-full bg-primary/10 p-1 mt-0.5 mr-2">
+                      <CheckCircle2 className="h-3 w-3 text-primary" />
+                    </div>
+                    <span className="text-sm">View personalized school matches with compatibility scores</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="rounded-full bg-primary/10 p-1 mt-0.5 mr-2">
+                      <CheckCircle2 className="h-3 w-3 text-primary" />
+                    </div>
+                    <span className="text-sm">Receive actionable feedback to improve your recruiting profile</span>
+                  </li>
+                </ul>
+                <Button asChild className="w-full">
+                  <a href="/college-matcher">
+                    <School className="mr-2 h-4 w-4" />
+                    Go to College Matcher
+                  </a>
+                </Button>
+              </div>
+              
+              <div className="border rounded-md p-4">
+                <h4 className="font-medium mb-2">Complete Your Profile for Better Matches</h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  To get the most accurate college matches, make sure you've completed the following:
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-center text-sm">
+                    <div className="w-5 h-5 mr-2 flex items-center justify-center">
+                      <div className="h-4 w-4 rounded-full border border-amber-500" />
+                    </div>
+                    <span>Add your GPA and test scores</span>
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <div className="w-5 h-5 mr-2 flex items-center justify-center">
+                      <div className="h-4 w-4 rounded-full border border-amber-500" />
+                    </div>
+                    <span>Set your school preferences</span>
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <div className="w-5 h-5 mr-2 flex items-center justify-center">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    </div>
+                    <span>Update your combine metrics</span>
+                  </li>
+                </ul>
               </div>
             </CardContent>
           </Card>
