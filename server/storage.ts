@@ -238,6 +238,7 @@ export class MemStorage implements IStorage {
   private aiMealSuggestionsMap: Map<number, AiMealSuggestion>;
   private socialConnectionsMap: Map<number, SocialConnection>;
   private socialPostsMap: Map<number, SocialPost>;
+  private socialCommentsMap: Map<number, any>;
   private achievementsMap: Map<number, Achievement>;
   private athleteAchievementsMap: Map<number, AthleteAchievement>;
   private leaderboardsMap: Map<number, Leaderboard>;
@@ -296,6 +297,7 @@ export class MemStorage implements IStorage {
     this.aiMealSuggestionsMap = new Map();
     this.socialConnectionsMap = new Map();
     this.socialPostsMap = new Map();
+    this.socialCommentsMap = new Map();
     this.achievementsMap = new Map();
     this.athleteAchievementsMap = new Map();
     this.leaderboardsMap = new Map();
@@ -324,6 +326,7 @@ export class MemStorage implements IStorage {
     this.currentAiMealSuggestionId = 1;
     this.currentSocialConnectionId = 1;
     this.currentSocialPostId = 1;
+    this.currentSocialCommentId = 1;
     this.currentAchievementId = 1;
     this.currentAthleteAchievementId = 1;
     this.currentLeaderboardId = 1;
@@ -995,41 +998,136 @@ export class MemStorage implements IStorage {
   }
 
   // Social Post Methods
-  async getSocialPosts(userId: number): Promise<SocialPost[]> {
-    return Array.from(this.socialPostsMap.values())
-      .filter((post) => post.userId === userId)
-      .sort((a, b) => {
-        // First sort by scheduledFor (if available)
-        if (a.scheduledFor && b.scheduledFor) {
-          return a.scheduledFor.getTime() - b.scheduledFor.getTime();
+  async getSocialPosts(options: any): Promise<SocialPost[]> {
+    const { filter, userId, limit = 10, offset = 0 } = options;
+    
+    // Get all posts
+    let posts = Array.from(this.socialPostsMap.values());
+    
+    // Filter based on provided criteria
+    if (filter === "team") {
+      // Find teams the user is a member of
+      const teamMemberships = Array.from(this.teamMembersMap.values())
+        .filter(member => member.athleteId === userId)
+        .map(member => member.teamId);
+      
+      // Get posts from team members
+      const teamMemberIds = Array.from(this.teamMembersMap.values())
+        .filter(member => teamMemberships.includes(member.teamId))
+        .map(member => member.athleteId);
+      
+      // Get user IDs from athlete IDs
+      const userIds = Array.from(this.athletesMap.values())
+        .filter(athlete => teamMemberIds.includes(athlete.id))
+        .map(athlete => athlete.userId);
+      
+      // Filter posts by team members
+      posts = posts.filter(post => userIds.includes(post.userId));
+    } else if (filter === "achievements") {
+      // Filter posts with achievements
+      posts = posts.filter(post => post.achievementId !== null);
+    }
+    
+    // Sort posts (most recent first)
+    posts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    
+    // Apply pagination
+    posts = posts.slice(offset, offset + limit);
+    
+    // Enhance posts with additional data
+    return posts.map(post => {
+      // Check if user has liked this post
+      const hasLiked = (post.likes || []).includes(userId);
+      
+      // Count comments
+      const commentCount = Array.from(this.socialCommentsMap?.values() || [])
+        .filter(comment => comment.postId === post.id)
+        .length;
+      
+      // Get author info
+      const author = this.getUserForPost(post.userId);
+      
+      // Get achievement info if available
+      let achievement = null;
+      if (post.achievementId) {
+        const achievementData = this.achievementsMap.get(post.achievementId);
+        if (achievementData) {
+          achievement = {
+            id: achievementData.id,
+            name: achievementData.name,
+            badge: achievementData.badge,
+            description: achievementData.description,
+            type: achievementData.category
+          };
         }
-        
-        // Then by createdAt (most recent first)
-        return b.createdAt.getTime() - a.createdAt.getTime();
-      });
+      }
+      
+      // Get training plan info if available
+      let trainingPlan = null;
+      if (post.trainingPlanId) {
+        const planData = this.trainingPlansMap.get(post.trainingPlanId);
+        if (planData) {
+          trainingPlan = {
+            id: planData.id,
+            title: planData.title,
+            focus: planData.focus,
+            exerciseCount: planData.exercises?.length || 0
+          };
+        }
+      }
+      
+      return {
+        ...post,
+        likes: (post.likes || []).length,
+        comments: commentCount,
+        hasLiked,
+        isOwner: post.userId === userId,
+        author,
+        achievement,
+        trainingPlan
+      };
+    });
   }
 
   async getSocialPostById(id: number): Promise<SocialPost | undefined> {
     return this.socialPostsMap.get(id);
   }
 
-  async createSocialPost(insertPost: InsertSocialPost): Promise<SocialPost> {
+  async createSocialPost(post: any): Promise<SocialPost> {
     const id = this.currentSocialPostId++;
     const createdAt = new Date();
     
-    const post: SocialPost = {
-      ...insertPost,
+    // Convert the post to the format expected by the database
+    const socialPost: SocialPost = {
       id,
+      userId: post.userId,
+      content: post.content,
       createdAt,
-      status: insertPost.status ?? "pending",
-      scheduledFor: insertPost.scheduledFor ?? null,
-      postedAt: null,
+      platforms: [],
+      status: "published",
+      mediaUrl: post.media || null,
+      postedAt: new Date(),
+      scheduledFor: null,
       errorMessage: null,
-      mediaUrl: insertPost.mediaUrl ?? null
+      likes: [],
+      achievementId: post.achievementId || null,
+      trainingPlanId: post.trainingPlanId || null,
+      gameStatsId: post.gameStatsId || null,
+      combineMetricsId: post.combineMetricsId || null
     };
     
-    this.socialPostsMap.set(id, post);
-    return post;
+    this.socialPostsMap.set(id, socialPost);
+    return socialPost;
+  }
+  
+  async updateSocialPost(id: number, updates: any): Promise<SocialPost | undefined> {
+    const post = this.socialPostsMap.get(id);
+    if (!post) return undefined;
+    
+    const updatedPost = { ...post, ...updates };
+    this.socialPostsMap.set(id, updatedPost);
+    
+    return updatedPost;
   }
 
   async updateSocialPostStatus(id: number, status: string, postedAt?: Date, errorMessage?: string): Promise<SocialPost | undefined> {
