@@ -39,12 +39,13 @@ export const useWebSocket = () => {
 
       // Setup event handlers
       socket.onopen = () => {
-        console.log('WebSocket connected');
+        console.log('WebSocket connected to:', wsUrl);
         setIsConnected(true);
         setError(null);
         
         // Process any queued messages
         if (messageQueueRef.current.length > 0) {
+          console.log('Processing queued messages:', messageQueueRef.current.length);
           messageQueueRef.current.forEach(msg => {
             if (socket.readyState === WebSocket.OPEN) {
               socket.send(msg);
@@ -56,6 +57,7 @@ export const useWebSocket = () => {
 
       socket.onmessage = (event) => {
         try {
+          console.log('WebSocket message received:', event.data);
           const data = JSON.parse(event.data);
           setLastMessage(data);
         } catch (err) {
@@ -66,6 +68,7 @@ export const useWebSocket = () => {
       socket.onerror = (event) => {
         console.error('WebSocket error:', event);
         setError(new Error('WebSocket error occurred'));
+        setIsConnected(false);
       };
 
       socket.onclose = () => {
