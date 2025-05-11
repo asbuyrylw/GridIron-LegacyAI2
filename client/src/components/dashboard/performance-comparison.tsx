@@ -385,15 +385,14 @@ export function PerformanceComparison({ athleteId, className }: PerformanceCompa
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart
                     data={comparisonData}
-                    margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                    layout="vertical"
+                    margin={{ top: 5, right: 5, bottom: 5, left: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="name" type="category" />
-                    <Tooltip
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip 
                       formatter={(value, name, props) => {
-                        // Display the original value for metrics where lower is better
+                        // Display the original value if it exists
                         if (props.payload.displayValue !== undefined) {
                           return [props.payload.displayValue, name];
                         }
@@ -413,26 +412,18 @@ export function PerformanceComparison({ athleteId, className }: PerformanceCompa
             
             <TabsContent value="progress">
               <div className="space-y-6">
-                {/* D1 Progress */}
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <div className="flex items-start">
-                      <div className="mr-2">
-                        <span className="font-medium">D1 {positionGroup}</span>
-                        <div className="text-sm text-muted-foreground">
-                          Standard: {getBenchmark(selectedMetric, "D1")}
-                          {currentMetricDetails.key === "fortyYard" || 
-                            currentMetricDetails.key === "tenYardSplit" || 
-                            currentMetricDetails.key === "shuttle" || 
-                            currentMetricDetails.key === "threeCone" 
-                            ? "s" : ""}
-                        </div>
+                <div className="bg-muted p-4 rounded-lg mb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <div>
+                      <h4 className="font-medium">{currentMetricDetails.label}</h4>
+                      <div className="text-sm text-muted-foreground">
+                        Comparing against {selectedDivision} standard
                       </div>
                     </div>
                     <div className="text-right">
                       <span className="font-medium">
                         {latestMetrics && latestMetrics[selectedMetric as keyof CombineMetric] !== undefined
-                          ? latestMetrics[selectedMetric as keyof CombineMetric]
+                          ? String(latestMetrics[selectedMetric as keyof CombineMetric])
                           : "N/A"}
                       </span>
                       <div className="text-sm text-muted-foreground">Your value</div>
@@ -444,107 +435,70 @@ export function PerformanceComparison({ athleteId, className }: PerformanceCompa
                       getBenchmark(selectedMetric, "D1"),
                       currentMetricDetails.isLowerBetter
                     )} 
-                    className="h-2" 
+                    className="h-2"
                   />
+                  <div className="flex justify-between text-xs mt-1">
+                    <span>0%</span>
+                    <span>D1 Standard: {String(getBenchmark(selectedMetric, "D1"))}</span>
+                    <span>100%</span>
+                  </div>
                 </div>
-                
-                {/* D2 Progress */}
+              
                 <div>
-                  <div className="flex justify-between mb-2">
-                    <div className="flex items-start">
-                      <div className="mr-2">
-                        <span className="font-medium">D2 {positionGroup}</span>
-                        <div className="text-sm text-muted-foreground">
-                          Standard: {getBenchmark(selectedMetric, "D2")}
-                          {currentMetricDetails.key === "fortyYard" || 
-                            currentMetricDetails.key === "tenYardSplit" || 
-                            currentMetricDetails.key === "shuttle" || 
-                            currentMetricDetails.key === "threeCone" 
-                            ? "s" : ""}
+                  <RadioGroup 
+                    defaultValue="D1" 
+                    className="grid grid-cols-3"
+                    value={selectedDivision}
+                    onValueChange={(value) => setSelectedDivision(value as "D1" | "D2" | "D3")}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="D1" id="D1" />
+                      <Label htmlFor="D1">Division 1</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="D2" id="D2" />
+                      <Label htmlFor="D2">Division 2</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="D3" id="D3" />
+                      <Label htmlFor="D3">Division 3</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">{currentMetricGroup} Metrics</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Comparison with {selectedDivision} standards for {positionGroup}
+                  </p>
+                  
+                  {metricGroups[currentMetricGroup].map(metric => (
+                    <div 
+                      key={metric.key}
+                      className={`p-3 rounded-lg border ${selectedMetric === metric.key ? 'bg-muted border-primary' : ''} mb-2 cursor-pointer`}
+                      onClick={() => setSelectedMetric(metric.key as keyof PositionBenchmarks[string][string])}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="font-medium">{metric.label}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {metric.isLowerBetter ? 'Lower is better' : 'Higher is better'}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-medium">
+                            {latestMetrics && latestMetrics[metric.key as keyof CombineMetric] !== undefined
+                              ? String(latestMetrics[metric.key as keyof CombineMetric])
+                              : "N/A"}
+                          </span>
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className="font-medium">
-                        {latestMetrics && latestMetrics[selectedMetric as keyof CombineMetric] !== undefined
-                          ? latestMetrics[selectedMetric as keyof CombineMetric]
-                          : "N/A"}
-                      </span>
-                      <div className="text-sm text-muted-foreground">Your value</div>
-                    </div>
-                  </div>
-                  <Progress 
-                    value={calculatePercentage(
-                      latestMetrics ? latestMetrics[selectedMetric as keyof CombineMetric] as number : undefined,
-                      getBenchmark(selectedMetric, "D2"),
-                      currentMetricDetails.isLowerBetter
-                    )} 
-                    className="h-2" 
-                  />
-                </div>
-                
-                {/* D3 Progress */}
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <div className="flex items-start">
-                      <div className="mr-2">
-                        <span className="font-medium">D3 {positionGroup}</span>
-                        <div className="text-sm text-muted-foreground">
-                          Standard: {getBenchmark(selectedMetric, "D3")}
-                          {currentMetricDetails.key === "fortyYard" || 
-                            currentMetricDetails.key === "tenYardSplit" || 
-                            currentMetricDetails.key === "shuttle" || 
-                            currentMetricDetails.key === "threeCone" 
-                            ? "s" : ""}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-medium">
-                        {latestMetrics && latestMetrics[selectedMetric as keyof CombineMetric] !== undefined
-                          ? latestMetrics[selectedMetric as keyof CombineMetric]
-                          : "N/A"}
-                      </span>
-                      <div className="text-sm text-muted-foreground">Your value</div>
-                    </div>
-                  </div>
-                  <Progress 
-                    value={calculatePercentage(
-                      latestMetrics ? latestMetrics[selectedMetric as keyof CombineMetric] as number : undefined,
-                      getBenchmark(selectedMetric, "D3"),
-                      currentMetricDetails.isLowerBetter
-                    )} 
-                    className="h-2" 
-                  />
+                  ))}
                 </div>
               </div>
             </TabsContent>
           </Tabs>
-          
-          {/* Insight Message */}
-          <div className="bg-blue-50 text-blue-800 p-4 rounded-md text-sm">
-            {currentMetricDetails.isLowerBetter ? (
-              <p>
-                <strong>Key Insight:</strong> For {currentMetricDetails.label}, lower values are better. 
-                {latestMetrics && latestMetrics[selectedMetric as keyof CombineMetric] !== undefined ? (
-                  latestMetrics[selectedMetric as keyof CombineMetric] as number <= getBenchmark(selectedMetric) ?
-                  ` Your current value of ${latestMetrics[selectedMetric as keyof CombineMetric]} meets or exceeds the ${selectedDivision} benchmark for ${positionGroup}.` :
-                  ` Your current value of ${latestMetrics[selectedMetric as keyof CombineMetric]} is ${((latestMetrics[selectedMetric as keyof CombineMetric] as number) - getBenchmark(selectedMetric)).toFixed(2)} above the ${selectedDivision} benchmark for ${positionGroup}.`
-                ) : 
-                " Update your metrics to see how you compare."}
-              </p>
-            ) : (
-              <p>
-                <strong>Key Insight:</strong> For {currentMetricDetails.label}, higher values are better. 
-                {latestMetrics && latestMetrics[selectedMetric as keyof CombineMetric] !== undefined ? (
-                  latestMetrics[selectedMetric as keyof CombineMetric] as number >= getBenchmark(selectedMetric) ?
-                  ` Your current value of ${latestMetrics[selectedMetric as keyof CombineMetric]} meets or exceeds the ${selectedDivision} benchmark for ${positionGroup}.` :
-                  ` Your current value of ${latestMetrics[selectedMetric as keyof CombineMetric]} is ${(getBenchmark(selectedMetric) - (latestMetrics[selectedMetric as keyof CombineMetric] as number)).toFixed(2)} below the ${selectedDivision} benchmark for ${positionGroup}.`
-                ) : 
-                " Update your metrics to see how you compare."}
-              </p>
-            )}
-          </div>
         </div>
       </CardContent>
     </Card>
