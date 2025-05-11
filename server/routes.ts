@@ -818,8 +818,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           weaknesses: insights.weaknesses || [],
           recommendations: insights.recommendations || [],
           performanceTrend: insights.performanceTrend || "stable",
-          positionRanking: insights.positionRanking || "",
-          lastUpdated: new Date()
+          positionRanking: insights.positionRanking || ""
+          // lastUpdated is automatically set by the database via defaultNow()
         });
         
         res.status(200).json({ 
@@ -882,8 +882,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update or create insights with all the new fields
       const updatedInsights = await storage.updatePerformanceInsights(athleteId, {
-        ...req.body,
-        lastUpdated: new Date()
+        ...req.body
+        // lastUpdated is automatically set by the database via defaultNow()
       });
       res.status(200).json(updatedInsights);
     } catch (error) {

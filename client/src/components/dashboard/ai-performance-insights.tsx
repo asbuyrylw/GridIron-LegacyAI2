@@ -9,19 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Brain, ChevronRight, RefreshCw, Lightbulb, TrendingUp, Target, AlertCircle } from "lucide-react";
-import { CombineMetric } from "@shared/schema";
+import { CombineMetric, PerformanceInsights } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-
-// Define the type for performance insights
-interface PerformanceInsights {
-  athleteId: number;
-  strengths: string[];
-  weaknesses: string[];
-  recommendations: string[];
-  performanceTrend?: string;
-  positionRanking?: string;
-  lastUpdated?: string;
-}
 
 interface AiPerformanceInsightsProps {
   athleteId?: number;
