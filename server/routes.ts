@@ -424,6 +424,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Generate performance growth predictions
+  app.post("/api/athlete/:id/performance/predictions", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.id);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow performance predictions for own profile or coaches
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Get latest metrics
+      const metrics = await storage.getLatestCombineMetrics(athleteId);
+      
+      if (!metrics) {
+        return res.status(400).json({ 
+          message: "Cannot generate predictions without baseline metrics. Please record combine metrics first."
+        });
+      }
+      
+      // Get strength profile for additional context
+      const strengthProfile = await storage.getStrengthConditioning(athleteId);
+      
+      // Get training focus from request body or strength profile
+      const trainingFocus = req.body.trainingFocus || [];
+      
+      // Get timeframe from request body
+      const timeframe = req.body.timeframe || 'medium';
+      
+      // Estimate age from dateOfBirth if available
+      let age = 16; // Default age for high school athlete
+      if (athlete.dateOfBirth) {
+        const birthDate = new Date(athlete.dateOfBirth);
+        const today = new Date();
+        age = today.getFullYear() - birthDate.getFullYear();
+      }
+      
+      // Determine workouts per week from training history
+      const workoutSessions = await storage.getWorkoutSessions(athleteId);
+      const fourWeeksAgo = new Date();
+      fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+      
+      const recentWorkouts = workoutSessions.filter(workout => {
+        const workoutDate = new Date(workout.date);
+        return workoutDate >= fourWeeksAgo;
+      });
+      
+      const workoutsPerWeek = Math.ceil(recentWorkouts.length / 4) || 3; // Default to 3 if no data
+      
+      // Generate performance predictions
+      const { generatePerformanceGrowthPredictions } = await import("./performance-predictions");
+      
+      const predictions = await generatePerformanceGrowthPredictions(
+        metrics,
+        athlete.position,
+        {
+          workoutsPerWeek,
+          trainingFocus,
+          timeframe,
+          age,
+          height: athlete.height || undefined,
+          weight: athlete.weight ? Number(athlete.weight) : undefined,
+          experience: req.body.experience || undefined
+        }
+      );
+      
+      res.json(predictions);
+    } catch (error) {
+      console.error("Error generating performance predictions:", error);
+      
+      // If we hit OpenAI API errors, return a more user-friendly message
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes("OpenAI")) {
+        return res.status(500).json({ 
+          message: "AI service is currently unavailable. Please try again later."
+        });
+      }
+      
+      next(error);
+    }
+  });
+  
   // -- Exercise Library Routes --
   // Get all exercises with optional filters
   app.get("/api/exercises", async (req, res, next) => {
