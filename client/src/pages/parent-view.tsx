@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
+import { useWebSocket } from "@/hooks/use-websocket";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -118,7 +119,69 @@ export default function ParentViewPage() {
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<TeamEvent[]>([]);
+  const [wsConnected, setWsConnected] = useState(false);
+  
+  // Initialize WebSocket connection
+  const { isConnected, lastMessage, sendMessage, authenticateParentView } = useWebSocket();
 
+  // Handle WebSocket messages
+  useEffect(() => {
+    if (lastMessage) {
+      console.log('Received WebSocket message:', lastMessage);
+      
+      // Handle different message types
+      switch (lastMessage.type) {
+        case 'connection':
+          setWsConnected(true);
+          break;
+        case 'parent_view_success':
+          console.log('Parent view authenticated via WebSocket');
+          break;
+        case 'athlete_data':
+          // Update athlete data if needed
+          if (lastMessage.data && data && data.athlete) {
+            setData(prev => prev ? {
+              ...prev,
+              athlete: {
+                ...prev.athlete,
+                ...lastMessage.data
+              }
+            } : prev);
+          }
+          break;
+        case 'metrics_update':
+          // Update metrics in real-time
+          if (lastMessage.data) {
+            setMetrics(lastMessage.data);
+          }
+          break;
+        case 'insights_update':
+          // Update insights in real-time
+          if (lastMessage.data) {
+            setInsights(lastMessage.data);
+          }
+          break;
+        case 'error':
+          console.error('WebSocket error:', lastMessage.message);
+          break;
+      }
+    }
+  }, [lastMessage, data]);
+  
+  // WebSocket authentication
+  useEffect(() => {
+    if (isConnected) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      
+      if (token) {
+        console.log('Authenticating parent view with WebSocket');
+        authenticateParentView(token);
+      }
+    }
+  }, [isConnected, authenticateParentView]);
+
+  // Main data loading effect
   useEffect(() => {
     async function fetchParentAccess() {
       try {
