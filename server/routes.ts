@@ -3834,6 +3834,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Setup WebSocket Server on a specific path to avoid conflicting with Vite's HMR
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws'
+  });
+  
+  // WebSocket connection handler
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('WebSocket client connected');
+    
+    // Send initial welcome message
+    ws.send(JSON.stringify({ 
+      type: 'connection', 
+      message: 'Connected to GridIron LegacyAI WebSocket Server'
+    }));
+    
+    // Handle incoming messages
+    ws.on('message', (data: string) => {
+      try {
+        const message = JSON.parse(data.toString());
+        console.log('Received WebSocket message:', message);
+        
+        // Handle different message types
+        switch (message.type) {
+          case 'ping':
+            ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
+            break;
+          case 'parent_view':
+            // Handle parent view access
+            if (message.token) {
+              handleParentViewAccess(ws, message.token);
+            }
+            break;
+          default:
+            console.log('Unknown message type:', message.type);
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    });
+    
+    // Handle disconnection
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+    });
+  });
+  
+  // Helper function to handle parent view access
+  async function handleParentViewAccess(ws: WebSocket, token: string) {
+    try {
+      // Load parent-access-service dynamically to avoid circular dependencies
+      const { parentAccessService } = await import('./parent-access-service');
+      
+      // Validate token and get parent access
+      const parentAccess = await parentAccessService.getParentAccessByToken(token);
+      
+      if (!parentAccess) {
+        ws.send(JSON.stringify({
+          type: 'error',
+          message: 'Invalid parent access token'
+        }));
+        return;
+      }
+      
+      // Send confirmation
+      ws.send(JSON.stringify({
+        type: 'parent_view_success',
+        data: {
+          accessId: parentAccess.id,
+          name: parentAccess.name,
+          athleteId: parentAccess.athleteId
+        }
+      }));
+      
+      // Load athlete data
+      const athlete = await storage.getAthlete(parentAccess.athleteId);
+      if (athlete) {
+        // Send athlete basic info
+        ws.send(JSON.stringify({
+          type: 'athlete_data',
+          data: {
+            id: athlete.id,
+            firstName: athlete.firstName,
+            lastName: athlete.lastName,
+            position: athlete.position
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error handling parent view access:', error);
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'Error processing parent view request'
+      }));
+    }
+  }
+  
   return httpServer;
 }
 
