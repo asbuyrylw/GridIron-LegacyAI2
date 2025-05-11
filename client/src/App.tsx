@@ -29,6 +29,7 @@ import ParentDashboard from "@/pages/parent-dashboard";
 import CoachDashboard from "@/pages/coach-dashboard";
 import ParentManagementPage from "@/pages/parent-management";
 import ParentViewPage from "@/pages/parent-view";
+import ParentAccessTester from "@/pages/parent-access-tester";
 
 // Landing Pages
 import LandingIndex from "@/pages/landing/index";
