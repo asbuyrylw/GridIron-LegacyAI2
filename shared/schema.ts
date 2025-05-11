@@ -346,7 +346,7 @@ export const recruitingAnalytics = pgTable("recruiting_analytics", {
   lastUpdated: timestamp("last_updated").defaultNow().notNull(),
 });
 
-// Recruiting messages between athletes and coaches/schools
+// Recruiting messages - self-referencing table for messages
 export const recruitingMessages = pgTable("recruiting_messages", {
   id: serial("id").primaryKey(),
   senderId: integer("sender_id").references(() => users.id).notNull(),
@@ -357,7 +357,7 @@ export const recruitingMessages = pgTable("recruiting_messages", {
   schoolName: text("school_name"), // If sender is a coach, their school name
   attachment: text("attachment"), // URL to any attachment
   isReply: boolean("is_reply").default(false),
-  parentMessageId: integer("parent_message_id").references(() => recruitingMessages.id),
+  parentMessageId: integer("parent_message_id"), // Self-reference without explicit foreign key constraint
 });
 
 // Team Management Tables
@@ -453,6 +453,17 @@ export const insertLeaderboardEntrySchema = createInsertSchema(leaderboardEntrie
 export const insertStrengthConditioningSchema = createInsertSchema(strengthConditioning).omit({ id: true, updatedAt: true });
 export const insertNutritionInfoSchema = createInsertSchema(nutritionInfo).omit({ id: true, updatedAt: true });
 export const insertRecruitingPreferencesSchema = createInsertSchema(recruitingPreferences).omit({ id: true, updatedAt: true });
+
+// Insert schemas for recruiting
+export const insertRecruitingAnalyticsSchema = createInsertSchema(recruitingAnalytics).omit({ id: true, lastUpdated: true });
+export const insertRecruitingMessagesSchema = createInsertSchema(recruitingMessages).omit({ id: true, sentAt: true });
+
+// Types
+export type RecruitingAnalytics = typeof recruitingAnalytics.$inferSelect;
+export type InsertRecruitingAnalytics = z.infer<typeof insertRecruitingAnalyticsSchema>;
+
+export type RecruitingMessage = typeof recruitingMessages.$inferSelect;
+export type InsertRecruitingMessage = z.infer<typeof insertRecruitingMessagesSchema>;
 
 // Team Management Insert Schemas
 export const insertTeamSchema = createInsertSchema(teams).omit({ id: true, createdAt: true });

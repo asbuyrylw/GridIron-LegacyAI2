@@ -19,6 +19,8 @@ import {
   strengthConditioning, type StrengthConditioning, type InsertStrengthConditioning,
   nutritionInfo, type NutritionInfo, type InsertNutritionInfo,
   recruitingPreferences, type RecruitingPreferences, type InsertRecruitingPreferences,
+  recruitingAnalytics, type RecruitingAnalytics, type InsertRecruitingAnalytics,
+  recruitingMessages, type RecruitingMessage, type InsertRecruitingMessage,
   teams, type Team, type InsertTeam,
   teamMembers, type TeamMember, type InsertTeamMember,
   teamEvents, type TeamEvent, type InsertTeamEvent,
@@ -70,6 +72,18 @@ export interface IStorage {
   getRecruitingPreferences(athleteId: number): Promise<RecruitingPreferences | undefined>;
   createRecruitingPreferences(recruitingPreferences: InsertRecruitingPreferences): Promise<RecruitingPreferences>;
   updateRecruitingPreferences(id: number, recruitingPreferences: Partial<InsertRecruitingPreferences>): Promise<RecruitingPreferences | undefined>;
+  
+  // Recruiting Analytics Methods
+  getRecruitingAnalytics(athleteId: number): Promise<RecruitingAnalytics | undefined>;
+  createRecruitingAnalytics(analytics: InsertRecruitingAnalytics): Promise<RecruitingAnalytics>;
+  updateRecruitingAnalytics(id: number, analytics: Partial<InsertRecruitingAnalytics>): Promise<RecruitingAnalytics | undefined>;
+  incrementProfileViews(athleteId: number): Promise<RecruitingAnalytics | undefined>;
+  
+  // Recruiting Messages Methods
+  getRecruitingMessages(userId: number): Promise<RecruitingMessage[]>;
+  getRecruitingMessageById(id: number): Promise<RecruitingMessage | undefined>;
+  createRecruitingMessage(message: InsertRecruitingMessage): Promise<RecruitingMessage>;
+  markRecruitingMessageAsRead(id: number): Promise<RecruitingMessage | undefined>;
   
   // Exercise Library Methods
   getExercises(category?: string, difficulty?: string, position?: string): Promise<ExerciseLibrary[]>;
