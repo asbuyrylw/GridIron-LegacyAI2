@@ -1,21 +1,88 @@
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Redirect } from "wouter";
-import { Loader2, User, Users, Calendar, MessageSquare, Clock, Award, BookOpen } from "lucide-react";
+import { Loader2, User, Users, Calendar, MessageSquare, Clock, Award, BookOpen, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import PageHeader from "@/components/layout/page-header";
+
+// Define schema for connecting to an athlete
+const connectAthleteSchema = z.object({
+  athleteId: z.string().min(1, "Athlete ID is required"),
+  relationship: z.string().min(1, "Relationship is required"),
+});
+
+// Type for academic info
+interface AcademicInfo {
+  gpa: number | null;
+  actScore: number | null;
+  school: string | null;
+  graduationYear: number | null;
+  grade: string | null;
+  eligibilityStatus: string;
+}
 
 export default function ParentDashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
+  const [showConnectForm, setShowConnectForm] = useState(false);
+  const [showAcademicInfo, setShowAcademicInfo] = useState(false);
+  const [selectedAthleteId, setSelectedAthleteId] = useState<number | null>(null);
+  
+  // Form setup for connecting to an athlete
+  const connectForm = useForm<z.infer<typeof connectAthleteSchema>>({
+    resolver: zodResolver(connectAthleteSchema),
+    defaultValues: {
+      athleteId: "",
+      relationship: "Parent/Guardian",
+    },
+  });
 
   // Check if user is a parent
   if (user?.userType !== "parent") {
     return <Redirect to="/" />;
   }
+  
+  // Connect to athlete mutation
+  const connectAthleteMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof connectAthleteSchema>) => {
+      const response = await apiRequest("POST", "/api/parents/connect-athlete", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to connect to athlete");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Connection request sent",
+        description: "The athlete will need to approve the connection.",
+      });
+      setShowConnectForm(false);
+      connectForm.reset();
+      // Invalidate athletes query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["/api/parents/athletes"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Connection failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   // Fetch parent profile
   const { data: parentProfile, isLoading: loadingParent } = useQuery({
@@ -28,6 +95,34 @@ export default function ParentDashboard() {
     queryKey: ["/api/parents/athletes"],
     enabled: !!user,
   });
+  
+  // Fetch athlete academic info
+  const { data: academicInfo, isLoading: loadingAcademics } = useQuery<AcademicInfo>({
+    queryKey: ["/api/parents/athletes", selectedAthleteId, "academics"],
+    queryFn: async () => {
+      if (!selectedAthleteId) return null;
+      const response = await fetch(`/api/parents/athletes/${selectedAthleteId}/academics`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch academic information");
+      }
+      return response.json();
+    },
+    enabled: !!selectedAthleteId && showAcademicInfo,
+  });
+  
+  // Handle submitting connect athlete form
+  const onSubmitConnectForm = (data: z.infer<typeof connectAthleteSchema>) => {
+    connectAthleteMutation.mutate({
+      athleteId: data.athleteId,
+      relationship: data.relationship,
+    });
+  };
+  
+  // Handle viewing athlete academic info
+  const handleViewAthleteAcademics = (athleteId: number) => {
+    setSelectedAthleteId(athleteId);
+    setShowAcademicInfo(true);
+  };
 
   if (loadingParent || loadingAthletes) {
     return (
@@ -164,23 +259,35 @@ export default function ParentDashboard() {
               {!connectedAthletes || connectedAthletes.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">No connected athletes yet</p>
-                  <Button>Connect to an Athlete</Button>
+                  <Button onClick={() => setShowConnectForm(true)}>Connect to an Athlete</Button>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {/* Connected athletes would be mapped here */}
-                  <div className="flex items-center justify-between rounded-md border p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="h-5 w-5 text-primary" />
+                  {connectedAthletes.map((athlete) => (
+                    <div key={athlete.id} className="flex items-center justify-between rounded-md border p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <User className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{athlete.firstName} {athlete.lastName}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {athlete.position} • {athlete.graduationYear ? `Class of ${athlete.graduationYear}` : ""}
+                            <span className="ml-2 text-primary text-xs">({athlete.relationship})</span>
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">John Smith</p>
-                        <p className="text-sm text-muted-foreground">Quarterback (QB) • Sophomore</p>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => handleViewAthleteAcademics(athlete.id)}
+                        >
+                          Academic Info
+                        </Button>
+                        <Button variant="outline">View Profile</Button>
                       </div>
                     </div>
-                    <Button variant="outline">View Profile</Button>
-                  </div>
+                  ))}
                 </div>
               )}
             </CardContent>
@@ -299,6 +406,140 @@ export default function ParentDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Connect to Athlete Dialog */}
+      <Dialog open={showConnectForm} onOpenChange={setShowConnectForm}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Connect to an Athlete</DialogTitle>
+            <DialogDescription>
+              Enter the athlete's ID and your relationship to connect with them.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...connectForm}>
+            <form onSubmit={connectForm.handleSubmit(onSubmitConnectForm)} className="space-y-4">
+              <FormField
+                control={connectForm.control}
+                name="athleteId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Athlete ID</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter athlete ID" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={connectForm.control}
+                name="relationship"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Relationship</FormLabel>
+                    <FormControl>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select relationship" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Parent/Guardian">Parent/Guardian</SelectItem>
+                          <SelectItem value="Family Member">Family Member</SelectItem>
+                          <SelectItem value="Mentor">Mentor</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button 
+                  type="submit" 
+                  disabled={connectAthleteMutation.isPending}
+                >
+                  {connectAthleteMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Connect
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Academic Info Dialog */}
+      <Dialog open={showAcademicInfo} onOpenChange={setShowAcademicInfo}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Academic Information</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowAcademicInfo(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {loadingAcademics ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : !academicInfo ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No academic information available</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">GPA</p>
+                  <p className="text-lg font-semibold">{academicInfo.gpa || 'N/A'}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">ACT Score</p>
+                  <p className="text-lg font-semibold">{academicInfo.actScore || 'N/A'}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">School</p>
+                  <p className="text-lg font-semibold">{academicInfo.school || 'N/A'}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Grade</p>
+                  <p className="text-lg font-semibold">{academicInfo.grade || 'N/A'}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Graduation Year</p>
+                  <p className="text-lg font-semibold">{academicInfo.graduationYear || 'N/A'}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Eligibility Status</p>
+                  <p className="text-lg font-semibold">{academicInfo.eligibilityStatus || 'N/A'}</p>
+                </div>
+              </div>
+              
+              <div className="border-t pt-4 mt-4">
+                <p className="text-sm text-muted-foreground mb-2">Academic Requirements for College Eligibility:</p>
+                <ul className="text-sm space-y-1 list-disc pl-5">
+                  <li>NCAA Division I: 2.3 GPA in core courses, sliding scale for SAT/ACT</li>
+                  <li>NCAA Division II: 2.2 GPA in core courses, minimum SAT/ACT score</li>
+                  <li>NCAA Division III: Determined by individual schools</li>
+                  <li>NAIA: 2.0 GPA, minimum 18 ACT or 970 SAT</li>
+                </ul>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
