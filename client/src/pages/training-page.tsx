@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { PageHeader } from "@/components/layout/page-header";
 import { TrainingPlanView } from "@/components/training/training-plan";
+import { TrainingPlanGenerator } from "@/components/training/training-plan-generator";
 import { WorkoutSession } from "@/components/training/workout-session";
 import { TabsContent, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { useWorkoutSessions } from "@/hooks/use-training-hooks";
 import { WorkoutSession as WorkoutSessionType } from "@shared/schema";
-import { Dumbbell, CalendarDays, Clock, BarChart2, Flag, Trophy, TrendingUp } from "lucide-react";
+import { Dumbbell, CalendarDays, Clock, BarChart2, Flag, Trophy, TrendingUp, SparklesIcon } from "lucide-react";
 import { format, parseISO, isToday, isYesterday, isThisWeek, isThisMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -75,8 +76,12 @@ export default function TrainingPage() {
       />
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6">
-        <TabsList className="grid grid-cols-2 w-full">
+        <TabsList className="grid grid-cols-3 w-full">
           <TabsTrigger value="plan">Today's Plan</TabsTrigger>
+          <TabsTrigger value="generator">
+            <SparklesIcon className="h-4 w-4 mr-1" />
+            AI Generator
+          </TabsTrigger>
           <TabsTrigger value="history">Workout History</TabsTrigger>
         </TabsList>
         
@@ -91,6 +96,12 @@ export default function TrainingPage() {
                 onComplete={handleWorkoutComplete}
               />
             </>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="generator" className="space-y-4 pt-4">
+          {athleteId && (
+            <TrainingPlanGenerator />
           )}
         </TabsContent>
         
