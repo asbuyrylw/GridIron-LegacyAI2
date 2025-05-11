@@ -285,7 +285,7 @@ function RegisterTabs({ isLoading, onSubmit }: RegisterFormProps) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <Button 
           variant={userType === "athlete" ? "default" : "outline"} 
           onClick={() => setUserType("athlete")}
@@ -293,14 +293,6 @@ function RegisterTabs({ isLoading, onSubmit }: RegisterFormProps) {
         >
           <GraduationCap className="h-6 w-6 mb-2" />
           <span>Athlete</span>
-        </Button>
-        <Button 
-          variant={userType === "parent" ? "default" : "outline"} 
-          onClick={() => setUserType("parent")}
-          className="flex flex-col py-4 h-auto"
-        >
-          <UsersRound className="h-6 w-6 mb-2" />
-          <span>Parent</span>
         </Button>
         <Button 
           variant={userType === "coach" ? "default" : "outline"} 
@@ -316,13 +308,35 @@ function RegisterTabs({ isLoading, onSubmit }: RegisterFormProps) {
         <AthleteRegisterForm isLoading={isLoading} onSubmit={onSubmit} />
       )}
       
-      {userType === "parent" && (
-        <ParentRegisterForm isLoading={isLoading} onSubmit={onSubmit} />
-      )}
-      
       {userType === "coach" && (
         <CoachRegisterForm isLoading={isLoading} onSubmit={onSubmit} />
       )}
+      
+      <div className="relative mt-6 pt-6">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-slate-200"></span>
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-card px-2 text-muted-foreground">Are you a parent?</span>
+        </div>
+      </div>
+      
+      <div className="bg-blue-50 p-4 rounded-lg mt-2">
+        <h3 className="font-medium text-blue-800 flex items-center">
+          <UsersRound className="h-4 w-4 mr-2" />
+          Parent Access
+        </h3>
+        <p className="text-sm text-blue-700 mt-1">
+          Parents don't need an account. Athletes can invite parents to receive updates via email and access a read-only dashboard with nutrition information.
+        </p>
+        <Button 
+          variant="link" 
+          className="text-sm text-blue-600 p-0 h-auto mt-2"
+          onClick={() => window.open("#athlete-help-parent", "_blank")}
+        >
+          Learn how athletes can invite parents →
+        </Button>
+      </div>
     </div>
   );
 }
@@ -549,237 +563,7 @@ function AthleteRegisterForm({ isLoading, onSubmit }: RegisterFormProps) {
   );
 }
 
-function ParentRegisterForm({ isLoading, onSubmit }: RegisterFormProps) {
-  const form = useForm<z.infer<typeof parentRegistrationSchema>>({
-    resolver: zodResolver(parentRegistrationSchema),
-    defaultValues: {
-      username: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      firstName: "",
-      lastName: "",
-      relationship: "Parent",
-      phone: "",
-      userType: "parent",
-    },
-  });
-
-  function handleSubmit(values: z.infer<typeof parentRegistrationSchema>) {
-    onSubmit(values);
-  }
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mt-2">
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium">First Name</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input 
-                      className="py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
-                      placeholder="John" 
-                      {...field} 
-                    />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium">Last Name</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input 
-                      className="py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
-                      placeholder="Smith" 
-                      {...field} 
-                    />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm font-medium">Username</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                  </div>
-                  <Input 
-                    className="pl-10 py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
-                    placeholder="Choose a username" 
-                    {...field} 
-                  />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm font-medium">Email</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-                    </svg>
-                  </div>
-                  <Input 
-                    className="pl-10 py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
-                    type="email" 
-                    placeholder="your.email@example.com" 
-                    {...field} 
-                  />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="relationship"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium">Relationship</FormLabel>
-                <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger className="py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10">
-                      <SelectValue placeholder="Select..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Parent">Parent</SelectItem>
-                      <SelectItem value="Guardian">Guardian</SelectItem>
-                      <SelectItem value="Family Member">Family Member</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium">Phone (Optional)</FormLabel>
-                <FormControl>
-                  <Input 
-                    className="py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
-                    placeholder="(555) 555-5555" 
-                    {...field} 
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm font-medium">Password</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                  </div>
-                  <Input 
-                    className="pl-10 py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
-                    type="password" 
-                    placeholder="Create a password" 
-                    {...field} 
-                  />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="confirmPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm font-medium">Confirm Password</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                  </div>
-                  <Input 
-                    className="pl-10 py-5 bg-white border-slate-200 focus:ring-2 focus:ring-primary/10" 
-                    type="password" 
-                    placeholder="Confirm your password" 
-                    {...field} 
-                  />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <Button 
-          type="submit" 
-          className="w-full py-6 text-base font-medium shadow-md mt-2" 
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Creating Account...
-            </>
-          ) : (
-            "Create Parent Account"
-          )}
-        </Button>
-      </form>
-    </Form>
-  );
-}
+// Parent registration removed in favor of read-only parent access
 
 function CoachRegisterForm({ isLoading, onSubmit }: RegisterFormProps) {
   const form = useForm<z.infer<typeof coachRegistrationSchema>>({
