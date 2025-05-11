@@ -1,4 +1,127 @@
-import { InsertTrainingPlan, InsertExerciseLibrary } from "@shared/schema";
+import { InsertTrainingPlan, InsertExerciseLibrary, CombineMetric, Athlete, StrengthConditioning } from "@shared/schema";
+import OpenAI from "openai";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+/**
+ * Generate an AI-powered training plan based on athlete metrics, profile and goals
+ */
+export async function generateAITrainingPlan(
+  athleteId: number,
+  athleteData: {
+    position: string;
+    metrics?: CombineMetric;
+    profile?: Athlete;
+    strengthProfile?: StrengthConditioning;
+    focusAreas?: string[];
+    recentPerformance?: {
+      completedWorkouts: number;
+      averageExertion: number;
+      commonIssues: string[];
+    };
+  }
+): Promise<InsertTrainingPlan> {
+  try {
+    // Create a prompt for OpenAI to generate personalized training plan
+    const { position, metrics, profile, strengthProfile, focusAreas, recentPerformance } = athleteData;
+    
+    let prompt = `Create a personalized football training plan for a ${position} player.`;
+    
+    // Add metrics information if available
+    if (metrics) {
+      prompt += `\nRecent combine metrics:
+      - 40-yard dash: ${metrics.fortyYard ? metrics.fortyYard + ' seconds' : 'Not recorded'}
+      - Shuttle: ${metrics.shuttle ? metrics.shuttle + ' seconds' : 'Not recorded'}
+      - Vertical jump: ${metrics.verticalJump ? metrics.verticalJump + ' inches' : 'Not recorded'}
+      - Bench press reps: ${metrics.benchPressReps || 'Not recorded'}
+      - Squat max: ${metrics.squatMax ? metrics.squatMax + ' lbs' : 'Not recorded'}`;
+    }
+    
+    // Add strength profile information if available
+    if (strengthProfile) {
+      prompt += `\nStrength profile:
+      - Primary strengths: ${strengthProfile.primaryStrengths?.join(', ') || 'Not specified'}
+      - Training limitations: ${strengthProfile.trainingLimitations?.join(', ') || 'None'}
+      - Preferred training style: ${strengthProfile.trainingPreference || 'Not specified'}
+      - Current fitness level: ${strengthProfile.fitnessLevel || 'Not specified'}`;
+    }
+    
+    // Add recent performance data if available
+    if (recentPerformance) {
+      prompt += `\nRecent training performance:
+      - Completed workouts: ${recentPerformance.completedWorkouts} in last 30 days
+      - Average exertion level: ${recentPerformance.averageExertion}/10
+      - Common issues: ${recentPerformance.commonIssues?.join(', ') || 'None'}`;
+    }
+    
+    // Add focus areas
+    prompt += `\nFocus areas: ${focusAreas?.join(', ') || 'General athletic development'}`;
+    
+    // Request specific format for the response
+    prompt += `\n\nPlease create a football training plan with the following:
+    1. A title for the training plan
+    2. Primary focus area (Speed, Strength, Agility, etc.)
+    3. Difficulty level (Beginner, Intermediate, Advanced)
+    4. 5-6 exercises with sets, reps, and rest times
+    5. A coaching tip
+    
+    Format the response as a JSON object with the following structure:
+    {
+      "title": "Plan title",
+      "focus": "Primary focus",
+      "difficultyLevel": "Difficulty level",
+      "exercises": [
+        {
+          "id": "ex1",
+          "name": "Exercise name",
+          "sets": 3,
+          "reps": "10 reps",
+          "restTime": 60,
+          "category": "Category name"
+        },
+        ...more exercises
+      ],
+      "coachTip": "A helpful coaching tip relevant to this workout"
+    }`;
+    
+    // Call OpenAI API to generate the training plan
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [
+        { role: "system", content: "You are an expert football strength and conditioning coach with 15+ years experience developing personalized training programs for athletes at all levels." },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" }
+    });
+    
+    // Parse the response
+    const content = response.choices[0].message.content || '{}';
+    const trainingPlan = JSON.parse(content);
+    
+    // Ensure the generated plan has the correct structure and add any missing fields
+    const today = new Date();
+    const date = today.toISOString().split('T')[0];
+    
+    // Prepare the final training plan
+    const finalPlan: InsertTrainingPlan = {
+      athleteId,
+      date,
+      title: trainingPlan.title || "Personalized Training Plan",
+      focus: trainingPlan.focus || "General",
+      exercises: trainingPlan.exercises || generateExercisesForFocus("General", position),
+      completed: false,
+      active: true,
+      difficultyLevel: trainingPlan.difficultyLevel || "Intermediate",
+      coachTip: trainingPlan.coachTip || generateCoachTip("General", position)
+    };
+    
+    return finalPlan;
+  } catch (error) {
+    console.error("Error generating AI training plan:", error);
+    // Fallback to basic training plan if AI generation fails
+    return generateInitialTrainingPlan(athleteId, position, focusAreas || []);
+  }
+}
 
 /**
  * Generate a basic training plan based on athlete data
