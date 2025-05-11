@@ -37,7 +37,9 @@ export function AiPerformanceInsights({ athleteId, className }: AiPerformanceIns
   });
   
   const hasInsightsData = !isInsightsLoading && insights && 
-    (insights.strengths?.length > 0 || insights.weaknesses?.length > 0 || insights.recommendations?.length > 0);
+    (Array.isArray(insights.strengths) && insights.strengths.length > 0 || 
+     Array.isArray(insights.weaknesses) && insights.weaknesses.length > 0 || 
+     Array.isArray(insights.recommendations) && insights.recommendations.length > 0);
     
   const latestMetrics = metrics && metrics.length > 0 ? metrics[0] : null;
   const updatedDate = insights?.lastUpdated 
@@ -192,7 +194,7 @@ export function AiPerformanceInsights({ athleteId, className }: AiPerformanceIns
             
             <TabsContent value="strengths">
               <div className="space-y-4">
-                {insights?.strengths?.map((strength: string, index: number) => (
+                {Array.isArray(insights?.strengths) && insights.strengths.map((strength: string, index: number) => (
                   <div key={index} className="flex gap-3 items-start">
                     <div className="bg-green-100 rounded-full p-1 mt-0.5">
                       <TrendingUp className="h-4 w-4 text-green-600" />
@@ -201,7 +203,7 @@ export function AiPerformanceInsights({ athleteId, className }: AiPerformanceIns
                   </div>
                 ))}
                 
-                {(!insights?.strengths || insights.strengths.length === 0) && (
+                {(!insights?.strengths || !Array.isArray(insights.strengths) || insights.strengths.length === 0) && (
                   <p className="text-muted-foreground text-center py-4">
                     No strengths identified yet. Generate insights to see your athletic strengths.
                   </p>
@@ -211,7 +213,7 @@ export function AiPerformanceInsights({ athleteId, className }: AiPerformanceIns
             
             <TabsContent value="weaknesses">
               <div className="space-y-4">
-                {insights?.weaknesses?.map((weakness: string, index: number) => (
+                {Array.isArray(insights?.weaknesses) && insights.weaknesses.map((weakness: string, index: number) => (
                   <div key={index} className="flex gap-3 items-start">
                     <div className="bg-amber-100 rounded-full p-1 mt-0.5">
                       <Target className="h-4 w-4 text-amber-600" />
@@ -220,7 +222,7 @@ export function AiPerformanceInsights({ athleteId, className }: AiPerformanceIns
                   </div>
                 ))}
                 
-                {(!insights?.weaknesses || insights.weaknesses.length === 0) && (
+                {(!insights?.weaknesses || !Array.isArray(insights.weaknesses) || insights.weaknesses.length === 0) && (
                   <p className="text-muted-foreground text-center py-4">
                     No areas for growth identified yet. Generate insights to see improvement opportunities.
                   </p>
@@ -230,7 +232,7 @@ export function AiPerformanceInsights({ athleteId, className }: AiPerformanceIns
             
             <TabsContent value="recommendations">
               <div className="space-y-4">
-                {insights?.recommendations?.map((recommendation: string, index: number) => (
+                {Array.isArray(insights?.recommendations) && insights.recommendations.map((recommendation: string, index: number) => (
                   <div key={index} className="flex gap-3 items-start">
                     <div className="bg-blue-100 rounded-full p-1 mt-0.5">
                       <Lightbulb className="h-4 w-4 text-blue-600" />
@@ -239,7 +241,7 @@ export function AiPerformanceInsights({ athleteId, className }: AiPerformanceIns
                   </div>
                 ))}
                 
-                {(!insights?.recommendations || insights.recommendations.length === 0) && (
+                {(!insights?.recommendations || !Array.isArray(insights.recommendations) || insights.recommendations.length === 0) && (
                   <p className="text-muted-foreground text-center py-4">
                     No recommendations available yet. Generate insights to receive training suggestions.
                   </p>

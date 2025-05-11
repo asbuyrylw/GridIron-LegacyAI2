@@ -78,7 +78,8 @@ export async function generatePerformanceInsights(
     });
 
     try {
-      return JSON.parse(response.choices[0].message.content);
+      const content = response.choices[0].message.content || "{}";
+      return JSON.parse(content);
     } catch (error) {
       console.error("Error parsing OpenAI response", error);
       return generateFallbackInsights(metrics, position, comparisons);

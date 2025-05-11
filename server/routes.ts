@@ -2190,8 +2190,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           performanceTrend: analysisResult.performanceTrend || "stable",
           positionRanking: analysisResult.positionRanking || `Average ${position} with potential to improve`,
           improvementAreas: analysisResult.improvementAreas || [],
-          recentAchievements: analysisResult.recentAchievements || [],
-          lastUpdated: new Date()
+          recentAchievements: analysisResult.recentAchievements || []
+          // lastUpdated is automatically set by the database via defaultNow()
         });
         
         res.json(updatedInsights);
