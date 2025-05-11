@@ -5,6 +5,7 @@ interface Step {
   id: number;
   title: string;
   description?: string;
+  label?: string; // For backward compatibility
 }
 
 interface StepIndicatorProps {
