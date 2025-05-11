@@ -1,6 +1,9 @@
 import { 
   users, type User, type InsertUser, 
   athletes, type Athlete, type InsertAthlete,
+  parents, type Parent, type InsertParent,
+  coaches, type Coach, type InsertCoach,
+  parentAthleteRelationships, type ParentAthleteRelationship, type InsertParentAthleteRelationship,
   combineMetrics, type CombineMetric, type InsertCombineMetric,
   exerciseLibrary, type ExerciseLibrary, type InsertExerciseLibrary,
   trainingPlans, type TrainingPlan, type InsertTrainingPlan,
@@ -34,6 +37,9 @@ import createMemoryStore from "memorystore";
 const MemoryStore = createMemoryStore(session);
 
 export interface IStorage {
+  // Session Store
+  sessionStore: session.SessionStore;
+  
   // User Methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -45,6 +51,24 @@ export interface IStorage {
   createAthlete(athlete: InsertAthlete): Promise<Athlete>;
   updateAthlete(id: number, athlete: Partial<InsertAthlete>): Promise<Athlete | undefined>;
   getAllAthletes(): Promise<Athlete[]>;
+  
+  // Parent Methods
+  getParent(id: number): Promise<Parent | undefined>;
+  getParentByUserId(userId: number): Promise<Parent | undefined>;
+  createParent(parent: InsertParent): Promise<Parent>;
+  updateParent(id: number, parent: Partial<InsertParent>): Promise<Parent | undefined>;
+  
+  // Parent-Athlete Relationship Methods
+  getParentAthleteRelationships(parentId: number): Promise<ParentAthleteRelationship[]>;
+  getAthleteParents(athleteId: number): Promise<(Parent & { relationship: string })[]>;
+  createParentAthleteRelationship(relationship: InsertParentAthleteRelationship): Promise<ParentAthleteRelationship>;
+  
+  // Coach Methods
+  getCoach(id: number): Promise<Coach | undefined>;
+  getCoachByUserId(userId: number): Promise<Coach | undefined>;
+  createCoach(coach: InsertCoach): Promise<Coach>;
+  updateCoach(id: number, coach: Partial<InsertCoach>): Promise<Coach | undefined>;
+  getCoachesByTeam(teamId: number): Promise<Coach[]>;
   
   // Combine Metrics Methods
   getCombineMetrics(athleteId: number): Promise<CombineMetric[]>;

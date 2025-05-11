@@ -20,12 +20,19 @@ export const achievementLevelEnum = pgEnum('achievement_level', [
   'platinum'
 ]);
 
+export const userTypeEnum = pgEnum('user_type', [
+  'athlete',
+  'parent',
+  'coach',
+  'admin'
+]);
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
-  userType: text("user_type").notNull().default("athlete"), // athlete, parent, coach
+  userType: text("user_type", { enum: ['athlete', 'parent', 'coach', 'admin'] }).notNull().default("athlete"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -164,6 +171,57 @@ export const recruitingProfiles = pgTable("recruiting_profiles", {
   highlightVideoUrl: text("highlight_video_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Parent profiles for tracking parent/guardian information
+export const parents = pgTable("parents", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull().unique(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  phone: text("phone"),
+  relationship: text("relationship").notNull(), // Father, Mother, Guardian, etc.
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  zipCode: text("zip_code"),
+  occupation: text("occupation"),
+  emergencyContact: boolean("emergency_contact").default(true),
+  secondaryEmail: text("secondary_email"),
+  receivesNotifications: boolean("receives_notifications").default(true),
+  preferredContactMethod: text("preferred_contact_method").default("email"), // email, phone, text
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Parent-Athlete relationships table to allow parents to manage multiple athletes
+export const parentAthleteRelationships = pgTable("parent_athlete_relationships", {
+  id: serial("id").primaryKey(),
+  parentId: integer("parent_id").references(() => parents.id).notNull(),
+  athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
+  isPrimary: boolean("is_primary").default(false), // Is this the primary parent/guardian
+  relationship: text("relationship").notNull(), // Father, Mother, Guardian, etc.
+  hasViewAccess: boolean("has_view_access").default(true),
+  hasEditAccess: boolean("has_edit_access").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Coach profiles for tracking coach information
+export const coaches = pgTable("coaches", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull().unique(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  phone: text("phone"),
+  title: text("title"), // Head Coach, Assistant Coach, Position Coach, etc.
+  bio: text("bio"),
+  yearsExperience: integer("years_experience"),
+  certifications: json("certifications").default('[]'), // Array of coaching certifications
+  specialties: json("specialties").default('[]'), // Array of coaching specialties (e.g., Offense, Defense, QBs, etc.)
+  profileImage: text("profile_image"),
+  philosophy: text("philosophy"),
+  achievements: json("achievements").default('[]'), // Array of coaching achievements
+  education: text("education"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Expanded combine metrics table to include more athletic tests
@@ -523,6 +581,16 @@ export const teamAnnouncements = pgTable("team_announcements", {
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertAthleteSchema = createInsertSchema(athletes).omit({ id: true });
+export const insertParentSchema = createInsertSchema(parents).omit({ id: true, createdAt: true });
+export const insertCoachSchema = createInsertSchema(coaches).omit({ id: true, createdAt: true });
+export const insertParentAthleteRelationshipSchema = createInsertSchema(parentAthleteRelationships).omit({ id: true, createdAt: true });
+
+export type Parent = typeof parents.$inferSelect;
+export type InsertParent = z.infer<typeof insertParentSchema>;
+export type Coach = typeof coaches.$inferSelect;
+export type InsertCoach = z.infer<typeof insertCoachSchema>;
+export type ParentAthleteRelationship = typeof parentAthleteRelationships.$inferSelect;
+export type InsertParentAthleteRelationship = z.infer<typeof insertParentAthleteRelationshipSchema>;
 export const insertCombineMetricsSchema = createInsertSchema(combineMetrics).omit({ id: true, dateRecorded: true });
 export const insertExerciseLibrarySchema = createInsertSchema(exerciseLibrary).omit({ id: true, createdAt: true });
 export const insertTrainingPlanSchema = createInsertSchema(trainingPlans).omit({ id: true, createdAt: true });
@@ -640,6 +708,35 @@ export const athleteRegistrationSchema = insertUserSchema.extend({
 });
 
 export type AthleteRegistration = z.infer<typeof athleteRegistrationSchema>;
+
+// Parent Registration Schema
+export const parentRegistrationSchema = insertUserSchema.extend({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  relationship: z.string().min(1, "Relationship is required"),
+  phone: z.string().optional(),
+  childAthleteId: z.number().optional(), // If connecting to existing athlete
+  confirmPassword: z.string().min(6, "Confirm password is required"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+export type ParentRegistration = z.infer<typeof parentRegistrationSchema>;
+
+// Coach Registration Schema
+export const coachRegistrationSchema = insertUserSchema.extend({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  title: z.string().min(1, "Title is required"),
+  phone: z.string().optional(),
+  confirmPassword: z.string().min(6, "Confirm password is required"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+export type CoachRegistration = z.infer<typeof coachRegistrationSchema>;
 
 // Login Schema
 export const loginSchema = z.object({
