@@ -207,6 +207,7 @@ export interface IStorage {
   getTeam(id: number): Promise<Team | undefined>;
   getAthleteTeams(athleteId: number): Promise<Team[]>;
   getCoachTeams(coachId: number): Promise<Team[]>;
+  getTeamsForCoach(userId: number): Promise<Team[]>;
   createTeam(team: InsertTeam): Promise<Team>;
   updateTeam(id: number, team: Partial<InsertTeam>): Promise<Team | undefined>;
   
@@ -1651,6 +1652,23 @@ export class MemStorage implements IStorage {
     return Array.from(this.teamsMap.values()).filter(
       (team) => team.coachId === coachId
     );
+  }
+  
+  async getTeamsForCoach(userId: number): Promise<Team[]> {
+    const teams: Team[] = [];
+    
+    // Get all team members where this user is a coach or assistant coach
+    for (const teamMember of this.teamMembersMap.values()) {
+      if (teamMember.userId === userId && 
+          (teamMember.role === 'coach' || teamMember.role === 'assistant_coach')) {
+        const team = await this.getTeam(teamMember.teamId);
+        if (team) {
+          teams.push(team);
+        }
+      }
+    }
+    
+    return teams;
   }
   
   async createTeam(insertTeam: InsertTeam): Promise<Team> {
