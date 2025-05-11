@@ -91,7 +91,7 @@ export function BottomNav() {
           ))}
         </div>
         <div className="mt-1 grid grid-cols-5 gap-1">
-          {navItems.slice(5).map((item) => (
+          {navItems.slice(5, 10).map((item) => (
             <NavItem key={item.href} {...item} />
           ))}
         </div>

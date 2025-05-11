@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/accordion";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, GraduationCap, Trophy, MapPin, BookOpen } from "lucide-react";
+import { Loader2, GraduationCap, Trophy, MapPin, BookOpen, Share2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 interface CollegeMatchResult {
@@ -133,10 +133,22 @@ export default function CollegeMatcherPage() {
       
       <div className="container mx-auto py-8 px-4 max-w-6xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">College Matcher</h1>
-          <p className="text-muted-foreground">
-            Find the right college fit based on your athletic and academic profile.
-          </p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight mb-2">College Matcher</h1>
+              <p className="text-muted-foreground">
+                Find the right college fit based on your athletic and academic profile.
+              </p>
+            </div>
+            <div className="mt-4 md:mt-0">
+              <Button asChild variant="outline" size="sm">
+                <a href="/recruiting">
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Back to Recruiting Dashboard
+                </a>
+              </Button>
+            </div>
+          </div>
         </div>
 
         {collegeMatches && (
