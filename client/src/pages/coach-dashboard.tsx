@@ -1,10 +1,20 @@
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Redirect } from "wouter";
-import { Loader2, Users, Calendar, Clipboard, MessageSquare, BarChart3, Award } from "lucide-react";
+import { Loader2, Users, Calendar, Clipboard, MessageSquare, BarChart3, Award, Plus, X, UserPlus, Eye } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useState } from "react";
 import PageHeader from "@/components/layout/page-header";
 import { 
@@ -17,9 +27,83 @@ import {
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 
+// Define schema for adding team member
+const addTeamMemberSchema = z.object({
+  athleteId: z.string().min(1, "Athlete ID is required"),
+  position: z.string().min(1, "Position is required"),
+  jerseyNumber: z.string().optional(),
+  role: z.string().default("Player"),
+});
+
+// Define schema for adding team event
+const addTeamEventSchema = z.object({
+  eventType: z.string().min(1, "Event type is required"),
+  date: z.string().min(1, "Date is required"),
+  time: z.string().min(1, "Time is required"),
+  location: z.string().min(1, "Location is required"),
+  description: z.string().optional(),
+});
+
+// Type for team member details
+interface TeamMember {
+  id: number;
+  athleteId: number;
+  firstName: string;
+  lastName: string;
+  position: string | null;
+  jerseyNumber: string | null;
+  status: string | null;
+  isActive: boolean | null;
+  role: string;
+}
+
+// Type for athlete details for performance view
+interface AthletePerformance {
+  id: number;
+  athleteId: number;
+  firstName: string;
+  lastName: string;
+  position: string;
+  metrics: {
+    fortyYard: number | null;
+    verticalJump: number | null;
+    benchPress: number | null;
+    squat: number | null;
+  };
+  recentTrainingCompletion: number;
+}
+
 export default function CoachDashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
+  const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
+  const [showAddEventDialog, setShowAddEventDialog] = useState(false);
+  const [selectedAthlete, setSelectedAthlete] = useState<number | null>(null);
+  const [showAthleteDetails, setShowAthleteDetails] = useState(false);
+  
+  // Form setup for adding team member
+  const addMemberForm = useForm<z.infer<typeof addTeamMemberSchema>>({
+    resolver: zodResolver(addTeamMemberSchema),
+    defaultValues: {
+      athleteId: "",
+      position: "",
+      jerseyNumber: "",
+      role: "Player",
+    },
+  });
+  
+  // Form setup for adding team event
+  const addEventForm = useForm<z.infer<typeof addTeamEventSchema>>({
+    resolver: zodResolver(addTeamEventSchema),
+    defaultValues: {
+      eventType: "",
+      date: "",
+      time: "",
+      location: "",
+      description: "",
+    },
+  });
 
   // Check if user is a coach
   if (user?.userType !== "coach") {
@@ -39,10 +123,90 @@ export default function CoachDashboard() {
   });
 
   // Fetch team members (athletes)
-  const { data: teamMembers, isLoading: loadingMembers } = useQuery({
+  const { data: teamMembers, isLoading: loadingMembers } = useQuery<TeamMember[]>({
     queryKey: ["/api/coaches/team-members"],
     enabled: !!user && !!teamInfo,
   });
+  
+  // Fetch athlete details when selected
+  const { data: selectedAthleteData, isLoading: loadingAthleteDetails } = useQuery({
+    queryKey: ["/api/coaches/athletes", selectedAthlete],
+    enabled: !!selectedAthlete && showAthleteDetails,
+  });
+  
+  // Add team member mutation
+  const addTeamMemberMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof addTeamMemberSchema>) => {
+      const response = await apiRequest("POST", "/api/coaches/team-members", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to add team member");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Team member added",
+        description: "The athlete has been added to your team.",
+      });
+      setShowAddMemberDialog(false);
+      addMemberForm.reset();
+      // Invalidate team members query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["/api/coaches/team-members"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add team member",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Add team event mutation
+  const addTeamEventMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof addTeamEventSchema>) => {
+      const response = await apiRequest("POST", "/api/coaches/team-events", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to add team event");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Event added",
+        description: "The team event has been added to the schedule.",
+      });
+      setShowAddEventDialog(false);
+      addEventForm.reset();
+      // Invalidate teams query to refresh the events list
+      queryClient.invalidateQueries({ queryKey: ["/api/coaches/team-events"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add event",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handle submitting add team member form
+  const onSubmitAddMemberForm = (data: z.infer<typeof addTeamMemberSchema>) => {
+    addTeamMemberMutation.mutate(data);
+  };
+  
+  // Handle submitting add team event form
+  const onSubmitAddEventForm = (data: z.infer<typeof addTeamEventSchema>) => {
+    addTeamEventMutation.mutate(data);
+  };
+  
+  // Handle viewing athlete details
+  const handleViewAthleteDetails = (athleteId: number) => {
+    setSelectedAthlete(athleteId);
+    setShowAthleteDetails(true);
+  };
 
   if (loadingCoach || loadingTeam || loadingMembers) {
     return (
@@ -211,7 +375,10 @@ export default function CoachDashboard() {
                   Manage your team members and their positions
                 </CardDescription>
               </div>
-              <Button>Add Athlete</Button>
+              <Button onClick={() => setShowAddMemberDialog(true)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add Athlete
+              </Button>
             </CardHeader>
             <CardContent>
               <Table>
@@ -230,34 +397,42 @@ export default function CoachDashboard() {
                       <TableCell colSpan={5} className="text-center">No team members found</TableCell>
                     </TableRow>
                   ) : (
-                    <>
-                      <TableRow>
-                        <TableCell className="font-medium">John Smith</TableCell>
-                        <TableCell>Quarterback (QB)</TableCell>
-                        <TableCell>12</TableCell>
+                    teamMembers.map((member) => (
+                      <TableRow key={member.id}>
+                        <TableCell className="font-medium">{member.firstName} {member.lastName}</TableCell>
+                        <TableCell>{member.position || "Unassigned"}</TableCell>
+                        <TableCell>{member.jerseyNumber || "N/A"}</TableCell>
                         <TableCell>
-                          <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-green-100 text-green-800">
-                            Active
-                          </span>
+                          {member.status === "active" ? (
+                            <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                              Active
+                            </Badge>
+                          ) : member.status === "injured" ? (
+                            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">
+                              Injured
+                            </Badge>
+                          ) : member.status === "inactive" ? (
+                            <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
+                              Inactive
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline">
+                              Unknown
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm">View</Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleViewAthleteDetails(member.athleteId)}
+                          >
+                            <Eye className="mr-1 h-4 w-4" />
+                            View
+                          </Button>
                         </TableCell>
                       </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">Michael Johnson</TableCell>
-                        <TableCell>Wide Receiver (WR)</TableCell>
-                        <TableCell>84</TableCell>
-                        <TableCell>
-                          <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800">
-                            Injured
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm">View</Button>
-                        </TableCell>
-                      </TableRow>
-                    </>
+                    ))
                   )}
                 </TableBody>
               </Table>
@@ -517,6 +692,264 @@ export default function CoachDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Add Team Member Dialog */}
+      <Dialog open={showAddMemberDialog} onOpenChange={setShowAddMemberDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Team Member</DialogTitle>
+            <DialogDescription>
+              Add an athlete to your team roster by entering their ID and position.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...addMemberForm}>
+            <form onSubmit={addMemberForm.handleSubmit(onSubmitAddMemberForm)} className="space-y-4">
+              <FormField
+                control={addMemberForm.control}
+                name="athleteId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Athlete ID</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter athlete ID" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={addMemberForm.control}
+                name="position"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Position</FormLabel>
+                    <FormControl>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select position" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Quarterback (QB)">Quarterback (QB)</SelectItem>
+                          <SelectItem value="Running Back (RB)">Running Back (RB)</SelectItem>
+                          <SelectItem value="Wide Receiver (WR)">Wide Receiver (WR)</SelectItem>
+                          <SelectItem value="Tight End (TE)">Tight End (TE)</SelectItem>
+                          <SelectItem value="Offensive Line (OL)">Offensive Line (OL)</SelectItem>
+                          <SelectItem value="Defensive Line (DL)">Defensive Line (DL)</SelectItem>
+                          <SelectItem value="Linebacker (LB)">Linebacker (LB)</SelectItem>
+                          <SelectItem value="Cornerback (CB)">Cornerback (CB)</SelectItem>
+                          <SelectItem value="Safety (S)">Safety (S)</SelectItem>
+                          <SelectItem value="Kicker (K)">Kicker (K)</SelectItem>
+                          <SelectItem value="Punter (P)">Punter (P)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={addMemberForm.control}
+                name="jerseyNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Jersey Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Optional" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={addMemberForm.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <FormControl>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Player">Player</SelectItem>
+                          <SelectItem value="Captain">Captain</SelectItem>
+                          <SelectItem value="Practice Squad">Practice Squad</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button 
+                  type="submit" 
+                  disabled={addTeamMemberMutation.isPending}
+                >
+                  {addTeamMemberMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Add to Team
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Athlete Details Dialog */}
+      <Dialog open={showAthleteDetails} onOpenChange={setShowAthleteDetails}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Athlete Details</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowAthleteDetails(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {loadingAthleteDetails ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : !selectedAthleteData ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Athlete information not found</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex gap-4 items-start">
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">{selectedAthleteData.firstName} {selectedAthleteData.lastName}</h3>
+                  <p className="text-muted-foreground">{selectedAthleteData.position}</p>
+                  <div className="flex gap-2 mt-2">
+                    <Badge>{selectedAthleteData.height || 'No height data'}</Badge>
+                    <Badge>{selectedAthleteData.weight ? `${selectedAthleteData.weight} lbs` : 'No weight data'}</Badge>
+                    <Badge>{selectedAthleteData.grade || 'No grade data'}</Badge>
+                  </div>
+                </div>
+              </div>
+
+              <Tabs defaultValue="performance" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="performance">Performance</TabsTrigger>
+                  <TabsTrigger value="training">Training</TabsTrigger>
+                  <TabsTrigger value="academics">Academics</TabsTrigger>
+                </TabsList>
+                <TabsContent value="performance" className="space-y-4 pt-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedAthleteData.metrics ? (
+                      <>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-muted-foreground">40 Yard Dash</p>
+                          <p className="text-lg font-semibold">{selectedAthleteData.metrics.fortyYard || 'N/A'} sec</p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-muted-foreground">Vertical Jump</p>
+                          <p className="text-lg font-semibold">{selectedAthleteData.metrics.verticalJump || 'N/A'} inches</p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-muted-foreground">Bench Press</p>
+                          <p className="text-lg font-semibold">{selectedAthleteData.metrics.benchPress || 'N/A'} lbs</p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-muted-foreground">Squat</p>
+                          <p className="text-lg font-semibold">{selectedAthleteData.metrics.squatMax || 'N/A'} lbs</p>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="col-span-2 text-center text-muted-foreground">No performance metrics available</p>
+                    )}
+                  </div>
+                </TabsContent>
+                <TabsContent value="training" className="space-y-4 pt-4">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Training Plan Completion</span>
+                        <span>{selectedAthleteData.trainingCompletion || 0}%</span>
+                      </div>
+                      <Progress value={selectedAthleteData.trainingCompletion || 0} />
+                    </div>
+                    <div className="rounded-md border p-4">
+                      <h4 className="font-medium mb-2">Current Training Focus</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedAthleteData.trainingFocus || 'No current training focus assigned'}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-medium mb-2">Recent Training Activities</h4>
+                      {selectedAthleteData.recentTraining?.length > 0 ? (
+                        <ul className="space-y-2">
+                          {selectedAthleteData.recentTraining.map((session, i) => (
+                            <li key={i} className="text-sm flex justify-between">
+                              <span>{session.title}</span>
+                              <span className="text-muted-foreground">{session.date}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No recent training activities</p>
+                      )}
+                    </div>
+                  </div>
+                </TabsContent>
+                <TabsContent value="academics" className="space-y-4 pt-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">GPA</p>
+                      <p className="text-lg font-semibold">{selectedAthleteData.gpa || 'N/A'}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">ACT Score</p>
+                      <p className="text-lg font-semibold">{selectedAthleteData.actScore || 'N/A'}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">School</p>
+                      <p className="text-lg font-semibold">{selectedAthleteData.school || 'N/A'}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">Grade</p>
+                      <p className="text-lg font-semibold">{selectedAthleteData.grade || 'N/A'}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">Graduation Year</p>
+                      <p className="text-lg font-semibold">{selectedAthleteData.graduationYear || 'N/A'}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">Eligibility Status</p>
+                      <p className="text-lg font-semibold">{selectedAthleteData.eligibilityStatus || 'N/A'}</p>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowAthleteDetails(false)}>Close</Button>
+                <Button>Send Message</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add Team Event Dialog - to be implemented */}
     </div>
   );
 }
