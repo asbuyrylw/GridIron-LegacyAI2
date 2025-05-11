@@ -227,7 +227,13 @@ export default function PersonalInfoForm({
                       type="date"
                       {...field}
                       value={field.value instanceof Date ? field.value.toISOString().slice(0, 10) : field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value)}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          field.onChange(new Date(e.target.value))
+                        } else {
+                          field.onChange(undefined);
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -242,8 +248,8 @@ export default function PersonalInfoForm({
                 <FormItem>
                   <FormLabel>Graduation Year</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    onValueChange={(value) => field.onChange(Number(value))}
+                    defaultValue={field.value?.toString()}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -447,9 +453,14 @@ export default function PersonalInfoForm({
             </div>
           </div>
 
-          <Button type="submit" disabled={!acceptedTerms}>
-            Next: Football Information
-          </Button>
+          <div className="flex justify-between mt-6">
+            <div className="text-sm text-muted-foreground">
+              * Required fields must be completed to continue
+            </div>
+            <Button type="submit" disabled={!acceptedTerms}>
+              Next: Football Information
+            </Button>
+          </div>
         </form>
       </Form>
     </div>

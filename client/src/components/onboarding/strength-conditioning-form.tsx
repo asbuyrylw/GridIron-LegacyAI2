@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { strengthConditioningSchema, StrengthConditioningForm as StrengthForm } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,8 @@ import {
   GYM_ACCESS_OPTIONS, 
   RECOVERY_METHOD_OPTIONS 
 } from "@/lib/constants";
+import { InjuryTrackingForm } from "./injury-tracking-form";
+import { Separator } from "@/components/ui/separator";
 
 interface StrengthConditioningFormProps {
   onSubmit: (data: { strengthConditioning: StrengthForm }) => void;
@@ -38,6 +41,8 @@ export default function StrengthConditioningForm({
   prevStep,
   initialData,
 }: StrengthConditioningFormProps) {
+  const [showLegacyInjuryField, setShowLegacyInjuryField] = useState(false);
+  
   const form = useForm<StrengthForm>({
     resolver: zodResolver(strengthConditioningSchema),
     defaultValues: initialData || {
@@ -49,6 +54,11 @@ export default function StrengthConditioningForm({
       sleepHours: undefined,
       recoveryMethods: [],
       injuriesSurgeries: "",
+      currentInjuries: [],
+      pastSurgeries: [],
+      concussionHistory: [],
+      medicalClearance: false,
+      medicalNotes: "",
     },
   });
 
@@ -275,23 +285,30 @@ export default function StrengthConditioningForm({
             <FormMessage />
           </div>
 
-          <FormField
-            control={form.control}
-            name="injuriesSurgeries"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Injuries/Surgeries (Optional)</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="List any significant injuries or surgeries that may impact your training"
-                    className="resize-none"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Injury Tracking */}
+          <Separator className="my-4" />
+          
+          {showLegacyInjuryField ? (
+            <FormField
+              control={form.control}
+              name="injuriesSurgeries"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Injuries/Surgeries (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="List any significant injuries or surgeries that may impact your training"
+                      className="resize-none"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ) : (
+            <InjuryTrackingForm setShowLegacyField={setShowLegacyInjuryField} />
+          )}
 
           <div className="flex justify-between">
             <Button type="button" variant="outline" onClick={prevStep}>
