@@ -120,9 +120,14 @@ export const recruitingPreferences = pgTable("recruiting_preferences", {
   athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
   desiredDivision: text("desired_division"),
   schoolsOfInterest: json("schools_of_interest"), // Array of schools
+  personalStatement: text("personal_statement"),
+  hasHighlightFilm: boolean("has_highlight_film").default(false),
+  attendedCamps: boolean("attended_camps").default(false),
   footballSeasonStart: date("football_season_start"),
   footballSeasonEnd: date("football_season_end"),
   preferredTrainingDays: json("preferred_training_days"), // Array of days
+  recruitingGoals: text("recruiting_goals"),
+  collegePreferences: json("college_preferences"), // Academic programs, locations, school size
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
@@ -321,6 +326,38 @@ export const leaderboardEntries = pgTable("leaderboard_entries", {
   value: real("value").notNull(),
   rank: integer("rank"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Recruiting analytics to track profile views, interest, and activities
+export const recruitingAnalytics = pgTable("recruiting_analytics", {
+  id: serial("id").primaryKey(),
+  athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
+  profileViews: integer("profile_views").default(0),
+  uniqueViewers: integer("unique_viewers").default(0),
+  interestLevel: integer("interest_level").default(0), // 0-100 calculated score
+  bookmarksCount: integer("bookmarks_count").default(0),
+  messagesSent: integer("messages_sent").default(0),
+  connectionsCount: integer("connections_count").default(0),
+  viewsOverTime: json("views_over_time").default('[]'), // Array of dated view counts
+  interestBySchoolType: json("interest_by_school_type").default('[]'), // Distribution of interest
+  interestByPosition: json("interest_by_position").default('[]'), // Position interest metrics
+  interestByRegion: json("interest_by_region").default('[]'), // Geographic interest data
+  topSchools: json("top_schools").default('[]'), // Array of most interested schools
+  lastUpdated: timestamp("last_updated").defaultNow().notNull(),
+});
+
+// Recruiting messages between athletes and coaches/schools
+export const recruitingMessages = pgTable("recruiting_messages", {
+  id: serial("id").primaryKey(),
+  senderId: integer("sender_id").references(() => users.id).notNull(),
+  recipientId: integer("recipient_id").references(() => users.id).notNull(),
+  message: text("message").notNull(),
+  read: boolean("read").default(false),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+  schoolName: text("school_name"), // If sender is a coach, their school name
+  attachment: text("attachment"), // URL to any attachment
+  isReply: boolean("is_reply").default(false),
+  parentMessageId: integer("parent_message_id").references(() => recruitingMessages.id),
 });
 
 // Team Management Tables
