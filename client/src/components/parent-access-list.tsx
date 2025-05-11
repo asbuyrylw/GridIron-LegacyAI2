@@ -180,7 +180,7 @@ export function ParentAccessList({ athleteId }: ParentAccessListProps) {
                   <div className="text-sm">{access.email}</div>
                   <div className="mt-1">
                     {access.active ? (
-                      <Badge variant="success" className="text-xs">
+                      <Badge variant="outline" className="text-xs text-green-600 border-green-200 bg-green-50">
                         <Check className="h-3 w-3 mr-1" />
                         Access Enabled
                       </Badge>
@@ -205,7 +205,7 @@ export function ParentAccessList({ athleteId }: ParentAccessListProps) {
                         checked={access.receiveUpdates} 
                         onCheckedChange={() => handleToggleUpdate(access, "receiveUpdates")}
                         disabled={!access.active || updateAccessMutation.isPending}
-                        size="sm"
+                        className="h-4 w-7"
                       />
                     </div>
                     <div className="flex items-center justify-between">
@@ -214,7 +214,7 @@ export function ParentAccessList({ athleteId }: ParentAccessListProps) {
                         checked={access.receiveNutritionInfo} 
                         onCheckedChange={() => handleToggleUpdate(access, "receiveNutritionInfo")}
                         disabled={!access.active || updateAccessMutation.isPending}
-                        size="sm"
+                        className="h-4 w-7"
                       />
                     </div>
                   </div>

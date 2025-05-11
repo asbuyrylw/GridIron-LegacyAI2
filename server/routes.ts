@@ -4441,8 +4441,214 @@ function registerParentRoutes(app: Express): void {
       }
     });
     
+    // Get athlete metrics (requires token)
+    app.get("/api/athlete/:athleteId/metrics", async (req, res, next) => {
+      try {
+        const { token } = req.query;
+        
+        if (!token || typeof token !== 'string') {
+          return res.status(400).json({ message: "Valid access token is required" });
+        }
+        
+        const parentAccess = await parentAccessService.getParentAccessByToken(token);
+        
+        if (!parentAccess || !parentAccess.active) {
+          return res.status(404).json({ message: "Invalid or expired access token" });
+        }
+        
+        const athleteId = parseInt(req.params.athleteId);
+        
+        // Ensure the parent is requesting data for the athlete they have access to
+        if (parentAccess.athleteId !== athleteId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
+        // Get athlete combine metrics
+        const metrics = await storage.getCombineMetrics(athleteId);
+        
+        res.json(metrics || []);
+      } catch (error) {
+        next(error);
+      }
+    });
+    
+    // Get athlete performance insights (requires token)
+    app.get("/api/athlete/:athleteId/performance/insights", async (req, res, next) => {
+      try {
+        const { token } = req.query;
+        
+        if (!token || typeof token !== 'string') {
+          return res.status(400).json({ message: "Valid access token is required" });
+        }
+        
+        const parentAccess = await parentAccessService.getParentAccessByToken(token);
+        
+        if (!parentAccess || !parentAccess.active) {
+          return res.status(404).json({ message: "Invalid or expired access token" });
+        }
+        
+        const athleteId = parseInt(req.params.athleteId);
+        
+        // Ensure the parent is requesting data for the athlete they have access to
+        if (parentAccess.athleteId !== athleteId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
+        // Get athlete performance insights
+        const insights = await storage.getPerformanceInsights(athleteId);
+        
+        if (!insights) {
+          // Get most recent metrics to generate insights
+          const metrics = await storage.getCombineMetricsByAthleteId(athleteId);
+          const latestMetric = metrics && metrics.length > 0 ? metrics[0] : null;
+          
+          if (!latestMetric) {
+            return res.status(404).json({ message: "No metrics available to generate insights" });
+          }
+          
+          // Get athlete for position
+          const athlete = await storage.getAthlete(athleteId);
+          
+          if (!athlete) {
+            return res.status(404).json({ message: "Athlete not found" });
+          }
+          
+          // Generate insights using the performance insights generator
+          const { generatePerformanceInsights } = await import('./performance-insights');
+          const generatedInsights = await generatePerformanceInsights(latestMetric, athlete.position);
+          
+          // Save the insights for future use
+          await storage.createPerformanceInsights(generatedInsights);
+          
+          return res.json(generatedInsights);
+        }
+        
+        res.json(insights);
+      } catch (error) {
+        next(error);
+      }
+    });
+    
+    // Get athlete nutrition plan (requires token)
+    app.get("/api/athlete/:athleteId/nutrition/plan", async (req, res, next) => {
+      try {
+        const { token } = req.query;
+        
+        if (!token || typeof token !== 'string') {
+          return res.status(400).json({ message: "Valid access token is required" });
+        }
+        
+        const parentAccess = await parentAccessService.getParentAccessByToken(token);
+        
+        if (!parentAccess || !parentAccess.active) {
+          return res.status(404).json({ message: "Invalid or expired access token" });
+        }
+        
+        const athleteId = parseInt(req.params.athleteId);
+        
+        // Ensure the parent is requesting data for the athlete they have access to
+        if (parentAccess.athleteId !== athleteId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
+        // Get active nutrition plan
+        const plans = await storage.getNutritionPlans(athleteId);
+        const activePlan = plans && plans.length > 0 
+          ? plans.find(plan => plan.active) || plans[0] 
+          : null;
+        
+        if (!activePlan) {
+          return res.status(404).json({ message: "No nutrition plan available" });
+        }
+        
+        res.json(activePlan);
+      } catch (error) {
+        next(error);
+      }
+    });
+    
+    // Get athlete achievements (requires token)
+    app.get("/api/athlete/:athleteId/achievements", async (req, res, next) => {
+      try {
+        const { token } = req.query;
+        
+        if (!token || typeof token !== 'string') {
+          return res.status(400).json({ message: "Valid access token is required" });
+        }
+        
+        const parentAccess = await parentAccessService.getParentAccessByToken(token);
+        
+        if (!parentAccess || !parentAccess.active) {
+          return res.status(404).json({ message: "Invalid or expired access token" });
+        }
+        
+        const athleteId = parseInt(req.params.athleteId);
+        
+        // Ensure the parent is requesting data for the athlete they have access to
+        if (parentAccess.athleteId !== athleteId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
+        // Get athlete achievements
+        const achievements = await storage.getAchievements(athleteId);
+        
+        res.json(achievements || []);
+      } catch (error) {
+        next(error);
+      }
+    });
+    
+    // Get athlete upcoming events (requires token)
+    app.get("/api/athlete/:athleteId/events", async (req, res, next) => {
+      try {
+        const { token } = req.query;
+        
+        if (!token || typeof token !== 'string') {
+          return res.status(400).json({ message: "Valid access token is required" });
+        }
+        
+        const parentAccess = await parentAccessService.getParentAccessByToken(token);
+        
+        if (!parentAccess || !parentAccess.active) {
+          return res.status(404).json({ message: "Invalid or expired access token" });
+        }
+        
+        const athleteId = parseInt(req.params.athleteId);
+        
+        // Ensure the parent is requesting data for the athlete they have access to
+        if (parentAccess.athleteId !== athleteId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
+        // Get athlete's team memberships
+        const teamMemberships = await storage.getTeamMembershipsByAthlete(athleteId);
+        
+        if (!teamMemberships || teamMemberships.length === 0) {
+          return res.json([]);
+        }
+        
+        // Get team IDs
+        const teamIds = teamMemberships.map(membership => membership.teamId);
+        
+        // Get upcoming events for all teams
+        const allEvents = await Promise.all(
+          teamIds.map(teamId => storage.getUpcomingTeamEvents(teamId))
+        );
+        
+        // Flatten the array of events and sort by date
+        const events = allEvents
+          .flat()
+          .filter(Boolean)
+          .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+        
+        res.json(events);
+      } catch (error) {
+        next(error);
+      }
+    });
+    
     // Invite a parent (requires athlete authentication)
-    app.post("/api/parent/invite", async (req, res, next) => {
+    app.post("/api/athlete/parent-invite", async (req, res, next) => {
       try {
         if (!req.isAuthenticated()) {
           return res.status(401).json({ message: "Not authenticated" });
