@@ -144,6 +144,7 @@ class ParentAccessService {
       relationship: invite.relationship,
       receiveUpdates: invite.receiveUpdates,
       receiveNutritionInfo: invite.receiveNutritionInfo,
+      active: true
     });
 
     // Send invitation email

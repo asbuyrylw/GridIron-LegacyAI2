@@ -4395,6 +4395,238 @@ function registerSocialRoutes(app: Express): void {
 
 // Parent Dashboard API routes
 function registerParentRoutes(app: Express): void {
+  // Import parent access service here to avoid circular dependencies
+  import("./parent-access-service").then(({ parentAccessService }) => {
+    
+    // NEW PARENT ACCESS ROUTES
+    
+    // Access parent dashboard via token (no authentication needed)
+    app.get("/api/parent/access", async (req, res, next) => {
+      try {
+        const { token } = req.query;
+        
+        if (!token || typeof token !== 'string') {
+          return res.status(400).json({ message: "Valid access token is required" });
+        }
+        
+        const parentAccess = await parentAccessService.getParentAccessByToken(token);
+        
+        if (!parentAccess || !parentAccess.active) {
+          return res.status(404).json({ message: "Invalid or expired access token" });
+        }
+        
+        // Get athlete information
+        const athlete = await storage.getAthlete(parentAccess.athleteId);
+        if (!athlete) {
+          return res.status(404).json({ message: "Athlete not found" });
+        }
+        
+        // Get user information
+        const user = await storage.getUser(athlete.userId);
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        // Return parent access info and basic athlete info
+        res.json({
+          parentAccess,
+          athlete: {
+            ...athlete,
+            firstName: user.firstName,
+            lastName: user.lastName
+          }
+        });
+      } catch (error) {
+        next(error);
+      }
+    });
+    
+    // Invite a parent (requires athlete authentication)
+    app.post("/api/parent/invite", async (req, res, next) => {
+      try {
+        if (!req.isAuthenticated()) {
+          return res.status(401).json({ message: "Not authenticated" });
+        }
+        
+        const athlete = await storage.getAthleteByUserId(req.user.id);
+        
+        if (!athlete) {
+          return res.status(403).json({ message: "Only athletes can invite parents" });
+        }
+        
+        // Validate invitation data
+        const { parentInviteSchema } = await import("@shared/parent-access");
+        const validated = parentInviteSchema.parse({
+          ...req.body,
+          athleteId: athlete.id
+        });
+        
+        // Process the invitation
+        const parentAccess = await parentAccessService.inviteParent(validated);
+        
+        res.status(201).json({
+          success: true,
+          parentAccess: {
+            id: parentAccess.id,
+            email: parentAccess.email,
+            name: parentAccess.name,
+            relationship: parentAccess.relationship,
+            createdAt: parentAccess.createdAt,
+            lastEmailSent: parentAccess.lastEmailSent,
+            receiveUpdates: parentAccess.receiveUpdates,
+            receiveNutritionInfo: parentAccess.receiveNutritionInfo,
+            active: parentAccess.active
+          }
+        });
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          const validationError = fromZodError(error);
+          return res.status(400).json({ message: validationError.message });
+        }
+        next(error);
+      }
+    });
+    
+    // Get all parent accesses for an athlete
+    app.get("/api/athlete/:id/parent-access", async (req, res, next) => {
+      try {
+        if (!req.isAuthenticated()) {
+          return res.status(401).json({ message: "Not authenticated" });
+        }
+        
+        const athleteId = parseInt(req.params.id);
+        const athlete = await storage.getAthlete(athleteId);
+        
+        if (!athlete) {
+          return res.status(404).json({ message: "Athlete not found" });
+        }
+        
+        // Only allow the athlete to view their own parent accesses
+        if (athlete.userId !== req.user.id) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
+        const parentAccesses = await parentAccessService.getParentAccessesByAthleteId(athleteId);
+        
+        // Remove sensitive information (accessToken)
+        const safeParentAccesses = parentAccesses.map(access => ({
+          id: access.id,
+          email: access.email,
+          name: access.name,
+          relationship: access.relationship,
+          createdAt: access.createdAt,
+          lastEmailSent: access.lastEmailSent,
+          receiveUpdates: access.receiveUpdates,
+          receiveNutritionInfo: access.receiveNutritionInfo,
+          active: access.active
+        }));
+        
+        res.json(safeParentAccesses);
+      } catch (error) {
+        next(error);
+      }
+    });
+    
+    // Update parent access settings
+    app.patch("/api/athlete/:athleteId/parent-access/:id", async (req, res, next) => {
+      try {
+        if (!req.isAuthenticated()) {
+          return res.status(401).json({ message: "Not authenticated" });
+        }
+        
+        const athleteId = parseInt(req.params.athleteId);
+        const accessId = parseInt(req.params.id);
+        
+        const athlete = await storage.getAthlete(athleteId);
+        
+        if (!athlete) {
+          return res.status(404).json({ message: "Athlete not found" });
+        }
+        
+        // Only allow the athlete to update their own parent accesses
+        if (athlete.userId !== req.user.id) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
+        // Get current parent access
+        const parentAccesses = await parentAccessService.getParentAccessesByAthleteId(athleteId);
+        const accessExists = parentAccesses.some(access => access.id === accessId);
+        
+        if (!accessExists) {
+          return res.status(404).json({ message: "Parent access not found" });
+        }
+        
+        // Update the parent access settings
+        const updatedAccess = await parentAccessService.updateParentAccess(accessId, req.body);
+        
+        if (!updatedAccess) {
+          return res.status(404).json({ message: "Failed to update parent access" });
+        }
+        
+        // Remove sensitive information (accessToken)
+        const safeAccess = {
+          id: updatedAccess.id,
+          email: updatedAccess.email,
+          name: updatedAccess.name,
+          relationship: updatedAccess.relationship,
+          createdAt: updatedAccess.createdAt,
+          lastEmailSent: updatedAccess.lastEmailSent,
+          receiveUpdates: updatedAccess.receiveUpdates,
+          receiveNutritionInfo: updatedAccess.receiveNutritionInfo,
+          active: updatedAccess.active
+        };
+        
+        res.json(safeAccess);
+      } catch (error) {
+        next(error);
+      }
+    });
+    
+    // Deactivate parent access
+    app.delete("/api/athlete/:athleteId/parent-access/:id", async (req, res, next) => {
+      try {
+        if (!req.isAuthenticated()) {
+          return res.status(401).json({ message: "Not authenticated" });
+        }
+        
+        const athleteId = parseInt(req.params.athleteId);
+        const accessId = parseInt(req.params.id);
+        
+        const athlete = await storage.getAthlete(athleteId);
+        
+        if (!athlete) {
+          return res.status(404).json({ message: "Athlete not found" });
+        }
+        
+        // Only allow the athlete to deactivate their own parent accesses
+        if (athlete.userId !== req.user.id) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        
+        // Get current parent access
+        const parentAccesses = await parentAccessService.getParentAccessesByAthleteId(athleteId);
+        const accessExists = parentAccesses.some(access => access.id === accessId);
+        
+        if (!accessExists) {
+          return res.status(404).json({ message: "Parent access not found" });
+        }
+        
+        // Deactivate the parent access
+        const success = await parentAccessService.deactivateParentAccess(accessId);
+        
+        if (!success) {
+          return res.status(500).json({ message: "Failed to deactivate parent access" });
+        }
+        
+        res.json({ success: true });
+      } catch (error) {
+        next(error);
+      }
+    });
+  });
+  
+  // LEGACY ROUTES (WILL BE REMOVED)
+  
   // Get parent profile for current user
   app.get("/api/parents/profile", async (req, res, next) => {
     try {

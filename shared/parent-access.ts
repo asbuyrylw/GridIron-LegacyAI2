@@ -16,7 +16,8 @@ export const parentAccessSchema = z.object({
 });
 
 export const insertParentAccessSchema = parentAccessSchema
-  .omit({ id: true, createdAt: true, lastEmailSent: true, accessToken: true });
+  .omit({ id: true, createdAt: true, lastEmailSent: true, accessToken: true })
+  .required({ active: true });
 
 export type ParentAccess = z.infer<typeof parentAccessSchema>;
 export type InsertParentAccess = z.infer<typeof insertParentAccessSchema>;
