@@ -7,7 +7,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Activity, BarChart, Trophy, ListTodo, ShoppingBag, Calendar } from "lucide-react";
+import { 
+  AlertCircle, 
+  Activity, 
+  BarChart, 
+  Trophy, 
+  ListTodo, 
+  ShoppingBag, 
+  Calendar, 
+  Wifi, 
+  WifiOff, 
+  RefreshCw 
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 // Type definitions for parent access data
@@ -350,7 +361,20 @@ export default function ParentViewPage() {
                 Viewing as {parentAccess.name} ({parentAccess.relationship})
               </CardDescription>
             </div>
-            <Badge variant="outline" className="text-sm">Read-Only View</Badge>
+            <div className="flex flex-col items-end gap-2">
+              <Badge variant="outline" className="text-sm">Read-Only View</Badge>
+              {wsConnected || isConnected ? (
+                <div className="flex items-center text-xs text-green-600">
+                  <Wifi className="h-3 w-3 mr-1" />
+                  <span>Live updates enabled</span>
+                </div>
+              ) : (
+                <div className="flex items-center text-xs text-slate-500">
+                  <WifiOff className="h-3 w-3 mr-1" />
+                  <span>Live updates disabled</span>
+                </div>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -395,15 +419,25 @@ export default function ParentViewPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <BarChart className="w-5 h-5 mr-2" />
-                  Latest Metrics
-                </CardTitle>
-                {metrics && (
-                  <CardDescription>
-                    Recorded on {new Date(metrics.dateRecorded).toLocaleDateString()}
-                  </CardDescription>
-                )}
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="flex items-center">
+                      <BarChart className="w-5 h-5 mr-2" />
+                      Latest Metrics
+                    </CardTitle>
+                    {metrics && (
+                      <CardDescription>
+                        Recorded on {new Date(metrics.dateRecorded).toLocaleDateString()}
+                      </CardDescription>
+                    )}
+                  </div>
+                  {wsConnected && (
+                    <div className="flex items-center text-xs text-green-600">
+                      <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                      <span>Live</span>
+                    </div>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 {metrics ? (
