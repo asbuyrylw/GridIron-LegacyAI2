@@ -24,6 +24,7 @@ import TeamsPage from "@/pages/teams-page";
 import TeamDetailsPage from "@/pages/team-details-page";
 import RecruitingPage from "@/pages/recruiting-page";
 import CollegeMatcherPage from "@/pages/college-matcher-page";
+import RecruitingProfileBuilderPage from "@/pages/recruiting-profile-builder-page";
 
 // Landing Pages
 import LandingIndex from "@/pages/landing/index";
@@ -82,6 +83,7 @@ function Router() {
         <ProtectedRoute path="/teams" component={TeamsPage} />
         <ProtectedRoute path="/teams/:id" component={TeamDetailsPage} />
         <ProtectedRoute path="/recruiting" component={RecruitingPage} />
+        <ProtectedRoute path="/recruiting-profile-builder" component={RecruitingProfileBuilderPage} />
         <ProtectedRoute path="/college-matcher" component={CollegeMatcherPage} />
         
         {/* Public Routes */}
