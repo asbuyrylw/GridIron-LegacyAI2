@@ -74,7 +74,7 @@ export default function WebSocketTester() {
                 Test parent view WebSocket functionality
               </CardDescription>
             </div>
-            <Badge variant={isConnected ? "success" : "destructive"} className="text-sm">
+            <Badge variant={isConnected ? "outline" : "destructive"} className={`text-sm ${isConnected ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}`}>
               {isConnected ? (
                 <div className="flex items-center">
                   <Wifi className="h-3 w-3 mr-1" />
