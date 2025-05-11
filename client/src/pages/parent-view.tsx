@@ -485,15 +485,25 @@ export default function ParentViewPage() {
             
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Activity className="w-5 h-5 mr-2" />
-                  Performance Insights
-                </CardTitle>
-                {insights && insights.lastUpdated && (
-                  <CardDescription>
-                    Updated {formatDistanceToNow(new Date(insights.lastUpdated), { addSuffix: true })}
-                  </CardDescription>
-                )}
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="flex items-center">
+                      <Activity className="w-5 h-5 mr-2" />
+                      Performance Insights
+                    </CardTitle>
+                    {insights && insights.lastUpdated && (
+                      <CardDescription>
+                        Updated {formatDistanceToNow(new Date(insights.lastUpdated), { addSuffix: true })}
+                      </CardDescription>
+                    )}
+                  </div>
+                  {wsConnected && (
+                    <div className="flex items-center text-xs text-green-600">
+                      <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                      <span>Live</span>
+                    </div>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 {insights ? (

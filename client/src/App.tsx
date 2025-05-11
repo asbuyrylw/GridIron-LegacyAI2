@@ -30,6 +30,7 @@ import CoachDashboard from "@/pages/coach-dashboard";
 import ParentManagementPage from "@/pages/parent-management";
 import ParentViewPage from "@/pages/parent-view";
 import ParentAccessTester from "@/pages/parent-access-tester";
+import WebSocketTester from "@/pages/websocket-tester";
 
 // Landing Pages
 import LandingIndex from "@/pages/landing/index";
@@ -55,6 +56,7 @@ function Router() {
         <Route path="/auth" component={AuthPage} />
         <Route path="/parent-view" component={ParentViewPage} />
         <Route path="/parent-access-tester" component={ParentAccessTester} />
+        <Route path="/websocket-tester" component={WebSocketTester} />
         
         {/* Landing Pages */}
         <Route path="/landing/players" component={LandingPlayers} />

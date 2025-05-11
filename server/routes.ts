@@ -3919,9 +3919,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
             id: athlete.id,
             firstName: athlete.firstName,
             lastName: athlete.lastName,
-            position: athlete.position
+            position: athlete.position,
+            school: athlete.school,
+            grade: athlete.grade
           }
         }));
+        
+        // Send latest metrics data
+        const metrics = await loadLatestMetrics(parentAccess.athleteId);
+        if (metrics) {
+          ws.send(JSON.stringify({
+            type: 'metrics_update',
+            data: metrics
+          }));
+        }
+        
+        // Send performance insights
+        const insights = await loadInsights(parentAccess.athleteId);
+        if (insights) {
+          ws.send(JSON.stringify({
+            type: 'insights_update',
+            data: insights
+          }));
+        }
+        
+        // Set up a periodic update interval (every 30 seconds)
+        // This simulates real-time updates for the demo
+        const intervalId = setInterval(async () => {
+          if (ws.readyState === WebSocket.OPEN) {
+            // Only send if we're still connected
+            const updatedMetrics = await loadLatestMetrics(parentAccess.athleteId);
+            if (updatedMetrics) {
+              ws.send(JSON.stringify({
+                type: 'metrics_update',
+                data: updatedMetrics
+              }));
+            }
+          } else {
+            // Clean up interval if connection is closed
+            clearInterval(intervalId);
+          }
+        }, 30000); // 30 seconds
+        
+        // Clean up interval when connection closes
+        ws.on('close', () => {
+          clearInterval(intervalId);
+        });
       }
     } catch (error) {
       console.error('Error handling parent view access:', error);
@@ -3929,6 +3972,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: 'error',
         message: 'Error processing parent view request'
       }));
+    }
+  }
+  
+  // Helper function to load latest metrics
+  async function loadLatestMetrics(athleteId: number) {
+    try {
+      const metrics = await storage.getCombineMetrics(athleteId);
+      if (metrics && metrics.length > 0) {
+        // Return the most recent metrics
+        return metrics[0];
+      }
+      return null;
+    } catch (error) {
+      console.error('Error loading metrics:', error);
+      return null;
+    }
+  }
+  
+  // Helper function to load insights
+  async function loadInsights(athleteId: number) {
+    try {
+      const insights = await storage.getPerformanceInsights(athleteId);
+      if (insights && insights.length > 0) {
+        // Return the most recent insights
+        return insights[0];
+      }
+      return null;
+    } catch (error) {
+      console.error('Error loading insights:', error);
+      return null;
     }
   }
   
