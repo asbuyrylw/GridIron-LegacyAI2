@@ -1,0 +1,130 @@
+Milestone 6: College Matcher Tool
+#college #AIrecruiting
+
+🔹 Functional Goals:
+Help athletes and coaches understand where the athlete best fits based on measurable data and academic profile
+
+🔸 Tasks:
+ Build ML model (decision tree + regression hybrid) to classify target divisions (D1/D2/D3/NAIA/JUCO)
+
+Input features: GPA, SAT/ACT, height, weight, combine stats, game stats, position
+
+Output: recommended division and match score
+
+ College Matcher engine:
+
+Return list of matched schools by:
+
+Region
+
+Academic compatibility
+
+Position needs (from external database, optional)
+
+ Feedback generator:
+
+Output “to improve, increase 40 time to X”, “GPA > 3.2 for Ivy targets”
+
+ Allow coach input override:
+
+Coach can adjust division recommendation with rationale
+
+Add internal visibility: “Coach says athlete should aim D1 (arm strength)”
+
+ Display on dashboard:
+
+“Matched Division: D2 – 72% Fit”
+
+School suggestions shown below
+
+ Enable school filter system:
+
+Preferred major
+
+Distance from home
+
+Public/private
+
+ College data pulled via scraping or third-party DB (CollegeScorecard, optional)
+
+🎥 Milestone 7: Video Integration & Highlight Generator
+#video #AIhighlight #hudl
+
+🔹 Functional Goals:
+Make it easy to upload, sync, and automatically convert full game footage into digestible, recruiter-ready highlight clips
+
+🔸 Tasks:
+ OAuth + Hudl integration
+
+Link athlete’s Hudl account
+
+Fetch full games or clipped footage
+
+ Manual upload option:
+
+Accept .mp4, .mov files
+
+Require game metadata: date, opponent, jersey color
+
+ Trigger highlight reel AI:
+
+Run OpenCV + YOLOv8 model
+
+Detect plays and isolate athlete via jersey #
+
+Clip around detected start/end
+
+Apply tags: play type (INT, TD), quarter, week
+
+ Save clips to athlete video library:
+
+Sortable, filterable
+
+Downloadable by coach or recruiter
+
+ Add metadata to each clip:
+
+“Week 4 – TD vs. Bishop Gorman (Verified)”
+
+ Allow athletes to pin top clips to profile
+
+ Analytics tracking:
+
+View count, download logs (coach only)
+
+📢 Milestone 8: Messaging & Notifications
+#communication #alerts
+
+🔹 Functional Goals:
+Create reliable, secure lines of communication across athlete, coach, parent, and admin accounts; increase accountability
+
+🔸 Tasks:
+ Role-based messaging engine:
+
+Athlete ↔ Coach (1:1 only)
+
+Coach → Team (broadcast)
+
+Coach ↔ Parent (with athlete consent toggle)
+
+ UI chat module:
+
+Coach inbox
+
+Message threads with timestamps and read status
+
+ Push notification engine:
+
+Trigger on new workouts assigned
+
+Alert when stats or training milestones are reached
+
+Notify when coach feedback or evaluations are posted
+
+ Admin-level moderation interface:
+
+Flagged messages review
+
+Audit trail logs
+
+ Optional email + SMS toggle in user settings
