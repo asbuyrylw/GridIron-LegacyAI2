@@ -54,7 +54,11 @@ export async function getAllParents(this: MemStorage): Promise<Parent[]> {
 }
 
 // Parent-Athlete Relationship methods
-export async function getParentAthleteRelationships(this: MemStorage, parentId: number): Promise<ParentAthleteRelationship[]> {
+export async function getParentAthleteRelationship(this: MemStorage, id: number): Promise<ParentAthleteRelationship | undefined> {
+  return this.parentAthleteRelationshipsMap.get(id);
+}
+
+export async function getParentAthleteRelationshipsByParentId(this: MemStorage, parentId: number): Promise<ParentAthleteRelationship[]> {
   const relationships: ParentAthleteRelationship[] = [];
   
   for (const relationship of this.parentAthleteRelationshipsMap.values()) {
@@ -64,6 +68,23 @@ export async function getParentAthleteRelationships(this: MemStorage, parentId: 
   }
   
   return relationships;
+}
+
+export async function getParentAthleteRelationshipsByAthleteId(this: MemStorage, athleteId: number): Promise<ParentAthleteRelationship[]> {
+  const relationships: ParentAthleteRelationship[] = [];
+  
+  for (const relationship of this.parentAthleteRelationshipsMap.values()) {
+    if (relationship.athleteId === athleteId) {
+      relationships.push(relationship);
+    }
+  }
+  
+  return relationships;
+}
+
+// Alias for backward compatibility
+export async function getParentAthleteRelationships(this: MemStorage, parentId: number): Promise<ParentAthleteRelationship[]> {
+  return this.getParentAthleteRelationshipsByParentId(parentId);
 }
 
 export async function getAthleteParents(this: MemStorage, athleteId: number): Promise<(Parent & { relationship: string })[]> {
