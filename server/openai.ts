@@ -263,3 +263,97 @@ export async function generateMealSuggestion(
     };
   }
 }
+
+/**
+ * Generate AI-powered recruiting insights and advice for an athlete
+ * based on their profile and top college matches
+ */
+export async function generateRecruitingInsights(
+  athlete: {
+    position?: string;
+    firstName?: string;
+    lastName?: string;
+    height?: string;
+    weight?: number;
+    gpa?: number;
+    actScore?: number;
+    grade?: number;
+    school?: string;
+  },
+  metrics: any,
+  topMatches: any[]
+): Promise<string[]> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `You are a recruiting advisor for high school football athletes looking to play college football.
+          Generate personalized recruiting insights and advice for this athlete based on their profile and their top college matches.
+          
+          Athlete Profile:
+          - Name: ${athlete.firstName || ""} ${athlete.lastName || ""}
+          - Position: ${athlete.position || "Unknown"}
+          - Height: ${athlete.height || "Unknown"}
+          - Weight: ${athlete.weight || "Unknown"} lbs
+          - GPA: ${athlete.gpa || "Unknown"}
+          - ACT Score: ${athlete.actScore || "Unknown"}
+          - Grade/Year: ${athlete.grade || "Unknown"}
+          - School: ${athlete.school || "Unknown"}
+          
+          Athletic Metrics:
+          - 40-yard dash: ${metrics.fortyYard || "Unknown"}
+          - Vertical Jump: ${metrics.verticalJump || "Unknown"} inches
+          - Bench Press: ${metrics.benchPress || "Unknown"} lbs
+          - Shuttle: ${metrics.shuttle || "Unknown"} seconds
+          
+          Top College Matches:
+          ${topMatches.map((college, index) => `
+          ${index + 1}. ${college.name} (${college.division})
+             - Location: ${college.city}, ${college.state}
+             - Conference: ${college.conference || "Unknown"}
+             - Academic Match: ${college.academicMatch}/100
+             - Athletic Match: ${college.athleticMatch}/100
+             - Overall Match: ${college.overallMatch}/100
+             ${college.recruitingProfile?.activelyRecruiting ? `- Actively Recruiting: ${college.recruitingProfile.activelyRecruiting.join(", ")}` : ""}
+          `).join("")}
+          
+          Provide a list of 5-7 specific, actionable insights and recommendations for this athlete's recruiting process.
+          Each insight should be returned as a separate string in a JSON array called "insights". Focus on:
+          1. Position-specific advice for their recruiting journey
+          2. How to effectively approach the top-matching schools
+          3. Academic or athletic areas to improve
+          4. Timeline recommendations for the recruiting process
+          5. How to stand out to college recruiters
+          
+          Provide detailed, specific advice tailored to this athlete's profile and college matches.`
+        }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    const result = JSON.parse(response.choices[0].message.content);
+    
+    // Expect result to be an array of strings
+    if (Array.isArray(result.insights)) {
+      return result.insights;
+    } else if (Array.isArray(result)) {
+      return result;
+    } else {
+      // Fallback if the structure isn't as expected
+      return ["Focus on your strengths in your highlight films",
+              "Reach out directly to the recruiting coordinators at your top matched schools",
+              "Consider attending camps at schools that are actively recruiting your position"];
+    }
+  } catch (error) {
+    console.error("Error generating recruiting insights:", error);
+    return [
+      "Build a strong highlight reel showcasing your best plays",
+      "Reach out to coaches at your top-matched schools directly",
+      "Focus on maintaining or improving your academic standing",
+      "Consider attending camps or showcases where college coaches will be present",
+      "Develop a recruiting timeline with regular follow-ups with interested programs"
+    ];
+  }
+}

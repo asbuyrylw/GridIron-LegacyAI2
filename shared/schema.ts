@@ -82,6 +82,21 @@ export const athletes = pgTable("athletes", {
   apHonorsClasses: text("ap_honors_classes"),
   volunteerWork: text("volunteer_work"),
   intendedMajors: text("intended_majors"),
+  preferredMajor: text("preferred_major"),
+  
+  // Location Info
+  state: text("state"),
+  region: text("region"), // Northeast, Southeast, South, Midwest, West, Northwest, Southwest
+  
+  // Recruiting Preferences
+  targetDivision: text("target_division"), // D1, D2, D3, NAIA, JUCO
+  preferredRegions: json("preferred_regions"), // Array of preferred regions
+  preferredStates: json("preferred_states"), // Array of preferred states
+  academicPriority: integer("academic_priority"), // 1-10 scale of importance
+  athleticPriority: integer("athletic_priority"), // 1-10 scale of importance
+  distancePriority: integer("distance_priority"), // 1-10 scale of importance
+  financialAidImportance: integer("financial_aid_importance"), // 1-10 scale of importance
+  schoolsOfInterest: json("schools_of_interest"), // Array of school names
   
   // Social/Recruiting Links
   hudlLink: text("hudl_link"),
