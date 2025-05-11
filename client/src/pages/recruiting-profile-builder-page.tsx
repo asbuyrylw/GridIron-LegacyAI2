@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -154,20 +154,20 @@ export default function RecruitingProfileBuilderPage() {
       gpa: athlete?.gpa || undefined,
       actScore: athlete?.actScore || undefined,
       school: athlete?.school || "",
-      city: "",
-      state: "",
+      city: recruitingProfile?.city || "",
+      state: recruitingProfile?.state || "",
       hudlLink: athlete?.hudlLink || "",
       maxPrepsLink: athlete?.maxPrepsLink || "",
-      achievements: recruitingProfile?.achievements || [],
+      achievements: Array.isArray(recruitingProfile?.achievements) ? recruitingProfile.achievements : [],
       personalStatement: recruitingProfile?.personalStatement || "",
       coachReferenceEmail: recruitingProfile?.coachReferenceEmail || "",
       coachReferenceName: recruitingProfile?.coachReferenceName || "",
       highlightVideoUrl: recruitingProfile?.highlightVideoUrl || "",
-    },
+    } as RecruitingProfileData,
   });
 
   // Update form values when data is loaded
-  React.useEffect(() => {
+  useEffect(() => {
     if (athlete && recruitingProfile) {
       form.reset({
         ...form.getValues(),
@@ -322,7 +322,7 @@ export default function RecruitingProfileBuilderPage() {
                 </CardDescription>
               </div>
               <div>
-                <Badge variant={profileCompleteness >= 80 ? "success" : profileCompleteness >= 50 ? "warning" : "destructive"}>
+                <Badge variant={profileCompleteness >= 80 ? "default" : profileCompleteness >= 50 ? "secondary" : "destructive"}>
                   {profileCompleteness}% Complete
                 </Badge>
               </div>
