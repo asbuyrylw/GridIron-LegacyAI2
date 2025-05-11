@@ -52,6 +52,8 @@ export const athletes = pgTable("athletes", {
   weight: integer("weight"),
   projectedHeight: text("projected_height"),
   bodyFat: real("body_fat"),
+  fatherHeight: integer("father_height"),
+  motherHeight: integer("mother_height"),
   
   // Academic Info
   gpa: real("gpa"),
@@ -583,7 +585,11 @@ export const personalInfoSchema = z.object({
   parentLastName: z.string().optional(),
   parentEmail: z.string().email("Invalid email address").optional(),
   parentPhone: z.string().optional(),
-  parentHeight: z.number().optional().describe("For height prediction calculations"),
+  
+  // Height prediction data points
+  fatherHeight: z.number().optional().describe("Father's height in inches for growth prediction"),
+  motherHeight: z.number().optional().describe("Mother's height in inches for growth prediction"),
+  
   secondaryContactName: z.string().optional(),
   secondaryContactPhone: z.string().optional(),
   secondaryContactRelationship: z.string().optional(),
