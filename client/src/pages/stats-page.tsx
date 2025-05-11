@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Header } from "@/components/layout/header";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { CombineMetricsForm } from "@/components/training/combine-metrics-form";
@@ -10,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CombineMetric } from "@shared/schema";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { format } from "date-fns";
-import { Redirect } from "wouter";
+import { Redirect, Link } from "wouter";
 import { Loader2 } from "lucide-react";
 
 export default function StatsPage() {
@@ -56,15 +57,27 @@ export default function StatsPage() {
       <Header />
       
       <main className="container mx-auto px-4 pt-4 pb-20">
-        <h1 className="text-2xl md:text-3xl font-montserrat font-bold mb-6">Performance Stats</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-6">Performance Dashboard</h1>
         
-        <Tabs defaultValue="current">
+        <Tabs defaultValue="dashboard">
           <TabsList className="w-full mb-6">
-            <TabsTrigger value="current" className="flex-1">Current Metrics</TabsTrigger>
-            <TabsTrigger value="history" className="flex-1">History & Trends</TabsTrigger>
+            <TabsTrigger value="dashboard" className="flex-1">Dashboard</TabsTrigger>
+            <TabsTrigger value="metrics" className="flex-1">Update Metrics</TabsTrigger>
+            <TabsTrigger value="insights" className="flex-1">AI Insights</TabsTrigger>
+            <TabsTrigger value="compare" className="flex-1">College Comparison</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="current">
+          <TabsContent value="dashboard">
+            <div className="space-y-6">
+              {/* Import the PerformanceDashboard component */}
+              {React.createElement(
+                require("@/components/dashboard/performance-dashboard").PerformanceDashboard,
+                { athleteId }
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="metrics">
             <div className="space-y-6">
               <CombineMetricsForm />
               
@@ -75,67 +88,24 @@ export default function StatsPage() {
             </div>
           </TabsContent>
           
-          <TabsContent value="history">
-            {!chartData || chartData.length < 2 ? (
-              <Card className="p-8 text-center">
-                <h3 className="text-lg font-medium mb-2">Not Enough Data</h3>
-                <p className="text-muted-foreground max-w-md mx-auto mb-4">
-                  Update your metrics more than once to see your progress over time.
-                </p>
-              </Card>
-            ) : (
-              <div className="space-y-6">
-                {/* Enhanced Performance Trends */}
-                <PerformanceTrends />
-                
-                {/* Legacy charts - keeping for reference */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card className="p-4">
-                    <h3 className="font-montserrat font-semibold mb-4">40-Yard Dash Progress</h3>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" />
-                          <YAxis domain={['dataMin', 'dataMax']} />
-                          <Tooltip />
-                          <Legend />
-                          <Line 
-                            type="monotone" 
-                            dataKey="fortyYard" 
-                            name="40-Yard (sec)" 
-                            stroke="hsl(var(--primary))" 
-                            activeDot={{ r: 8 }} 
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </Card>
-                  
-                  <Card className="p-4">
-                    <h3 className="font-montserrat font-semibold mb-4">Jump Metrics</h3>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" />
-                          <YAxis domain={['auto', 'auto']} />
-                          <Tooltip />
-                          <Legend />
-                          <Line 
-                            type="monotone" 
-                            dataKey="verticalJump" 
-                            name="Vertical Jump (in)" 
-                            stroke="#82ca9d" 
-                            activeDot={{ r: 8 }} 
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </Card>
-                </div>
-              </div>
-            )}
+          <TabsContent value="insights">
+            <div className="space-y-6">
+              {/* AI Performance Insights component */}
+              {React.createElement(
+                require("@/components/dashboard/ai-performance-insights").AiPerformanceInsights,
+                { athleteId }
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="compare">
+            <div className="space-y-6">
+              {/* Performance Comparison component */}
+              {React.createElement(
+                require("@/components/dashboard/performance-comparison").PerformanceComparison,
+                { athleteId }
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </main>

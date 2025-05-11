@@ -91,26 +91,28 @@ export async function generatePerformanceInsights(
 
 // Map the position to a standardized category for benchmarks
 function mapPositionToCategory(position: string): string {
-  position = position.toLowerCase();
+  if (!position) return "General";
   
-  if (position.includes("quarterback")) return "Quarterback";
-  if (position.includes("running back") || position.includes("rb")) return "Running Back";
-  if (position.includes("wide receiver") || position.includes("wr")) return "Wide Receiver";
-  if (position.includes("tight end") || position.includes("te")) return "Tight End";
-  if (position.includes("offensive line") || 
-      position.includes("tackle") || 
-      position.includes("guard") || 
-      position.includes("center")) return "Offensive Line";
-  if (position.includes("defensive line") || 
-      position.includes("defensive tackle") || 
-      position.includes("defensive end")) return "Defensive Line";
-  if (position.includes("linebacker")) return "Linebacker";
-  if (position.includes("cornerback") || 
-      position.includes("safety") || 
-      position.includes("defensive back")) return "Defensive Back";
-  if (position.includes("kicker") || 
-      position.includes("punter") || 
-      position.includes("special")) return "Special Teams";
+  const positionLower = position.toLowerCase();
+  
+  if (positionLower.includes("quarterback")) return "Quarterback";
+  if (positionLower.includes("running back") || positionLower.includes("rb")) return "Running Back";
+  if (positionLower.includes("wide receiver") || positionLower.includes("wr")) return "Wide Receiver";
+  if (positionLower.includes("tight end") || positionLower.includes("te")) return "Tight End";
+  if (positionLower.includes("offensive line") || 
+      positionLower.includes("tackle") || 
+      positionLower.includes("guard") || 
+      positionLower.includes("center")) return "Offensive Line";
+  if (positionLower.includes("defensive line") || 
+      positionLower.includes("defensive tackle") || 
+      positionLower.includes("defensive end")) return "Defensive Line";
+  if (positionLower.includes("linebacker")) return "Linebacker";
+  if (positionLower.includes("cornerback") || 
+      positionLower.includes("safety") || 
+      positionLower.includes("defensive back")) return "Defensive Back";
+  if (positionLower.includes("kicker") || 
+      positionLower.includes("punter") || 
+      positionLower.includes("special")) return "Special Teams";
       
   return "General"; // Default
 }

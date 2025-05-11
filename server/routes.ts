@@ -777,11 +777,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const insights = await storage.getPerformanceInsights(athleteId);
       
-      if (!insights) {
-        return res.status(404).json({ message: "Performance insights not found" });
+      // Return insights or empty object if none exist
+      res.json(insights || {});
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Generate performance insights using AI
+  app.post("/api/athlete/generate-insights", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
       }
       
-      res.json(insights);
+      const { athleteId, metrics, position } = req.body;
+      
+      if (!athleteId || !metrics || !position) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own data
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Generate insights using OpenAI
+      try {
+        const insights = await generatePerformanceInsights(metrics, position, athleteId);
+        
+        // Save insights to storage
+        await storage.updatePerformanceInsights(athleteId, {
+          strengths: insights.strengths || [],
+          weaknesses: insights.weaknesses || [],
+          recommendations: insights.recommendations || [],
+          performanceTrend: insights.performanceTrend || "stable",
+          positionRanking: insights.positionRanking || "",
+          lastUpdated: new Date()
+        });
+        
+        res.status(200).json({ 
+          message: "Performance insights generated successfully",
+          insights
+        });
+      } catch (error) {
+        console.error("Error generating performance insights:", error);
+        res.status(500).json({ message: "Failed to generate performance insights" });
+      }
     } catch (error) {
       next(error);
     }

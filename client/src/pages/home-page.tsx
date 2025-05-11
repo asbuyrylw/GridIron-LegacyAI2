@@ -159,9 +159,9 @@ export default function HomePage() {
             <div className="dashboard-card">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold">Performance</h2>
-                <button className="text-sm font-medium text-primary flex items-center">
+                <Link href="/stats" className="text-sm font-medium text-primary flex items-center">
                   View Stats <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </button>
+                </Link>
               </div>
               
               <div className="space-y-4">
@@ -186,7 +186,7 @@ export default function HomePage() {
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="font-medium">Bench Press</h3>
                     <div className="flex items-baseline">
-                      <span className="text-xl font-bold">{latestMetrics?.benchPress || "N/A"}</span>
+                      <span className="text-xl font-bold">{latestMetrics?.benchPressReps || "N/A"}</span>
                       <span className="text-xs ml-1 text-muted-foreground">reps</span>
                     </div>
                   </div>
