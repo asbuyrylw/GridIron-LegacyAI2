@@ -4398,6 +4398,49 @@ function registerParentRoutes(app: Express): void {
   // Import parent access service here to avoid circular dependencies
   import("./parent-access-service").then(({ parentAccessService }) => {
     
+    // Test route for generating parent access tokens (development only)
+    app.post("/api/test/generate-parent-access", async (req, res, next) => {
+      try {
+        const { athleteId } = req.body;
+        
+        if (!athleteId) {
+          return res.status(400).json({ message: "Athlete ID is required" });
+        }
+        
+        // Get athlete
+        const athlete = await storage.getAthlete(athleteId);
+        if (!athlete) {
+          return res.status(404).json({ message: "Athlete not found" });
+        }
+        
+        // Get user information
+        const user = await storage.getUser(athlete.userId);
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        // Generate a test parent access
+        const testParentAccess = {
+          athleteId,
+          email: "testparent@example.com",
+          name: "Test Parent",
+          relationship: "Parent",
+          receiveUpdates: true,
+          receiveNutritionInfo: true,
+          active: true
+        };
+        
+        const parentAccess = await parentAccessService.createParentAccess(testParentAccess);
+        
+        res.json({
+          token: parentAccess.accessToken,
+          parentAccess
+        });
+      } catch (error) {
+        next(error);
+      }
+    });
+    
     // NEW PARENT ACCESS ROUTES
     
     // Access parent dashboard via token (no authentication needed)

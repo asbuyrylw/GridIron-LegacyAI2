@@ -95,6 +95,7 @@ function Router() {
         <ProtectedRoute path="/parent-dashboard" component={ParentDashboard} />
         <ProtectedRoute path="/coach-dashboard" component={CoachDashboard} />
         <ProtectedRoute path="/parent-management" component={ParentManagementPage} />
+        <ProtectedRoute path="/parent-access-tester" component={ParentAccessTester} />
         
         {/* Public Routes */}
         <Route path="/auth" component={AuthPage} />
