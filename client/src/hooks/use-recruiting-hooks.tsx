@@ -1,108 +1,162 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { RecruitingAnalytics, RecruitingMessage } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+
+// Types for recruiting analytics
+interface RecruitingAnalytics {
+  id: number;
+  athleteId: number;
+  profileViews: number;
+  interestLevel: number;
+  bookmarksCount: number;
+  messagesSent: number;
+  viewsOverTime: Array<{ date: string; count: number }>;
+  interestBySchoolType: Array<{ name: string; value: number }>;
+  interestByPosition: Array<{ name: string; value: number }>;
+  interestByRegion: Array<{ name: string; value: number }>;
+}
+
+// Types for recruiting messages
+interface RecruitingMessage {
+  id: number;
+  athleteId: number;
+  schoolId: number;
+  schoolName: string;
+  coachName: string;
+  sentAt: string;
+  read: boolean;
+  subject: string;
+  content: string;
+}
+
+// Types for the share profile mutation
+interface ShareProfileData {
+  platform: string;
+  message?: string;
+}
 
 /**
- * Hook to fetch an athlete's recruiting profile analytics
+ * Hook to fetch recruiting analytics data
  */
 export function useRecruitingAnalytics(athleteId: number) {
   return useQuery<RecruitingAnalytics>({
-    queryKey: [`/api/athlete/${athleteId}/recruiting/analytics`],
+    queryKey: ["/api/recruiting/analytics", athleteId],
+    queryFn: getRecruitingAnalytics,
     enabled: !!athleteId
   });
+  
+  async function getRecruitingAnalytics() {
+    const res = await apiRequest("GET", `/api/recruiting/analytics/${athleteId}`);
+    return await res.json();
+  }
 }
 
 /**
- * Hook to fetch recruiting messages for an athlete
+ * Hook to fetch recruiting messages
  */
 export function useRecruitingMessages(athleteId: number) {
   return useQuery<RecruitingMessage[]>({
-    queryKey: [`/api/athlete/${athleteId}/recruiting/messages`],
+    queryKey: ["/api/recruiting/messages", athleteId],
+    queryFn: getRecruitingMessages,
     enabled: !!athleteId
   });
-}
-
-/**
- * Hook to send a recruiting message
- */
-export function useSendRecruitingMessage(athleteId: number) {
-  const { toast } = useToast();
   
-  return useMutation({
-    mutationFn: async (data: { subject: string; content: string; attachments?: string[] }) => {
-      const res = await apiRequest("POST", `/api/athlete/${athleteId}/recruiting/messages`, data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/athlete/${athleteId}/recruiting/messages`] });
-      toast({
-        title: "Message sent",
-        description: "Your message has been sent successfully.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error sending message",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
+  async function getRecruitingMessages() {
+    const res = await apiRequest("GET", `/api/recruiting/messages/${athleteId}`);
+    return await res.json();
+  }
 }
 
 /**
- * Hook to mark a message as read
+ * Hook to mark a recruiting message as read
  */
 export function useMarkMessageAsRead() {
   const { toast } = useToast();
   
   return useMutation({
-    mutationFn: async ({ messageId, athleteId }: { messageId: number; athleteId: number }) => {
-      const res = await apiRequest("PATCH", `/api/recruiting/messages/${messageId}/read`, {});
-      return res.json();
+    mutationFn: async (messageId: number) => {
+      const res = await apiRequest("PATCH", `/api/recruiting/messages/${messageId}/read`);
+      return await res.json();
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/athlete/${variables.athleteId}/recruiting/messages`] });
+    onSuccess: (_, messageId) => {
+      // Invalidate messages query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["/api/recruiting/messages"] });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error marking message as read",
-        description: error.message,
-        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to mark message as read",
+        variant: "destructive"
       });
     }
   });
 }
 
 /**
- * Hook to share a recruiting profile
+ * Hook to send a new recruiting message
+ */
+export function useSendRecruitingMessage(athleteId: number) {
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async (data: { schoolId: number; subject: string; content: string }) => {
+      const res = await apiRequest("POST", `/api/recruiting/messages/${athleteId}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Message Sent",
+        description: "Your message has been sent to the coach."
+      });
+      // Invalidate messages query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["/api/recruiting/messages", athleteId] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send message",
+        variant: "destructive"
+      });
+    }
+  });
+}
+
+/**
+ * Hook to share recruiting profile
  */
 export function useShareRecruitingProfile(athleteId: number) {
   const { toast } = useToast();
   
   return useMutation({
-    mutationFn: async (data: { platform: string; message?: string }) => {
-      // This would normally call an API endpoint, but for now it's a mock
-      // that would handle sharing to social media or generating a shareable link
-      return { success: true, url: `https://gridironlegacy.app/athletes/${athleteId}` };
+    mutationFn: async (data: ShareProfileData) => {
+      const res = await apiRequest("POST", `/api/recruiting/share/${athleteId}`, data);
+      return await res.json();
     },
-    onSuccess: (data) => {
-      // Copy the URL to clipboard
-      navigator.clipboard.writeText(data.url);
+    onSuccess: (_, variables) => {
+      let successMessage = "";
+      
+      if (variables.platform === "email") {
+        successMessage = "Your profile has been shared with coaches via email.";
+      } else if (variables.platform === "twitter") {
+        successMessage = "Your profile has been shared on Twitter.";
+      } else if (variables.platform === "link") {
+        successMessage = "Profile link has been copied to clipboard!";
+        navigator.clipboard.writeText(`https://yourdomain.com/athletes/${athleteId}`);
+      }
       
       toast({
-        title: "Profile shared",
-        description: "Profile link copied to clipboard.",
+        title: "Profile Shared",
+        description: successMessage
       });
       
-      return data;
+      // Invalidate analytics to show updated share stats
+      queryClient.invalidateQueries({ queryKey: ["/api/recruiting/analytics", athleteId] });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error sharing profile",
-        description: error.message,
-        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to share profile",
+        variant: "destructive"
       });
     }
   });
