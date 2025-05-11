@@ -421,50 +421,6 @@ export default function PersonalInfoForm({
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="secondaryContactName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Secondary Contact Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John Smith" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="secondaryContactPhone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Secondary Contact Phone</FormLabel>
-                  <FormControl>
-                    <Input placeholder="(555) 987-6543" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="secondaryContactRelationship"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Relationship</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Grandparent" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
           <div className="items-top flex space-x-2">
             <Checkbox
               id="terms"
