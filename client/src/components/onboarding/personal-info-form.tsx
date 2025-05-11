@@ -39,15 +39,26 @@ export default function PersonalInfoForm({
     defaultValues: initialData || {
       firstName: "",
       lastName: "",
-      email: "",
-      phone: "",
+      phoneNumber: "",
       address: "",
       city: "",
       state: "",
       zipCode: "",
-      dateOfBirth: undefined,
-      highSchool: "",
-      graduationYear: "",
+      dateOfBirth: new Date(),
+      school: "",
+      graduationYear: 2025,
+      jerseyNumber: "",
+      coachName: "",
+      
+      // Parent/Guardian info
+      parentFirstName: "",
+      parentLastName: "",
+      parentEmail: "",
+      parentPhone: "",
+      parentHeight: undefined,
+      secondaryContactName: "",
+      secondaryContactPhone: "",
+      secondaryContactRelationship: "",
     },
   });
 
@@ -99,16 +110,12 @@ export default function PersonalInfoForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="email"
+              name="phoneNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="john.doe@example.com"
-                      {...field}
-                    />
+                    <Input placeholder="(555) 123-4567" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -117,12 +124,12 @@ export default function PersonalInfoForm({
 
             <FormField
               control={form.control}
-              name="phone"
+              name="jerseyNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
+                  <FormLabel>Jersey Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="(555) 123-4567" {...field} />
+                    <Input placeholder="12" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -259,7 +266,7 @@ export default function PersonalInfoForm({
 
           <FormField
             control={form.control}
-            name="highSchool"
+            name="school"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>High School</FormLabel>
@@ -270,6 +277,152 @@ export default function PersonalInfoForm({
               </FormItem>
             )}
           />
+          
+          <FormField
+            control={form.control}
+            name="coachName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Coach Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Coach Smith" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <Separator className="my-4" />
+          
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Parent/Guardian Information</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              This information helps us provide a better experience and is used for emergency contacts.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="parentFirstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Parent First Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Jane" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="parentLastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Parent Last Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="parentEmail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Parent Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="parent@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="parentPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Parent Phone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="(555) 123-4567" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <FormField
+            control={form.control}
+            name="parentHeight"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Parent Height (inches) - Used for growth prediction</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="72" 
+                    {...field} 
+                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="secondaryContactName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Secondary Contact Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John Smith" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="secondaryContactPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Secondary Contact Phone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="(555) 987-6543" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="secondaryContactRelationship"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Relationship</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Grandparent" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <div className="items-top flex space-x-2">
             <Checkbox
