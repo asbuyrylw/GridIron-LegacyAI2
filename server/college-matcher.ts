@@ -509,16 +509,29 @@ export class CollegeMatcher {
     }
     
     // Recruiting materials feedback
-    const preferences = storage.getRecruitingPreferences(athlete.id).catch(() => null);
-    if (preferences) {
-      promises.then(prefs => {
-        if (prefs && !prefs.hasHighlightFilm) {
-          feedback.push("Creating a highlight film is essential for college recruitment. Add one to your profile.");
-        }
-      });
-    } else {
-      feedback.push("Complete your recruiting preferences to receive more tailored college matches.");
+    let hasHighlightFilm = false;
+    try {
+      const preferences = storage.getRecruitingPreferences(athlete.id);
+      if (preferences) {
+        preferences.then(prefs => {
+          if (prefs && !prefs.hasHighlightFilm) {
+            hasHighlightFilm = false;
+          } else if (prefs) {
+            hasHighlightFilm = true;
+          }
+        }).catch(() => {
+          hasHighlightFilm = false;
+        });
+      }
+    } catch (error) {
+      hasHighlightFilm = false;
     }
+    
+    if (!hasHighlightFilm) {
+      feedback.push("Creating a highlight film is essential for college recruitment. Add one to your profile.");
+    }
+    
+    feedback.push("Complete your recruiting preferences to receive more tailored college matches.");
     
     return feedback;
   }

@@ -23,6 +23,7 @@ import SocialSettingsPage from "@/pages/social-settings-page";
 import TeamsPage from "@/pages/teams-page";
 import TeamDetailsPage from "@/pages/team-details-page";
 import RecruitingPage from "@/pages/recruiting-page";
+import CollegeMatcherPage from "@/pages/college-matcher-page";
 
 // Landing Pages
 import LandingIndex from "@/pages/landing/index";

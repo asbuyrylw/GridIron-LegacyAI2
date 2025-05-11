@@ -1,10 +1,11 @@
 import { generateCoachingResponse, generateTrainingPlan, analyzeAthleteMetrics, generateMealSuggestion } from "./openai";
 import { generatePerformanceInsights } from "./performance-insights";
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import session from "express-session";
+import { collegeMatcher } from "./college-matcher";
 
 // Extend the Express Session type to include our onboarding progress
 declare module "express-session" {
@@ -57,6 +58,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Social API endpoints
   registerSocialRoutes(app);
+  
+  // College Matcher API endpoints
+  registerCollegeMatcherRoutes(app);
   
   // Get current athlete (for logged-in user)
   app.get("/api/athlete/me", async (req, res, next) => {
@@ -3821,6 +3825,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Register College Matcher routes
+function registerCollegeMatcherRoutes(app: Express): void {
+  // Get college matches for the current athlete
+  app.get("/api/college-matcher/matches", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const user = req.user;
+      if (user.userType !== "athlete") {
+        return res.status(403).json({ message: "Only athletes can access this resource" });
+      }
+      
+      const athlete = await storage.getAthleteByUserId(user.id);
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete profile not found" });
+      }
+      
+      // Extract optional query parameters
+      const region = req.query.region as string | undefined;
+      const preferredMajor = req.query.major as string | undefined;
+      const maxDistance = req.query.maxDistance ? parseInt(req.query.maxDistance as string) : undefined;
+      const publicOnly = req.query.publicOnly === "true";
+      const privateOnly = req.query.privateOnly === "true";
+      
+      // Generate college matches
+      const collegeMatches = await collegeMatcher.generateCollegeMatches(athlete.id, {
+        region,
+        preferredMajor,
+        maxDistance,
+        publicOnly,
+        privateOnly
+      });
+      
+      // Increment the profile view analytics
+      try {
+        await storage.incrementProfileViews(athlete.id);
+      } catch (error) {
+        console.error("Error incrementing profile views:", error);
+        // Continue execution even if this fails
+      }
+      
+      res.json(collegeMatches);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get a recommendation for the best division for an athlete
+  app.get("/api/college-matcher/division-recommendation", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const user = req.user;
+      const athleteId = req.query.athleteId ? parseInt(req.query.athleteId as string) : undefined;
+      
+      // If athleteId is provided, check if user has permission to view it
+      let targetAthleteId: number;
+      
+      if (athleteId) {
+        // Coaches can view athletes on their teams
+        if (user.userType === "coach") {
+          // Check if the athlete is on a team coached by this coach
+          const coachTeams = await storage.getTeamsByCoach(user.id);
+          const athleteIsOnCoachTeam = coachTeams.some(team => {
+            const teamMembers = storage.getTeamMembers(team.id);
+            return teamMembers.then(members => 
+              members.some(member => member.athleteId === athleteId)
+            );
+          });
+          
+          if (!athleteIsOnCoachTeam) {
+            return res.status(403).json({ message: "You don't have permission to view this athlete's data" });
+          }
+          
+          targetAthleteId = athleteId;
+        } else {
+          return res.status(403).json({ message: "Only coaches can view other athletes' recommendations" });
+        }
+      } else if (user.userType === "athlete") {
+        // User is viewing their own profile
+        const athlete = await storage.getAthleteByUserId(user.id);
+        if (!athlete) {
+          return res.status(404).json({ message: "Athlete profile not found" });
+        }
+        targetAthleteId = athlete.id;
+      } else {
+        return res.status(403).json({ message: "Invalid user type for this operation" });
+      }
+      
+      // Get the recommendation using the college matcher service
+      const matches = await collegeMatcher.generateCollegeMatches(targetAthleteId);
+      
+      res.json({
+        divisionRecommendation: matches.divisionRecommendation,
+        matchScore: matches.matchScore,
+        feedback: matches.feedback
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
 }
 
 // Register social media related routes
