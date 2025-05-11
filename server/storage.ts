@@ -192,6 +192,18 @@ export interface IStorage {
   getTeamAnnouncement(id: number): Promise<TeamAnnouncement | undefined>;
   createTeamAnnouncement(announcement: InsertTeamAnnouncement): Promise<TeamAnnouncement>;
   updateTeamAnnouncement(id: number, announcement: Partial<InsertTeamAnnouncement>): Promise<TeamAnnouncement | undefined>;
+  
+  // Recruiting Analytics Methods
+  getRecruitingAnalytics(athleteId: number): Promise<RecruitingAnalytics | undefined>;
+  createRecruitingAnalytics(analytics: InsertRecruitingAnalytics): Promise<RecruitingAnalytics>;
+  updateRecruitingAnalytics(id: number, analytics: Partial<InsertRecruitingAnalytics>): Promise<RecruitingAnalytics | undefined>;
+  incrementProfileViews(athleteId: number): Promise<RecruitingAnalytics | undefined>;
+  
+  // Recruiting Messages Methods
+  getRecruitingMessages(athleteId: number): Promise<RecruitingMessage[]>;
+  getRecruitingMessageById(id: number): Promise<RecruitingMessage | undefined>;
+  createRecruitingMessage(message: InsertRecruitingMessage): Promise<RecruitingMessage>;
+  markRecruitingMessageAsRead(id: number): Promise<RecruitingMessage | undefined>;
 
   // Session Store
   sessionStore: any; // Use any for session store to avoid type issues
@@ -1468,6 +1480,124 @@ export class MemStorage implements IStorage {
     const updatedAnnouncement: TeamAnnouncement = { ...announcement, ...announcementUpdate };
     this.teamAnnouncementsMap.set(id, updatedAnnouncement);
     return updatedAnnouncement;
+  }
+  
+  // -- Recruiting Analytics Methods --
+  private readonly recruitingAnalyticsMap = new Map<number, RecruitingAnalytics>();
+  private recruitingAnalyticsId = 1;
+
+  async getRecruitingAnalytics(athleteId: number): Promise<RecruitingAnalytics | undefined> {
+    return Array.from(this.recruitingAnalyticsMap.values()).find(a => a.athleteId === athleteId);
+  }
+
+  async createRecruitingAnalytics(analytics: InsertRecruitingAnalytics): Promise<RecruitingAnalytics> {
+    const id = this.recruitingAnalyticsId++;
+    const newAnalytics: RecruitingAnalytics = {
+      ...analytics,
+      id,
+      profileViews: analytics.profileViews || 0,
+      uniqueViewers: analytics.uniqueViewers || 0,
+      interestLevel: analytics.interestLevel || 0,
+      bookmarksCount: analytics.bookmarksCount || 0,
+      messagesSent: analytics.messagesSent || 0,
+      connectionsCount: analytics.connectionsCount || 0,
+      lastUpdated: new Date()
+    };
+    this.recruitingAnalyticsMap.set(id, newAnalytics);
+    return newAnalytics;
+  }
+
+  async updateRecruitingAnalytics(id: number, analytics: Partial<InsertRecruitingAnalytics>): Promise<RecruitingAnalytics | undefined> {
+    const existing = this.recruitingAnalyticsMap.get(id);
+    if (!existing) return undefined;
+
+    const updated: RecruitingAnalytics = {
+      ...existing,
+      ...analytics,
+      lastUpdated: new Date()
+    };
+    this.recruitingAnalyticsMap.set(id, updated);
+    return updated;
+  }
+
+  async incrementProfileViews(athleteId: number): Promise<RecruitingAnalytics | undefined> {
+    const analytics = await this.getRecruitingAnalytics(athleteId);
+    if (!analytics) return undefined;
+
+    // Get current date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Parse the views over time array
+    let viewsOverTime = JSON.parse(analytics.viewsOverTime as string) as Array<{ date: string; count: number }>;
+    
+    // Find if there's an entry for today
+    const todayIndex = viewsOverTime.findIndex(v => v.date === today);
+    
+    if (todayIndex >= 0) {
+      // Increment today's count
+      viewsOverTime[todayIndex].count++;
+    } else {
+      // Add a new entry for today
+      viewsOverTime.push({ date: today, count: 1 });
+    }
+    
+    const profileViews = (analytics.profileViews || 0) + 1;
+    
+    const updated: RecruitingAnalytics = {
+      ...analytics,
+      profileViews,
+      viewsOverTime: JSON.stringify(viewsOverTime),
+      lastUpdated: new Date()
+    };
+    
+    this.recruitingAnalyticsMap.set(analytics.id, updated);
+    return updated;
+  }
+
+  // -- Recruiting Messages Methods --
+  private readonly recruitingMessagesMap = new Map<number, RecruitingMessage>();
+  private recruitingMessageId = 1;
+
+  async getRecruitingMessages(athleteId: number): Promise<RecruitingMessage[]> {
+    const athlete = await this.getAthlete(athleteId);
+    if (!athlete) return [];
+    
+    return Array.from(this.recruitingMessagesMap.values()).filter(m => {
+      // Find messages where the athlete is either the recipient or sender
+      return m.recipientId === athlete.userId || m.senderId === athlete.userId;
+    });
+  }
+
+  async getRecruitingMessageById(id: number): Promise<RecruitingMessage | undefined> {
+    return this.recruitingMessagesMap.get(id);
+  }
+
+  async createRecruitingMessage(message: InsertRecruitingMessage): Promise<RecruitingMessage> {
+    const id = this.recruitingMessageId++;
+    const newMessage: RecruitingMessage = {
+      ...message,
+      id,
+      read: message.read || false,
+      isReply: message.isReply || false,
+      schoolName: message.schoolName || null,
+      attachment: message.attachment || null,
+      parentMessageId: message.parentMessageId || null,
+      sentAt: new Date()
+    };
+    this.recruitingMessagesMap.set(id, newMessage);
+    return newMessage;
+  }
+
+  async markRecruitingMessageAsRead(id: number): Promise<RecruitingMessage | undefined> {
+    const message = this.recruitingMessagesMap.get(id);
+    if (!message) return undefined;
+
+    const updated: RecruitingMessage = {
+      ...message,
+      read: true
+    };
+    this.recruitingMessagesMap.set(id, updated);
+    return updated;
   }
 }
 

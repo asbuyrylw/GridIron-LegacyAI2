@@ -1,36 +1,47 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "./use-toast";
 
-// Types for recruiting analytics
-interface RecruitingAnalytics {
+// Types for recruiting features
+export interface RecruitingAnalytics {
   id: number;
   athleteId: number;
   profileViews: number;
+  uniqueViewers: number;
   interestLevel: number;
   bookmarksCount: number;
   messagesSent: number;
+  connectionsCount: number;
   viewsOverTime: Array<{ date: string; count: number }>;
   interestBySchoolType: Array<{ name: string; value: number }>;
   interestByPosition: Array<{ name: string; value: number }>;
   interestByRegion: Array<{ name: string; value: number }>;
+  topSchools: Array<{ name: string; interest: number }>;
+  lastUpdated: Date;
 }
 
-// Types for recruiting messages
-interface RecruitingMessage {
+export interface RecruitingMessage {
   id: number;
-  athleteId: number;
-  schoolId: number;
-  schoolName: string;
-  coachName: string;
+  senderId: number;
+  recipientId: number;
+  schoolName: string | null;
+  subject: string;
+  message: string;
+  attachment: string | null;
+  isReply: boolean;
+  parentMessageId: number | null;
   sentAt: string;
   read: boolean;
-  subject: string;
-  content: string;
 }
 
-// Types for the share profile mutation
-interface ShareProfileData {
+export interface SendMessageData {
+  schoolId: number;
+  subject: string;
+  content: string;
+  attachment?: string;
+}
+
+export interface ShareProfileData {
   platform: string;
   message?: string;
 }
@@ -39,32 +50,79 @@ interface ShareProfileData {
  * Hook to fetch recruiting analytics data
  */
 export function useRecruitingAnalytics(athleteId: number) {
-  return useQuery<RecruitingAnalytics>({
-    queryKey: ["/api/recruiting/analytics", athleteId],
-    queryFn: getRecruitingAnalytics,
-    enabled: !!athleteId
-  });
+  const { toast } = useToast();
   
-  async function getRecruitingAnalytics() {
-    const res = await apiRequest("GET", `/api/recruiting/analytics/${athleteId}`);
-    return await res.json();
-  }
+  return useQuery({
+    queryKey: ['/api/recruiting/analytics', athleteId],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/recruiting/analytics/${athleteId}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch recruiting analytics");
+      }
+      return await response.json() as RecruitingAnalytics;
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error loading recruiting analytics",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
 }
 
 /**
  * Hook to fetch recruiting messages
  */
 export function useRecruitingMessages(athleteId: number) {
-  return useQuery<RecruitingMessage[]>({
-    queryKey: ["/api/recruiting/messages", athleteId],
-    queryFn: getRecruitingMessages,
-    enabled: !!athleteId
-  });
+  const { toast } = useToast();
   
-  async function getRecruitingMessages() {
-    const res = await apiRequest("GET", `/api/recruiting/messages/${athleteId}`);
-    return await res.json();
-  }
+  return useQuery({
+    queryKey: ['/api/recruiting/messages', athleteId],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/recruiting/messages/${athleteId}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch recruiting messages");
+      }
+      return await response.json() as RecruitingMessage[];
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error loading recruiting messages",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+/**
+ * Hook to fetch a single recruiting message details
+ */
+export function useRecruitingMessageDetails(messageId: number) {
+  const { toast } = useToast();
+  
+  return useQuery({
+    queryKey: ['/api/recruiting/messages/detail', messageId],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/recruiting/messages/detail/${messageId}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch message details");
+      }
+      return await response.json() as RecruitingMessage;
+    },
+    enabled: !!messageId, // Only run if messageId is provided
+    onError: (error: Error) => {
+      toast({
+        title: "Error loading message details",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
 }
 
 /**
@@ -75,18 +133,27 @@ export function useMarkMessageAsRead() {
   
   return useMutation({
     mutationFn: async (messageId: number) => {
-      const res = await apiRequest("PATCH", `/api/recruiting/messages/${messageId}/read`);
-      return await res.json();
+      const response = await apiRequest('PATCH', `/api/recruiting/messages/${messageId}/read`, {});
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to mark message as read");
+      }
+      return await response.json() as RecruitingMessage;
     },
-    onSuccess: (_, messageId) => {
+    onSuccess: (data) => {
       // Invalidate messages query to refresh the list
-      queryClient.invalidateQueries({ queryKey: ["/api/recruiting/messages"] });
+      queryClient.invalidateQueries({
+        queryKey: ['/api/recruiting/messages']
+      });
+      
+      // Update the specific message in the cache
+      queryClient.setQueryData(['/api/recruiting/messages/detail', data.id], data);
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to mark message as read",
-        variant: "destructive"
+        title: "Error marking message as read",
+        description: error.message,
+        variant: "destructive",
       });
     }
   });
@@ -99,23 +166,33 @@ export function useSendRecruitingMessage(athleteId: number) {
   const { toast } = useToast();
   
   return useMutation({
-    mutationFn: async (data: { schoolId: number; subject: string; content: string }) => {
-      const res = await apiRequest("POST", `/api/recruiting/messages/${athleteId}`, data);
-      return await res.json();
+    mutationFn: async (data: SendMessageData) => {
+      const response = await apiRequest('POST', `/api/recruiting/messages/${athleteId}`, data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to send message");
+      }
+      return await response.json();
     },
     onSuccess: () => {
       toast({
-        title: "Message Sent",
-        description: "Your message has been sent to the coach."
+        title: "Message sent successfully",
+        description: "Your message has been sent to the coach.",
       });
-      // Invalidate messages query to refresh the list
-      queryClient.invalidateQueries({ queryKey: ["/api/recruiting/messages", athleteId] });
+      
+      // Invalidate messages and analytics queries to refresh data
+      queryClient.invalidateQueries({
+        queryKey: ['/api/recruiting/messages']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['/api/recruiting/analytics']
+      });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to send message",
-        variant: "destructive"
+        title: "Failed to send message",
+        description: error.message,
+        variant: "destructive",
       });
     }
   });
@@ -129,34 +206,29 @@ export function useShareRecruitingProfile(athleteId: number) {
   
   return useMutation({
     mutationFn: async (data: ShareProfileData) => {
-      const res = await apiRequest("POST", `/api/recruiting/share/${athleteId}`, data);
-      return await res.json();
-    },
-    onSuccess: (_, variables) => {
-      let successMessage = "";
-      
-      if (variables.platform === "email") {
-        successMessage = "Your profile has been shared with coaches via email.";
-      } else if (variables.platform === "twitter") {
-        successMessage = "Your profile has been shared on Twitter.";
-      } else if (variables.platform === "link") {
-        successMessage = "Profile link has been copied to clipboard!";
-        navigator.clipboard.writeText(`https://yourdomain.com/athletes/${athleteId}`);
+      const response = await apiRequest('POST', `/api/recruiting/share/${athleteId}`, data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to share profile");
       }
-      
+      return await response.json();
+    },
+    onSuccess: (data) => {
       toast({
-        title: "Profile Shared",
-        description: successMessage
+        title: "Profile shared successfully",
+        description: `Your profile has been shared via ${data.platform || 'social media'}.`,
       });
       
-      // Invalidate analytics to show updated share stats
-      queryClient.invalidateQueries({ queryKey: ["/api/recruiting/analytics", athleteId] });
+      // Invalidate analytics to update interest level
+      queryClient.invalidateQueries({
+        queryKey: ['/api/recruiting/analytics']
+      });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to share profile",
-        variant: "destructive"
+        title: "Failed to share profile",
+        description: error.message,
+        variant: "destructive",
       });
     }
   });

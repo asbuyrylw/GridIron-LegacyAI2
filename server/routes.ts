@@ -3303,6 +3303,259 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // -- Recruiting Analytics Routes --
+  app.get("/api/recruiting/analytics/:athleteId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.athleteId);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own analytics
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Increment profile views when the analytics are viewed
+      await storage.incrementProfileViews(athleteId);
+      
+      // Get the analytics data
+      let analytics = await storage.getRecruitingAnalytics(athleteId);
+      
+      // If no analytics exist, create initial analytics
+      if (!analytics) {
+        analytics = await storage.createRecruitingAnalytics({
+          athleteId,
+          profileViews: 1,
+          uniqueViewers: 1,
+          interestLevel: 10,
+          bookmarksCount: 0,
+          messagesSent: 0,
+          connectionsCount: 0,
+          viewsOverTime: JSON.stringify([
+            { date: new Date().toISOString().split('T')[0], count: 1 }
+          ]),
+          interestBySchoolType: JSON.stringify([
+            { name: 'Division I', value: 3 },
+            { name: 'Division II', value: 5 },
+            { name: 'Division III', value: 8 }
+          ]),
+          interestByPosition: JSON.stringify([
+            { name: athlete.position, value: 12 }
+          ]),
+          interestByRegion: JSON.stringify([
+            { name: 'Northeast', value: 4 },
+            { name: 'Southeast', value: 6 },
+            { name: 'Midwest', value: 3 },
+            { name: 'West', value: 2 }
+          ]),
+          topSchools: JSON.stringify([])
+        });
+      }
+      
+      // Parse JSON fields for client
+      const parsedAnalytics = {
+        ...analytics,
+        viewsOverTime: JSON.parse(analytics.viewsOverTime as string),
+        interestBySchoolType: JSON.parse(analytics.interestBySchoolType as string),
+        interestByPosition: JSON.parse(analytics.interestByPosition as string),
+        interestByRegion: JSON.parse(analytics.interestByRegion as string),
+        topSchools: JSON.parse(analytics.topSchools as string)
+      };
+      
+      res.json(parsedAnalytics);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // -- Recruiting Messages Routes --
+  app.get("/api/recruiting/messages/:athleteId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.athleteId);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow access to own messages
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const messages = await storage.getRecruitingMessages(athleteId);
+      res.json(messages);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/recruiting/messages/detail/:messageId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const messageId = parseInt(req.params.messageId);
+      const message = await storage.getRecruitingMessageById(messageId);
+      
+      if (!message) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+      
+      // Verify access
+      const recipientUser = await storage.getUser(message.recipientId);
+      if (!recipientUser) {
+        return res.status(404).json({ message: "Recipient not found" });
+      }
+      
+      if (recipientUser.id !== req.user.id && message.senderId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      res.json(message);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/recruiting/messages/:athleteId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.athleteId);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow sending messages from own account
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Validate and create the message
+      const { schoolId, subject, content } = req.body;
+      
+      if (!schoolId || !content) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // For demo purposes, we're creating a mock school coach as recipient
+      // In a real app, this would be an actual coach's user ID
+      const coachId = 999; // Example school coach ID
+      const schoolName = "Sample University"; // This would be fetched from a schools table
+      
+      const message = await storage.createRecruitingMessage({
+        senderId: req.user.id,
+        recipientId: coachId,
+        message: content,
+        schoolName,
+        subject: subject || "Recruiting Inquiry",
+        attachment: req.body.attachment || null,
+        isReply: false,
+        parentMessageId: null
+      });
+      
+      // Update message count in analytics
+      const analytics = await storage.getRecruitingAnalytics(athleteId);
+      if (analytics) {
+        await storage.updateRecruitingAnalytics(analytics.id, {
+          messagesSent: analytics.messagesSent + 1
+        });
+      }
+      
+      res.status(201).json(message);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.patch("/api/recruiting/messages/:messageId/read", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const messageId = parseInt(req.params.messageId);
+      const message = await storage.getRecruitingMessageById(messageId);
+      
+      if (!message) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+      
+      // Only recipient can mark as read
+      if (message.recipientId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const updatedMessage = await storage.markRecruitingMessageAsRead(messageId);
+      res.json(updatedMessage);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // -- Profile Sharing Route --
+  app.post("/api/recruiting/share/:athleteId", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athleteId = parseInt(req.params.athleteId);
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Only allow sharing own profile
+      if (athlete.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const { platform, message } = req.body;
+      
+      if (!platform) {
+        return res.status(400).json({ message: "Platform is required" });
+      }
+      
+      // Update analytics to reflect the share
+      const analytics = await storage.getRecruitingAnalytics(athleteId);
+      if (analytics) {
+        await storage.updateRecruitingAnalytics(analytics.id, {
+          interestLevel: Math.min(100, analytics.interestLevel + 5)
+        });
+      }
+      
+      // In a real app, we would implement actual sharing functionality here
+      // For now, we just return a success message
+      
+      res.json({ 
+        success: true, 
+        message: `Profile shared via ${platform}`,
+        shareUrl: `https://gridiron.app/athlete/${athleteId}` 
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
