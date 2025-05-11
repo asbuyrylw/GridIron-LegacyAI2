@@ -1,123 +1,195 @@
-import React, { useState } from 'react';
-import { Share2, CheckIcon, CopyIcon, Facebook, Twitter, Link } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { IconWrapper } from "@/components/ui/icon-wrapper";
-import { SOCIAL_PLATFORMS } from "@/lib/social-platforms";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Share2, Link2, Copy, Check, Twitter, Facebook, Linkedin, Mail, Clipboard } from "lucide-react";
 
 interface ShareButtonProps {
   title: string;
   text: string;
   url?: string;
-  variant?: "default" | "outline" | "secondary" | "ghost";
   size?: "default" | "sm" | "lg" | "icon";
 }
 
-export function ShareButton({ 
-  title, 
-  text, 
-  url = window.location.href,
-  variant = "outline",
-  size = "default"
-}: ShareButtonProps) {
+export function ShareButton({ title, text, url, size = "default" }: ShareButtonProps) {
   const { toast } = useToast();
-  const [isOpen, setIsOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState(url || window.location.href);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
   
-  const shareData = {
-    title,
-    text,
-    url
+  // Handle copy to clipboard
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setCopySuccess(true);
+      
+      toast({
+        title: "Link copied",
+        description: "The link has been copied to your clipboard"
+      });
+      
+      setTimeout(() => setCopySuccess(false), 2000);
+    }).catch(() => {
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy to clipboard",
+        variant: "destructive"
+      });
+    });
   };
   
-  const handleNativeShare = async () => {
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-        toast({
-          title: "Shared successfully",
-          description: "Content has been shared through your device",
-        });
-        setIsOpen(false);
-      } else {
-        throw new Error("Web Share API not supported");
-      }
-    } catch (error) {
-      // Fall back to showing the popover
-      setIsOpen(true);
+  // Handle share via Web Share API
+  const handleShareAPI = () => {
+    if (navigator.share) {
+      navigator.share({
+        title,
+        text,
+        url: shareUrl
+      }).then(() => {
+        setIsDialogOpen(false);
+      }).catch((error) => {
+        console.error("Error sharing:", error);
+      });
+    } else {
+      setIsDialogOpen(true);
     }
   };
   
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(url);
-    toast({
-      title: "Link copied",
-      description: "Link has been copied to clipboard",
-      action: (
-        <div className="h-8 w-8 bg-primary/20 rounded-full flex items-center justify-center">
-          <CheckIcon className="h-4 w-4" />
-        </div>
-      ),
-    });
-    setIsOpen(false);
-  };
-  
-  const shareToTwitter = () => {
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
-    window.open(twitterUrl, '_blank');
-    setIsOpen(false);
-  };
-  
-  const shareToFacebook = () => {
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-    window.open(facebookUrl, '_blank');
-    setIsOpen(false);
+  // Handle share via platforms
+  const handlePlatformShare = (platform: string) => {
+    let platformUrl = "";
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedText = encodeURIComponent(text);
+    const encodedTitle = encodeURIComponent(title);
+    
+    switch (platform) {
+      case "twitter":
+        platformUrl = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+        break;
+      case "facebook":
+        platformUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+        break;
+      case "linkedin":
+        platformUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+        break;
+      case "email":
+        platformUrl = `mailto:?subject=${encodedTitle}&body=${encodedText}%0A%0A${encodedUrl}`;
+        break;
+      default:
+        break;
+    }
+    
+    if (platformUrl) {
+      window.open(platformUrl, "_blank");
+      setIsDialogOpen(false);
+    }
   };
   
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <Button 
-          variant={variant} 
-          size={size} 
-          onClick={handleNativeShare}
-          className="gap-2"
-        >
-          <Share2 className="h-4 w-4" />
-          {size !== "icon" && "Share"}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-64 p-2" side="top">
-        <div className="space-y-2">
-          <div className="text-sm font-medium">Share this content</div>
-          <div className="grid grid-cols-3 gap-2">
-            <Button variant="outline" className="flex flex-col items-center p-3 h-auto" onClick={shareToTwitter}>
-              <IconWrapper 
-                icon={SOCIAL_PLATFORMS.find(p => p.id === "twitter")?.icon || Twitter} 
-                className="h-5 w-5 mb-1"
-                style={{ color: "#1DA1F2" }}
+    <>
+      <Button 
+        variant="ghost" 
+        size={size} 
+        className="flex items-center gap-1"
+        onClick={handleShareAPI}
+      >
+        <Share2 className="h-4 w-4" />
+        {size !== "icon" && <span>{size === "sm" ? "Share" : "Share"}</span>}
+      </Button>
+      
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share</DialogTitle>
+            <DialogDescription>
+              Share this {title.toLowerCase()} with others via social media or direct link
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex items-center space-x-2 mt-2">
+            <div className="grid flex-1 gap-2">
+              <label className="text-sm font-medium leading-none">
+                Share link
+              </label>
+              <Input
+                value={shareUrl}
+                onChange={(e) => setShareUrl(e.target.value)}
+                className="font-mono text-sm"
               />
-              <span className="text-xs">Twitter</span>
-            </Button>
-            <Button variant="outline" className="flex flex-col items-center p-3 h-auto" onClick={shareToFacebook}>
-              <IconWrapper 
-                icon={SOCIAL_PLATFORMS.find(p => p.id === "facebook")?.icon || Facebook} 
-                className="h-5 w-5 mb-1"
-                style={{ color: "#4267B2" }}
-              />
-              <span className="text-xs">Facebook</span>
-            </Button>
-            <Button variant="outline" className="flex flex-col items-center p-3 h-auto" onClick={copyToClipboard}>
-              <Link className="h-5 w-5 mb-1" />
-              <span className="text-xs">Copy link</span>
+            </div>
+            <Button 
+              type="button" 
+              size="sm" 
+              className="px-3 h-10"
+              onClick={handleCopy}
+            >
+              {copySuccess ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+          
+          <div className="mt-3">
+            <h4 className="text-sm font-medium mb-2">Share via</h4>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-full"
+                onClick={() => handlePlatformShare("twitter")}
+              >
+                <Twitter className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-full"
+                onClick={() => handlePlatformShare("facebook")}
+              >
+                <Facebook className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-full"
+                onClick={() => handlePlatformShare("linkedin")}
+              >
+                <Linkedin className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-full"
+                onClick={() => handlePlatformShare("email")}
+              >
+                <Mail className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-full"
+                onClick={handleCopy}
+              >
+                <Clipboard className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          <DialogFooter className="sm:justify-start">
+            <DialogTrigger asChild>
+              <Button type="button" variant="secondary">
+                Close
+              </Button>
+            </DialogTrigger>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
