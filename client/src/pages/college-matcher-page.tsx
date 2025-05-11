@@ -41,20 +41,56 @@ import { useAuth } from "@/hooks/use-auth";
 interface CollegeMatchResult {
   divisionRecommendation: string;
   matchScore: number;
-  matchedSchools: MatchedSchool[];
+  matchedSchools: MatchedCollege[];
   feedback: string[];
+  insights?: string[];
+  athleteProfile: {
+    academicStrength: number;
+    athleticStrength: number;
+    positionRanking?: string;
+  };
 }
 
-interface MatchedSchool {
+interface MatchedCollege {
+  id: number;
   name: string;
   division: string;
+  conference?: string;
   region: string;
+  state: string;
+  city: string;
+  isPublic: boolean;
+  enrollment: number;
+  admissionRate?: number;
+  averageGPA?: number;
+  athleticRanking?: number;
+  programs: string[];
+  tuition: {
+    inState: number;
+    outOfState: number;
+  };
+  athleticScholarships: boolean;
+  sportOfferings: string[];
   academicMatch: number;
   athleticMatch: number;
   overallMatch: number;
-  programs?: string[];
-  location?: string;
-  positionNeeds?: boolean;
+  financialFit?: number;
+  locationFit?: number;
+  scholarshipPotential?: string;
+  admissionChance?: string;
+  campusSize?: string;
+  matchingReasons?: string[];
+  athleticFacilities?: string[];
+  academicSupport?: string[];
+  recruitingProfile?: {
+    activelyRecruiting: string[];
+    offensiveStyle?: string;
+    defensiveStyle?: string;
+    recentSuccess?: string;
+  };
+  website?: string;
+  imageUrl?: string;
+  notes?: string;
 }
 
 export default function CollegeMatcherPage() {
@@ -62,13 +98,19 @@ export default function CollegeMatcherPage() {
   const { toast } = useToast();
   const [filters, setFilters] = useState({
     region: "",
-    major: "",
+    preferredMajor: "",
     maxDistance: "",
+    preferredState: "",
+    financialAidImportance: 5,
+    athleticScholarshipRequired: false,
+    minEnrollment: "",
+    maxEnrollment: "",
     publicOnly: false,
     privateOnly: false,
+    useAI: true,
   });
   
-  // Get college matches
+  // Get college matches for the current athlete
   const {
     data: collegeMatches,
     isLoading,
@@ -76,12 +118,18 @@ export default function CollegeMatcherPage() {
     refetch,
   } = useQuery<CollegeMatchResult>({
     queryKey: [
-      "/api/college-matcher/matches",
+      "/api/college-matcher/me",
       filters.region,
-      filters.major,
+      filters.preferredMajor,
       filters.maxDistance,
+      filters.preferredState,
+      filters.financialAidImportance,
+      filters.athleticScholarshipRequired,
+      filters.minEnrollment,
+      filters.maxEnrollment,
       filters.publicOnly,
       filters.privateOnly,
+      filters.useAI,
     ],
     enabled: Boolean(user),
   });
@@ -208,6 +256,7 @@ export default function CollegeMatcherPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Location Filters */}
                   <div>
                     <Label htmlFor="region" className="mb-1 block">
                       Region
@@ -224,24 +273,27 @@ export default function CollegeMatcherPage() {
                       <SelectContent>
                         <SelectItem value="">All regions</SelectItem>
                         <SelectItem value="Northeast">Northeast</SelectItem>
+                        <SelectItem value="Southeast">Southeast</SelectItem>
                         <SelectItem value="South">South</SelectItem>
                         <SelectItem value="Midwest">Midwest</SelectItem>
                         <SelectItem value="West">West</SelectItem>
+                        <SelectItem value="Northwest">Northwest</SelectItem>
+                        <SelectItem value="Southwest">Southwest</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
-                    <Label htmlFor="major" className="mb-1 block">
-                      Preferred Major
+                    <Label htmlFor="preferredState" className="mb-1 block">
+                      Preferred State
                     </Label>
                     <Input
-                      id="major"
-                      value={filters.major}
+                      id="preferredState"
+                      value={filters.preferredState}
                       onChange={(e) =>
-                        handleFilterChange("major", e.target.value)
+                        handleFilterChange("preferredState", e.target.value)
                       }
-                      placeholder="e.g. Business, Engineering"
+                      placeholder="e.g. California, Texas"
                     />
                   </div>
 
@@ -261,7 +313,78 @@ export default function CollegeMatcherPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6 mt-4">
+                {/* Academic and Major Filters */}
+                <div className="mt-4">
+                  <Label htmlFor="preferredMajor" className="mb-1 block">
+                    Preferred Major
+                  </Label>
+                  <Input
+                    id="preferredMajor"
+                    value={filters.preferredMajor}
+                    onChange={(e) =>
+                      handleFilterChange("preferredMajor", e.target.value)
+                    }
+                    placeholder="e.g. Business, Engineering"
+                  />
+                </div>
+
+                {/* School Size Filters */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <Label htmlFor="minEnrollment" className="mb-1 block">
+                      Min Enrollment
+                    </Label>
+                    <Input
+                      id="minEnrollment"
+                      type="number"
+                      value={filters.minEnrollment}
+                      onChange={(e) =>
+                        handleFilterChange("minEnrollment", e.target.value)
+                      }
+                      placeholder="e.g. 5000"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="maxEnrollment" className="mb-1 block">
+                      Max Enrollment
+                    </Label>
+                    <Input
+                      id="maxEnrollment"
+                      type="number"
+                      value={filters.maxEnrollment}
+                      onChange={(e) =>
+                        handleFilterChange("maxEnrollment", e.target.value)
+                      }
+                      placeholder="e.g. 30000"
+                    />
+                  </div>
+                </div>
+
+                {/* Financial Aid Importance */}
+                <div className="mt-4">
+                  <div className="flex justify-between mb-1">
+                    <Label htmlFor="financialAidImportance" className="block">
+                      Financial Aid Importance
+                    </Label>
+                    <span className="text-sm text-muted-foreground">
+                      {filters.financialAidImportance}/10
+                    </span>
+                  </div>
+                  <Input
+                    id="financialAidImportance"
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={filters.financialAidImportance}
+                    onChange={(e) =>
+                      handleFilterChange("financialAidImportance", e.target.value)
+                    }
+                    className="w-full"
+                  />
+                </div>
+
+                {/* School Type Filters */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="publicOnly"
@@ -283,9 +406,32 @@ export default function CollegeMatcherPage() {
                     />
                     <Label htmlFor="privateOnly">Private Schools Only</Label>
                   </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="athleticScholarshipRequired"
+                      checked={filters.athleticScholarshipRequired}
+                      onCheckedChange={(checked) =>
+                        handleFilterChange("athleticScholarshipRequired", Boolean(checked))
+                      }
+                    />
+                    <Label htmlFor="athleticScholarshipRequired">Athletic Scholarships</Label>
+                  </div>
                 </div>
 
-                <Button onClick={applyFilters} className="mt-4">
+                {/* AI Insights */}
+                <div className="flex items-center space-x-2 mt-4">
+                  <Checkbox
+                    id="useAI"
+                    checked={filters.useAI}
+                    onCheckedChange={(checked) =>
+                      handleFilterChange("useAI", Boolean(checked))
+                    }
+                  />
+                  <Label htmlFor="useAI">Include AI-powered insights</Label>
+                </div>
+
+                <Button onClick={applyFilters} className="mt-6 w-full">
                   Apply Filters
                 </Button>
               </CardContent>
