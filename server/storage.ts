@@ -19,6 +19,7 @@ import {
   strengthConditioning, type StrengthConditioning, type InsertStrengthConditioning,
   nutritionInfo, type NutritionInfo, type InsertNutritionInfo,
   recruitingPreferences, type RecruitingPreferences, type InsertRecruitingPreferences,
+  recruitingProfiles, type RecruitingProfile, type InsertRecruitingProfile,
   recruitingAnalytics, type RecruitingAnalytics, type InsertRecruitingAnalytics,
   recruitingMessages, type RecruitingMessage, type InsertRecruitingMessage,
   teams, type Team, type InsertTeam,
@@ -72,6 +73,11 @@ export interface IStorage {
   getRecruitingPreferences(athleteId: number): Promise<RecruitingPreferences | undefined>;
   createRecruitingPreferences(recruitingPreferences: InsertRecruitingPreferences): Promise<RecruitingPreferences>;
   updateRecruitingPreferences(id: number, recruitingPreferences: Partial<InsertRecruitingPreferences>): Promise<RecruitingPreferences | undefined>;
+  
+  // Recruiting Profile Methods
+  getRecruitingProfile(athleteId: number): Promise<RecruitingProfile | undefined>;
+  createRecruitingProfile(profile: InsertRecruitingProfile): Promise<RecruitingProfile>;
+  updateRecruitingProfile(id: number, profile: Partial<InsertRecruitingProfile>): Promise<RecruitingProfile | undefined>;
   
   // Recruiting Analytics Methods
   getRecruitingAnalytics(athleteId: number): Promise<RecruitingAnalytics | undefined>;
@@ -230,6 +236,7 @@ export class MemStorage implements IStorage {
   private strengthConditioningMap: Map<number, StrengthConditioning>;
   private nutritionInfoMap: Map<number, NutritionInfo>;
   private recruitingPreferencesMap: Map<number, RecruitingPreferences>;
+  private recruitingProfilesMap: Map<number, RecruitingProfile>;
   private trainingPlansMap: Map<number, TrainingPlan>;
   private performanceInsightsMap: Map<number, PerformanceInsights>;
   private coachMessagesMap: Map<number, CoachMessage>;
