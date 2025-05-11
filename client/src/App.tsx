@@ -23,7 +23,7 @@ import SocialSettingsPage from "@/pages/social-settings-page";
 import TeamsPage from "@/pages/teams-page";
 import TeamDetailsPage from "@/pages/team-details-page";
 import RecruitingPage from "@/pages/recruiting-page";
-import CollegeMatcherPage from "@/pages/college-matcher-page";
+import CollegeMatcherPage from "@/pages/college-matcher-page-new";
 import RecruitingProfileBuilderPage from "@/pages/recruiting-profile-builder-page";
 import ParentDashboard from "@/pages/parent-dashboard";
 import CoachDashboard from "@/pages/coach-dashboard";
