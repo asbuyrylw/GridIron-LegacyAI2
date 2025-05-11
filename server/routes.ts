@@ -62,6 +62,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // College Matcher API endpoints
   registerCollegeMatcherRoutes(app);
   
+  // Recruiting Profile API endpoints
+  registerRecruitingProfileRoutes(app);
+  
   // Get current athlete (for logged-in user)
   app.get("/api/athlete/me", async (req, res, next) => {
     try {
@@ -3928,6 +3931,121 @@ function registerCollegeMatcherRoutes(app: Express): void {
         matchScore: matches.matchScore,
         feedback: matches.feedback
       });
+    } catch (error) {
+      next(error);
+    }
+  });
+}
+
+// Register Recruiting Profile routes
+function registerRecruitingProfileRoutes(app: Express): void {
+  // Get recruiting profile
+  app.get("/api/recruiting/profile", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athlete = await storage.getAthleteByUserId(req.user.id);
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete profile not found" });
+      }
+      
+      const recruitingProfile = await storage.getRecruitingProfile(athlete.id);
+      if (!recruitingProfile) {
+        // If no profile exists yet, create an empty one
+        const newProfile = await storage.createRecruitingProfile({
+          athleteId: athlete.id,
+          city: null,
+          state: null,
+          achievements: [],
+          personalStatement: null,
+          coachReferenceName: null,
+          coachReferenceEmail: null,
+          highlightVideoUrl: null
+        });
+        
+        return res.json(newProfile);
+      }
+      
+      res.json(recruitingProfile);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update recruiting profile
+  app.patch("/api/recruiting/profile", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athlete = await storage.getAthleteByUserId(req.user.id);
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete profile not found" });
+      }
+      
+      const recruitingProfile = await storage.getRecruitingProfile(athlete.id);
+      
+      if (!recruitingProfile) {
+        // Create new profile with request data
+        const newProfile = await storage.createRecruitingProfile({
+          athleteId: athlete.id,
+          ...req.body
+        });
+        
+        return res.status(201).json(newProfile);
+      }
+      
+      // Update existing profile
+      const updatedProfile = await storage.updateRecruitingProfile(recruitingProfile.id, req.body);
+      res.json(updatedProfile);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get profile completeness
+  app.get("/api/recruiting/profile/completeness", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const athlete = await storage.getAthleteByUserId(req.user.id);
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete profile not found" });
+      }
+      
+      const recruitingProfile = await storage.getRecruitingProfile(athlete.id);
+      
+      // Calculate completeness
+      const requiredFields = [
+        { name: "firstName", value: athlete.firstName },
+        { name: "lastName", value: athlete.lastName },
+        { name: "position", value: athlete.position },
+        { name: "height", value: athlete.height },
+        { name: "weight", value: athlete.weight },
+        { name: "graduationYear", value: athlete.graduationYear },
+        { name: "gpa", value: athlete.gpa },
+        { name: "school", value: athlete.school },
+        { name: "hudlLink", value: athlete.hudlLink },
+      ];
+      
+      if (recruitingProfile) {
+        requiredFields.push(
+          { name: "personalStatement", value: recruitingProfile.personalStatement },
+          { name: "achievements", value: recruitingProfile.achievements?.length > 0 ? recruitingProfile.achievements : null },
+          { name: "city", value: recruitingProfile.city },
+          { name: "state", value: recruitingProfile.state }
+        );
+      }
+      
+      const completedFields = requiredFields.filter(field => field.value !== null && field.value !== undefined && field.value !== "").length;
+      const completeness = Math.round((completedFields / requiredFields.length) * 100);
+      
+      res.json({ completeness, completedFields, totalFields: requiredFields.length });
     } catch (error) {
       next(error);
     }
