@@ -45,6 +45,14 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
+  // Parent Access (read-only)
+  createParentAccess(parentAccess: InsertParentAccess): Promise<ParentAccess>;
+  getParentAccessByEmail(email: string, athleteId: number): Promise<ParentAccess | undefined>;
+  getParentAccessByToken(token: string): Promise<ParentAccess | undefined>;
+  getParentAccessesByAthleteId(athleteId: number): Promise<ParentAccess[]>;
+  updateParentAccess(id: number, data: Partial<InsertParentAccess>): Promise<ParentAccess | undefined>;
+  deactivateParentAccess(id: number): Promise<boolean>;
+  
   // Athlete Methods
   getAthlete(id: number): Promise<Athlete | undefined>;
   getAthleteByUserId(userId: number): Promise<Athlete | undefined>;
