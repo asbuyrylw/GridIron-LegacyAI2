@@ -265,7 +265,7 @@ export default function OnboardingPage() {
               <StepIndicator steps={steps} currentStep={currentStep} className="mb-4" />
               <Progress value={progress} className="h-2" />
               <div className="mt-2 text-sm text-muted-foreground">
-                Step {currentStep} of {steps.length}: {tabSteps[stepIdMap[activeTab as keyof typeof stepIdMap] - 1].label}
+                Step {currentStep} of {steps.length}: {tabSteps.find(step => step.id === activeTab)?.label}
               </div>
             </div>
           </CardHeader>
