@@ -267,6 +267,7 @@ export class MemStorage implements IStorage {
   currentAiMealSuggestionId: number;
   currentSocialConnectionId: number;
   currentSocialPostId: number;
+  currentSocialCommentId: number;
   currentAchievementId: number;
   currentAthleteAchievementId: number;
   currentLeaderboardId: number;
@@ -1143,6 +1144,173 @@ export class MemStorage implements IStorage {
     
     this.socialPostsMap.set(id, updatedPost);
     return updatedPost;
+  }
+  
+  // Helper method to get user info for post author
+  private getUserForPost(userId: number) {
+    const user = this.usersMap.get(userId);
+    if (!user) return null;
+    
+    const athlete = Array.from(this.athletesMap.values()).find(a => a.userId === userId);
+    
+    return {
+      id: userId,
+      name: athlete ? `${athlete.firstName} ${athlete.lastName}` : user.username,
+      username: user.username,
+      profileImage: athlete?.profileImage || null,
+      position: athlete?.position || null
+    };
+  }
+  
+  async deleteSocialPost(id: number): Promise<boolean> {
+    const exists = this.socialPostsMap.has(id);
+    if (!exists) return false;
+    
+    this.socialPostsMap.delete(id);
+    return true;
+  }
+  
+  async toggleSocialPostLike(postId: number, userId: number): Promise<boolean> {
+    const post = this.socialPostsMap.get(postId);
+    if (!post) return false;
+    
+    // Initialize likes array if it doesn't exist
+    if (!post.likes) {
+      post.likes = [];
+    }
+    
+    // Check if user has already liked the post
+    const likeIndex = post.likes.indexOf(userId);
+    
+    if (likeIndex === -1) {
+      // User hasn't liked the post yet, add like
+      post.likes.push(userId);
+      this.socialPostsMap.set(postId, post);
+      return true;
+    } else {
+      // User already liked the post, remove like
+      post.likes.splice(likeIndex, 1);
+      this.socialPostsMap.set(postId, post);
+      return false;
+    }
+  }
+  
+  async getSocialPostComments(postId: number): Promise<any[]> {
+    return Array.from(this.socialCommentsMap.values())
+      .filter(comment => comment.postId === postId)
+      .map(comment => {
+        // Get author info
+        const author = this.getUserForPost(comment.userId);
+        
+        // Check if the commenter has liked this comment
+        const hasLiked = (comment.likes || []).includes(comment.userId);
+        
+        return {
+          ...comment,
+          likes: (comment.likes || []).length,
+          hasLiked,
+          isOwner: true, // For simplicity, make all comments owned by the current user
+          author
+        };
+      })
+      .sort((a, b) => {
+        // Sort by createdAt (oldest first for comments)
+        return a.createdAt.getTime() - b.createdAt.getTime();
+      });
+  }
+  
+  async getSocialCommentById(id: number): Promise<any | undefined> {
+    return this.socialCommentsMap.get(id);
+  }
+  
+  async createSocialComment(comment: any): Promise<any> {
+    const id = this.currentSocialCommentId++;
+    const createdAt = new Date();
+    
+    const newComment = {
+      id,
+      postId: comment.postId,
+      userId: comment.userId,
+      content: comment.content,
+      parentId: comment.parentId || null,
+      createdAt,
+      likes: []
+    };
+    
+    this.socialCommentsMap.set(id, newComment);
+    return newComment;
+  }
+  
+  async toggleSocialCommentLike(commentId: number, userId: number): Promise<boolean> {
+    const comment = this.socialCommentsMap.get(commentId);
+    if (!comment) return false;
+    
+    // Initialize likes array if it doesn't exist
+    if (!comment.likes) {
+      comment.likes = [];
+    }
+    
+    // Check if user has already liked the comment
+    const likeIndex = comment.likes.indexOf(userId);
+    
+    if (likeIndex === -1) {
+      // User hasn't liked the comment yet, add like
+      comment.likes.push(userId);
+      this.socialCommentsMap.set(commentId, comment);
+      return true;
+    } else {
+      // User already liked the comment, remove like
+      comment.likes.splice(likeIndex, 1);
+      this.socialCommentsMap.set(commentId, comment);
+      return false;
+    }
+  }
+  
+  async deleteSocialComment(id: number): Promise<boolean> {
+    const exists = this.socialCommentsMap.has(id);
+    if (!exists) return false;
+    
+    this.socialCommentsMap.delete(id);
+    return true;
+  }
+  
+  // Athlete connections methods
+  async getAthleteConnections(athleteId: number): Promise<SocialConnection[]> {
+    const athlete = this.athletesMap.get(athleteId);
+    if (!athlete) return [];
+    
+    return Array.from(this.socialConnectionsMap.values())
+      .filter(connection => connection.userId === athlete.userId);
+  }
+  
+  async upsertAthleteConnection(athleteId: number, connection: any): Promise<SocialConnection> {
+    const athlete = this.athletesMap.get(athleteId);
+    if (!athlete) {
+      throw new Error("Athlete not found");
+    }
+    
+    // Check if connection already exists
+    const existingConnection = Array.from(this.socialConnectionsMap.values())
+      .find(conn => conn.userId === athlete.userId && conn.platform === connection.platform);
+    
+    if (existingConnection) {
+      // Update existing connection
+      return this.updateSocialConnection(existingConnection.id, {
+        username: connection.username,
+        connected: connection.connected
+      });
+    } else {
+      // Create new connection
+      return this.createSocialConnection({
+        userId: athlete.userId,
+        platform: connection.platform,
+        username: connection.username,
+        connected: connection.connected || false,
+        accessToken: null,
+        refreshToken: null,
+        expiresAt: null
+      });
+    }
   }
 
   // Achievement Methods
