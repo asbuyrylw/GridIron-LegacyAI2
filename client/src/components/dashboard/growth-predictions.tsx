@@ -227,15 +227,22 @@ export function GrowthPredictions({ currentMetrics, onClose }: GrowthPredictions
     
     // Just return the top 5 metrics with the biggest improvement percentage
     return metricsTable
-      .sort((a, b) => parseFloat(b.percent) - parseFloat(a.percent))
+      .sort((a, b) => {
+        if (!a || !b) return 0;
+        return parseFloat(b.percent) - parseFloat(a.percent);
+      })
       .slice(0, 5)
-      .map(item => ({
-        name: item.metric.split(" ")[0], // Just first word of metric name for chart
-        Current: parseFloat(item.current),
-        Predicted: parseFloat(item.predicted),
-        metric: item.metric,
-        isSpeed: item.metric.includes("dash") || item.metric.includes("Shuttle") || item.metric.includes("Cone") || item.metric.includes("split")
-      }));
+      .map(item => {
+        if (!item) return null;
+        return {
+          name: item.metric.split(" ")[0], // Just first word of metric name for chart
+          Current: parseFloat(item.current),
+          Predicted: parseFloat(item.predicted),
+          metric: item.metric,
+          isSpeed: item.metric.includes("dash") || item.metric.includes("Shuttle") || item.metric.includes("Cone") || item.metric.includes("split")
+        };
+      })
+      .filter(Boolean) as any[];
   };
   
   const metricsTableData = predictions ? formatMetricsTableData() : [];
@@ -385,18 +392,21 @@ export function GrowthPredictions({ currentMetrics, onClose }: GrowthPredictions
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {metricsTableData.map((item, index) => (
-                          <TableRow key={index}>
-                            <TableCell className="font-medium">{item.metric}</TableCell>
-                            <TableCell>{item.current}</TableCell>
-                            <TableCell>{item.predicted}</TableCell>
-                            <TableCell className="text-right">
-                              <span className={item.isPositive ? "text-green-600" : "text-red-600"}>
-                                {item.improvement} ({item.percent})
-                              </span>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {metricsTableData.map((item, index) => {
+                          if (!item) return null;
+                          return (
+                            <TableRow key={index}>
+                              <TableCell className="font-medium">{item.metric}</TableCell>
+                              <TableCell>{item.current}</TableCell>
+                              <TableCell>{item.predicted}</TableCell>
+                              <TableCell className="text-right">
+                                <span className={item.isPositive ? "text-green-600" : "text-red-600"}>
+                                  {item.improvement} ({item.percent})
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </>

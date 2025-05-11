@@ -64,6 +64,7 @@ export default function StatsPage() {
             <TabsTrigger value="dashboard" className="flex-1">Dashboard</TabsTrigger>
             <TabsTrigger value="metrics" className="flex-1">Update Metrics</TabsTrigger>
             <TabsTrigger value="insights" className="flex-1">AI Insights</TabsTrigger>
+            <TabsTrigger value="predictions" className="flex-1">Growth Predictions</TabsTrigger>
             <TabsTrigger value="compare" className="flex-1">College Comparison</TabsTrigger>
           </TabsList>
           
@@ -94,6 +95,22 @@ export default function StatsPage() {
               {React.createElement(
                 require("@/components/dashboard/ai-performance-insights").AiPerformanceInsights,
                 { athleteId }
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="predictions">
+            <div className="space-y-6">
+              {/* Growth Predictions component */}
+              {metrics && metrics.length > 0 ? (
+                React.createElement(
+                  require("@/components/dashboard/growth-predictions").GrowthPredictions,
+                  { currentMetrics: metrics[0] }
+                )
+              ) : (
+                React.createElement(
+                  require("@/components/dashboard/growth-predictions").GrowthPredictionsPlaceholder
+                )
               )}
             </div>
           </TabsContent>
