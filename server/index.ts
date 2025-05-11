@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { createTestUser } from "./create-test-user";
+import { createTestUsers } from "./create-test-users";
 
 const app = express();
 app.use(express.json());
@@ -41,6 +42,11 @@ app.use((req, res, next) => {
   // Create test user for easy testing
   await createTestUser().catch(err => {
     console.error('Error creating test user:', err);
+  });
+  
+  // Create additional test users (parents and coaches)
+  await createTestUsers().catch(err => {
+    console.error('Error creating additional test users:', err);
   });
   
   const server = await registerRoutes(app);
