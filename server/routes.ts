@@ -65,6 +65,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Recruiting Profile API endpoints
   registerRecruitingProfileRoutes(app);
   
+  // Parent Dashboard API endpoints
+  registerParentRoutes(app);
+  
+  // Coach Dashboard API endpoints
+  registerCoachRoutes(app);
+  
   // Get current athlete (for logged-in user)
   app.get("/api/athlete/me", async (req, res, next) => {
     try {
@@ -4382,6 +4388,332 @@ function registerSocialRoutes(app: Express): void {
       
       res.status(201).json(connection);
     } catch (error) {
+      next(error);
+    }
+  });
+}
+
+// Parent Dashboard API routes
+function registerParentRoutes(app: Express): void {
+  // Get parent profile for current user
+  app.get("/api/parents/profile", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is a parent
+      if (req.user.userType !== "parent") {
+        return res.status(403).json({ message: "Only parent accounts can access this resource" });
+      }
+      
+      const parent = await storage.getParentByUserId(req.user.id);
+      
+      if (!parent) {
+        return res.status(404).json({ message: "Parent profile not found" });
+      }
+      
+      res.json(parent);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get connected athletes for parent
+  app.get("/api/parents/athletes", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is a parent
+      if (req.user.userType !== "parent") {
+        return res.status(403).json({ message: "Only parent accounts can access this resource" });
+      }
+      
+      const parent = await storage.getParentByUserId(req.user.id);
+      
+      if (!parent) {
+        return res.status(404).json({ message: "Parent profile not found" });
+      }
+      
+      // Get parent-athlete relationships
+      const relationships = await storage.getParentAthleteRelationshipsByParentId(parent.id);
+      
+      // Get athlete details for each relationship
+      const connectedAthletes = await Promise.all(
+        relationships.map(async (relationship) => {
+          const athlete = await storage.getAthlete(relationship.athleteId);
+          if (athlete) {
+            return {
+              ...athlete,
+              relationship: relationship.relationship
+            };
+          }
+          return null;
+        })
+      );
+      
+      // Filter out any null values (in case an athlete was deleted)
+      const validAthletes = connectedAthletes.filter(athlete => athlete !== null);
+      
+      res.json(validAthletes);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Connect parent to athlete
+  app.post("/api/parents/connect-athlete", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is a parent
+      if (req.user.userType !== "parent") {
+        return res.status(403).json({ message: "Only parent accounts can access this resource" });
+      }
+      
+      const parent = await storage.getParentByUserId(req.user.id);
+      
+      if (!parent) {
+        return res.status(404).json({ message: "Parent profile not found" });
+      }
+      
+      const { athleteId, relationship } = req.body;
+      
+      // Validate athleteId
+      if (!athleteId) {
+        return res.status(400).json({ message: "Athlete ID is required" });
+      }
+      
+      // Check if athlete exists
+      const athlete = await storage.getAthlete(athleteId);
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Create parent-athlete relationship
+      const newRelationship = await storage.createParentAthleteRelationship({
+        parentId: parent.id,
+        athleteId,
+        relationship: relationship || "Parent/Guardian",
+        approved: false // Requires athlete approval
+      });
+      
+      res.status(201).json(newRelationship);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get athlete academic info
+  app.get("/api/parents/athletes/:athleteId/academics", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is a parent
+      if (req.user.userType !== "parent") {
+        return res.status(403).json({ message: "Only parent accounts can access this resource" });
+      }
+      
+      const parent = await storage.getParentByUserId(req.user.id);
+      
+      if (!parent) {
+        return res.status(404).json({ message: "Parent profile not found" });
+      }
+      
+      const athleteId = parseInt(req.params.athleteId);
+      
+      // Check if parent is connected to this athlete
+      const relationships = await storage.getParentAthleteRelationshipsByParentId(parent.id);
+      const isConnected = relationships.some(rel => rel.athleteId === athleteId);
+      
+      if (!isConnected) {
+        return res.status(403).json({ message: "Not authorized to view this athlete's information" });
+      }
+      
+      // Get athlete profile for academic info
+      const athlete = await storage.getAthlete(athleteId);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Return academic-related information
+      const academicInfo = {
+        gpa: athlete.gpa,
+        actScore: athlete.actScore,
+        school: athlete.school,
+        graduationYear: athlete.graduationYear,
+        grade: athlete.grade,
+        eligibilityStatus: "On Track" // Placeholder - this would come from a real eligibility tracking system
+      };
+      
+      res.json(academicInfo);
+    } catch (error) {
+      next(error);
+    }
+  });
+}
+
+// Coach Dashboard API routes
+function registerCoachRoutes(app: Express): void {
+  // Get coach profile for current user
+  app.get("/api/coaches/profile", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is a coach
+      if (req.user.userType !== "coach") {
+        return res.status(403).json({ message: "Only coach accounts can access this resource" });
+      }
+      
+      const coach = await storage.getCoachByUserId(req.user.id);
+      
+      if (!coach) {
+        return res.status(404).json({ message: "Coach profile not found" });
+      }
+      
+      res.json(coach);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get teams for a coach
+  app.get("/api/coaches/teams", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is a coach
+      if (req.user.userType !== "coach") {
+        return res.status(403).json({ message: "Only coach accounts can access this resource" });
+      }
+      
+      const coach = await storage.getCoachByUserId(req.user.id);
+      
+      if (!coach) {
+        return res.status(404).json({ message: "Coach profile not found" });
+      }
+      
+      // Get teams where user is a coach
+      const teams = await storage.getTeamsForCoach(req.user.id);
+      
+      res.json(teams);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get team members for a coach's team
+  app.get("/api/coaches/team-members", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is a coach
+      if (req.user.userType !== "coach") {
+        return res.status(403).json({ message: "Only coach accounts can access this resource" });
+      }
+      
+      const coach = await storage.getCoachByUserId(req.user.id);
+      
+      if (!coach) {
+        return res.status(404).json({ message: "Coach profile not found" });
+      }
+      
+      // Get teams where user is a coach
+      const teams = await storage.getTeamsForCoach(req.user.id);
+      
+      if (teams.length === 0) {
+        return res.json([]);
+      }
+      
+      // For simplicity, use the first team. In a real app, we'd specify the team ID
+      const teamId = teams[0].id;
+      
+      // Get team members
+      const teamMembers = await storage.getTeamMembers(teamId);
+      
+      // Get full athlete data for each team member
+      const athletes = await Promise.all(
+        teamMembers.map(async (member) => {
+          if (member.userType === 'athlete') {
+            const user = await storage.getUser(member.userId);
+            if (!user) return null;
+            
+            const athlete = await storage.getAthleteByUserId(user.id);
+            if (!athlete) return null;
+            
+            return {
+              ...athlete,
+              teamRole: member.role,
+              teamNumber: member.number
+            };
+          }
+          return null;
+        })
+      );
+      
+      // Filter out null values
+      const validAthletes = athletes.filter(athlete => athlete !== null);
+      
+      res.json(validAthletes);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Create team announcement
+  app.post("/api/coaches/teams/:teamId/announcements", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Check if user is a coach
+      if (req.user.userType !== "coach") {
+        return res.status(403).json({ message: "Only coach accounts can access this resource" });
+      }
+      
+      const teamId = parseInt(req.params.teamId);
+      
+      // Verify coach has access to this team
+      const teams = await storage.getTeamsForCoach(req.user.id);
+      const hasAccess = teams.some(team => team.id === teamId);
+      
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Not authorized to manage this team" });
+      }
+      
+      // Create announcement
+      const announcement = await storage.createTeamAnnouncement({
+        teamId,
+        title: req.body.title,
+        content: req.body.content,
+        importance: req.body.importance || null,
+        publishedBy: req.user.id,
+        publishedAt: new Date(),
+        expiresAt: req.body.expiresAt ? new Date(req.body.expiresAt) : null,
+        image: req.body.image || null,
+        attachmentLink: req.body.attachmentLink || null
+      });
+      
+      res.status(201).json(announcement);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
       next(error);
     }
   });

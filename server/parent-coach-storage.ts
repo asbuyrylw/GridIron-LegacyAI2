@@ -53,6 +53,17 @@ export async function getAllParents(this: MemStorage): Promise<Parent[]> {
   return Array.from(this.parentsMap.values());
 }
 
+export async function deleteParent(this: MemStorage, id: number): Promise<void> {
+  // First, delete all parent-athlete relationships associated with this parent
+  const relationships = await this.getParentAthleteRelationshipsByParentId(id);
+  for (const relationship of relationships) {
+    await this.deleteParentAthleteRelationship(relationship.id);
+  }
+  
+  // Then delete the parent
+  this.parentsMap.delete(id);
+}
+
 // Parent-Athlete Relationship methods
 export async function getParentAthleteRelationship(this: MemStorage, id: number): Promise<ParentAthleteRelationship | undefined> {
   return this.parentAthleteRelationshipsMap.get(id);
@@ -117,6 +128,26 @@ export async function createParentAthleteRelationship(this: MemStorage, relation
   
   this.parentAthleteRelationshipsMap.set(id, newRelationship);
   return newRelationship;
+}
+
+export async function updateParentAthleteRelationship(this: MemStorage, id: number, relationship: Partial<InsertParentAthleteRelationship>): Promise<ParentAthleteRelationship | undefined> {
+  const existingRelationship = await this.getParentAthleteRelationship(id);
+  
+  if (!existingRelationship) {
+    return undefined;
+  }
+  
+  const updatedRelationship = {
+    ...existingRelationship,
+    ...relationship
+  };
+  
+  this.parentAthleteRelationshipsMap.set(id, updatedRelationship);
+  return updatedRelationship;
+}
+
+export async function deleteParentAthleteRelationship(this: MemStorage, id: number): Promise<void> {
+  this.parentAthleteRelationshipsMap.delete(id);
 }
 
 // Coach-related methods
@@ -184,4 +215,10 @@ export async function getCoachesByTeam(this: MemStorage, teamId: number): Promis
 
 export async function getAllCoaches(this: MemStorage): Promise<Coach[]> {
   return Array.from(this.coachesMap.values());
+}
+
+export async function deleteCoach(this: MemStorage, id: number): Promise<void> {
+  // First update any team relationships - set coach to inactive or reassign
+  // For simplicity in memory storage, we'll just delete the coach
+  this.coachesMap.delete(id);
 }
