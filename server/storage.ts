@@ -266,6 +266,7 @@ export class MemStorage implements IStorage {
   currentStrengthConditioningId: number;
   currentNutritionInfoId: number;
   currentRecruitingPreferencesId: number;
+  currentRecruitingProfileId: number;
   currentTrainingPlanId: number;
   currentPerformanceInsightsId: number;
   currentCoachMessageId: number;
@@ -297,6 +298,7 @@ export class MemStorage implements IStorage {
     this.strengthConditioningMap = new Map();
     this.nutritionInfoMap = new Map();
     this.recruitingPreferencesMap = new Map();
+    this.recruitingProfilesMap = new Map();
     this.trainingPlansMap = new Map();
     this.performanceInsightsMap = new Map();
     this.coachMessagesMap = new Map();
@@ -326,6 +328,7 @@ export class MemStorage implements IStorage {
     this.currentStrengthConditioningId = 1;
     this.currentNutritionInfoId = 1;
     this.currentRecruitingPreferencesId = 1;
+    this.currentRecruitingProfileId = 1;
     this.currentTrainingPlanId = 1;
     this.currentPerformanceInsightsId = 1;
     this.currentCoachMessageId = 1;
@@ -862,6 +865,47 @@ export class MemStorage implements IStorage {
     
     this.recruitingPreferencesMap.set(id, updatedRP);
     return updatedRP;
+  }
+
+  // Recruiting Profile Methods
+  async getRecruitingProfile(athleteId: number): Promise<RecruitingProfile | undefined> {
+    for (const profile of this.recruitingProfilesMap.values()) {
+      if (profile.athleteId === athleteId) {
+        return profile;
+      }
+    }
+    return undefined;
+  }
+
+  async createRecruitingProfile(profile: InsertRecruitingProfile): Promise<RecruitingProfile> {
+    const id = this.currentRecruitingProfileId++;
+    
+    const newProfile: RecruitingProfile = {
+      id,
+      ...profile,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    this.recruitingProfilesMap.set(id, newProfile);
+    return newProfile;
+  }
+
+  async updateRecruitingProfile(id: number, profileData: Partial<InsertRecruitingProfile>): Promise<RecruitingProfile | undefined> {
+    const profile = this.recruitingProfilesMap.get(id);
+    
+    if (!profile) {
+      return undefined;
+    }
+    
+    const updatedProfile: RecruitingProfile = { 
+      ...profile, 
+      ...profileData,
+      updatedAt: new Date()
+    };
+    
+    this.recruitingProfilesMap.set(id, updatedProfile);
+    return updatedProfile;
   }
 
   // Meal Log Methods
