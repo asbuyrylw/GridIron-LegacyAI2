@@ -514,12 +514,22 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAddingConcussion(false)}>Cancel</Button>
                 <Button onClick={() => {
-                  appendConcussion({
-                    date: form.getValues("tempConcussionDate") || new Date().toISOString().split('T')[0],
-                    severity: form.getValues("tempConcussionSeverity") || "moderate",
-                    returnToPlayDays: form.getValues("tempConcussionReturn"),
-                    notes: form.getValues("tempConcussionNotes") || ""
+                  // Validate required fields
+                  if (!tempConcussion.date || !tempConcussion.severity) {
+                    alert("Please provide a concussion date and severity");
+                    return;
+                  }
+                  
+                  appendConcussion(tempConcussion);
+                  
+                  // Reset temp concussion state
+                  setTempConcussion({
+                    date: new Date().toISOString().split('T')[0],
+                    severity: "moderate",
+                    returnToPlayDays: 0,
+                    notes: ""
                   });
+                  
                   setIsAddingConcussion(false);
                 }}>Add Concussion</Button>
               </DialogFooter>
