@@ -352,7 +352,7 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
                   <Input 
                     id="surgery-type" 
                     placeholder="ACL Reconstruction, Shoulder Surgery, etc."
-                    onChange={(e) => form.setValue("tempSurgeryType", e.target.value)}
+                    onChange={(e) => setTempSurgery(prev => ({ ...prev, type: e.target.value }))}
                   />
                 </div>
                 
@@ -361,7 +361,7 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
                   <Input 
                     id="surgery-date" 
                     type="date"
-                    onChange={(e) => form.setValue("tempSurgeryDate", e.target.value)}
+                    onChange={(e) => setTempSurgery(prev => ({ ...prev, date: e.target.value }))}
                     max={new Date().toISOString().split('T')[0]}
                   />
                 </div>
@@ -371,7 +371,7 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
                   <Textarea 
                     id="surgery-notes" 
                     placeholder="Recovery period, limitations, etc."
-                    onChange={(e) => form.setValue("tempSurgeryNotes", e.target.value)}
+                    onChange={(e) => setTempSurgery(prev => ({ ...prev, notes: e.target.value }))}
                   />
                 </div>
               </div>
@@ -379,11 +379,21 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAddingSurgery(false)}>Cancel</Button>
                 <Button onClick={() => {
-                  appendSurgery({
-                    type: form.getValues("tempSurgeryType") || "Unknown Surgery",
-                    date: form.getValues("tempSurgeryDate") || new Date().toISOString().split('T')[0],
-                    notes: form.getValues("tempSurgeryNotes") || ""
+                  // Validate required fields
+                  if (!tempSurgery.type || !tempSurgery.date) {
+                    alert("Please provide a surgery type and date");
+                    return;
+                  }
+                  
+                  appendSurgery(tempSurgery);
+                  
+                  // Reset temp surgery state
+                  setTempSurgery({
+                    type: "",
+                    date: new Date().toISOString().split('T')[0],
+                    notes: ""
                   });
+                  
                   setIsAddingSurgery(false);
                 }}>Add Surgery</Button>
               </DialogFooter>
@@ -459,14 +469,14 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
                   <Input 
                     id="concussion-date" 
                     type="date"
-                    onChange={(e) => form.setValue("tempConcussionDate", e.target.value)}
+                    onChange={(e) => setTempConcussion(prev => ({ ...prev, date: e.target.value }))}
                     max={new Date().toISOString().split('T')[0]}
                   />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="concussion-severity">Severity</Label>
-                  <Select onValueChange={(value) => form.setValue("tempConcussionSeverity", value)}>
+                  <Select onValueChange={(value) => setTempConcussion(prev => ({ ...prev, severity: value }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select severity" />
                     </SelectTrigger>
@@ -487,7 +497,7 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
                     type="number"
                     placeholder="Number of days"
                     min={0}
-                    onChange={(e) => form.setValue("tempConcussionReturn", parseInt(e.target.value) || undefined)}
+                    onChange={(e) => setTempConcussion(prev => ({ ...prev, returnToPlayDays: parseInt(e.target.value) || 0 }))}
                   />
                 </div>
                 
@@ -496,7 +506,7 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
                   <Textarea 
                     id="concussion-notes" 
                     placeholder="Symptoms, treatment, etc."
-                    onChange={(e) => form.setValue("tempConcussionNotes", e.target.value)}
+                    onChange={(e) => setTempConcussion(prev => ({ ...prev, notes: e.target.value }))}
                   />
                 </div>
               </div>
