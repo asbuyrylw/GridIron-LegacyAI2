@@ -51,15 +51,12 @@ export default function PersonalInfoForm({
       coachName: "",
       
       // Parent/Guardian info
-      parentFirstName: "",
-      parentLastName: "",
-      parentEmail: "",
-      parentPhone: "",
+      parentGuardianName: "",
+      parentGuardianEmail: "",
+      parentGuardianPhone: "",
+      parentGuardianRelationship: "",
       fatherHeight: undefined,
       motherHeight: undefined,
-      secondaryContactName: "",
-      secondaryContactPhone: "",
-      secondaryContactRelationship: "",
     },
   });
 
@@ -311,12 +308,12 @@ export default function PersonalInfoForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="parentFirstName"
+              name="parentGuardianName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Parent First Name</FormLabel>
+                  <FormLabel>Parent/Guardian Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Jane" {...field} />
+                    <Input placeholder="Jane Doe" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -325,13 +322,22 @@ export default function PersonalInfoForm({
             
             <FormField
               control={form.control}
-              name="parentLastName"
+              name="parentGuardianRelationship"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Parent Last Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Doe" {...field} />
-                  </FormControl>
+                  <FormLabel>Relationship</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select relationship" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="parent">Parent</SelectItem>
+                      <SelectItem value="guardian">Legal Guardian</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -341,10 +347,10 @@ export default function PersonalInfoForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="parentEmail"
+              name="parentGuardianEmail"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Parent Email</FormLabel>
+                  <FormLabel>Parent/Guardian Email</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="parent@example.com" {...field} />
                   </FormControl>
@@ -355,10 +361,10 @@ export default function PersonalInfoForm({
             
             <FormField
               control={form.control}
-              name="parentPhone"
+              name="parentGuardianPhone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Parent Phone</FormLabel>
+                  <FormLabel>Parent/Guardian Phone</FormLabel>
                   <FormControl>
                     <Input placeholder="(555) 123-4567" {...field} />
                   </FormControl>

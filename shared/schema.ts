@@ -638,16 +638,20 @@ export const personalInfoSchema = z.object({
   city: z.string().optional(),
   state: z.string().optional(),
   zipCode: z.string().optional(),
-  school: z.string().min(1, "School name is required"),
-  graduationYear: z.number().int().min(2024).max(2035),
-  jerseyNumber: z.string().optional(),
-  coachName: z.string().optional(),
   
   // Parent/Guardian Information
-  parentFirstName: z.string().optional(),
-  parentLastName: z.string().optional(),
-  parentEmail: z.string().email("Invalid email address").optional(),
-  parentPhone: z.string().optional(),
+  parentGuardianName: z.string().optional(),
+  parentGuardianEmail: z.string().email("Invalid email address").optional(),
+  parentGuardianPhone: z.string().optional(),
+  parentGuardianRelationship: z.string().optional(),
+  
+  // School Information
+  school: z.string().min(1, "School name is required"),
+  graduationYear: z.number().int().min(2024).max(2035),
+  
+  // Football Information
+  jerseyNumber: z.string().optional(),
+  coachName: z.string().optional(),
   
   // Height prediction data points
   fatherHeight: z.number().optional().describe("Father's height in inches for growth prediction"),
