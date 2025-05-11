@@ -206,7 +206,7 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="injury-type">Injury Type</Label>
-                    <Select onValueChange={(value) => form.setValue("tempInjuryType", value)}>
+                    <Select onValueChange={(value) => setTempInjury(prev => ({ ...prev, type: value }))}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
@@ -222,7 +222,7 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
                   
                   <div className="space-y-2">
                     <Label htmlFor="injury-location">Location</Label>
-                    <Select onValueChange={(value) => form.setValue("tempInjuryLocation", value)}>
+                    <Select onValueChange={(value) => setTempInjury(prev => ({ ...prev, location: value }))}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select location" />
                       </SelectTrigger>
@@ -242,7 +242,7 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
                   <Input 
                     id="injury-date" 
                     type="date"
-                    onChange={(e) => form.setValue("tempInjuryDate", e.target.value)}
+                    onChange={(e) => setTempInjury(prev => ({ ...prev, date: e.target.value }))}
                     max={new Date().toISOString().split('T')[0]}
                   />
                 </div>
@@ -251,7 +251,7 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
                   <Checkbox 
                     id="fully-recovered" 
                     onCheckedChange={(checked) => 
-                      form.setValue("tempInjuryRecovered", checked === true)
+                      setTempInjury(prev => ({ ...prev, fullyRecovered: checked === true }))
                     }
                   />
                   <Label htmlFor="fully-recovered">Fully recovered</Label>
@@ -262,7 +262,7 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
                   <Textarea 
                     id="treatment-notes" 
                     placeholder="Physical therapy, medication, etc."
-                    onChange={(e) => form.setValue("tempInjuryNotes", e.target.value)}
+                    onChange={(e) => setTempInjury(prev => ({ ...prev, treatmentNotes: e.target.value }))}
                   />
                 </div>
               </div>
@@ -270,13 +270,24 @@ export const InjuryTrackingForm = ({ setShowLegacyField }: InjuryFormProps) => {
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAddingInjury(false)}>Cancel</Button>
                 <Button onClick={() => {
-                  appendInjury({
-                    type: form.getValues("tempInjuryType") || "Unknown",
-                    location: form.getValues("tempInjuryLocation") || "Unknown",
-                    date: form.getValues("tempInjuryDate") || new Date().toISOString().split('T')[0],
-                    fullyRecovered: form.getValues("tempInjuryRecovered") || false,
-                    treatmentNotes: form.getValues("tempInjuryNotes") || ""
+                  // Validate required fields
+                  if (!tempInjury.type || !tempInjury.location || !tempInjury.date) {
+                    // We would add a toast message here if we had it imported
+                    alert("Please fill out all required fields");
+                    return;
+                  }
+                  
+                  appendInjury(tempInjury);
+                  
+                  // Reset temp injury state
+                  setTempInjury({
+                    type: "",
+                    location: "",
+                    date: new Date().toISOString().split('T')[0],
+                    fullyRecovered: false,
+                    treatmentNotes: ""
                   });
+                  
                   setIsAddingInjury(false);
                 }}>Add Injury</Button>
               </DialogFooter>
