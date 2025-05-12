@@ -34,6 +34,14 @@ import {
 import { savedColleges, type SavedCollege, type InsertSavedCollege } from "@shared/saved-colleges-schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { 
+  getAthleteAchievements,
+  getAthleteAchievementByStringId,
+  getAchievementProgressByUserId,
+  getAchievementProgressByAthleteId,
+  updateAchievementProgress,
+  getLeaderboard
+} from "./gamification-storage";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -304,6 +312,14 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private usersMap: Map<number, User>;
+  
+  // Import gamification methods
+  getAthleteAchievements = getAthleteAchievements;
+  getAthleteAchievementByStringId = getAthleteAchievementByStringId;
+  getAchievementProgressByUserId = getAchievementProgressByUserId;
+  getAchievementProgressByAthleteId = getAchievementProgressByAthleteId;
+  updateAchievementProgress = updateAchievementProgress;
+  getLeaderboard = getLeaderboard;
   private athletesMap: Map<number, Athlete>;
   private parentsMap: Map<number, Parent>;
   private coachesMap: Map<number, Coach>;
