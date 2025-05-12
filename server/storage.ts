@@ -460,6 +460,10 @@ export class MemStorage implements IStorage {
     this.usersMap.set(id, user);
     return user;
   }
+  
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.usersMap.values());
+  }
 
   // Athlete Methods
   async getAthlete(id: number): Promise<Athlete | undefined> {
