@@ -19,6 +19,9 @@ import { Badge } from "@/components/ui/badge";
 
 export interface AchievementBadgeProps {
   achievement: Achievement;
+  progress: number;
+  isCompleted: boolean;
+  earnedDate?: string | null;
   size?: 'sm' | 'md' | 'lg';
   showProgress?: boolean;
   showTooltip?: boolean;
@@ -28,6 +31,9 @@ export interface AchievementBadgeProps {
 
 export function AchievementBadge({
   achievement,
+  progress,
+  isCompleted,
+  earnedDate,
   size = 'md',
   showProgress = true,
   showTooltip = true,
@@ -35,13 +41,11 @@ export function AchievementBadge({
   className = '',
 }: AchievementBadgeProps) {
   const [showDetails, setShowDetails] = useState(false);
-  const { isCompleted, getProgress } = useAchievementProgress();
   const { user } = useAuth();
   
-  // Get progress
-  const progress = getProgress(achievement.id);
+  // Calculate progress percentage
   const progressPercentage = Math.min(100, (progress / achievement.progressMax) * 100);
-  const isUnlocked = isCompleted(achievement.id);
+  const isUnlocked = isCompleted;
   
   // Get icon from Lucide icons
   const IconComponent = LucideIcons[achievement.icon as keyof typeof LucideIcons] as LucideIcon;

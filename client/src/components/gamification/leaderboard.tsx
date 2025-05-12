@@ -1,22 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { AchievementProgress } from "@/hooks/use-achievement-progress";
-import { Trophy, Medal, ArrowUp, ArrowDown, Minus, UserCircle2, Users, Clock, Search } from "lucide-react";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -24,234 +15,97 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Users, Trophy, Medal, Calendar, Star } from "lucide-react";
 
-// Leaderboard entry types
+type LeaderboardTimeframe = 'weekly' | 'monthly' | 'allTime';
+type LeaderboardScope = 'team' | 'school' | 'global';
+
 interface LeaderboardEntry {
+  id: number;
   userId: number;
   athleteId: number;
-  username: string;
-  fullName: string;
-  profileImage?: string;
-  points: number;
   rank: number;
-  previousRank: number;
-  achievements: number;
-  topAchievement?: string;
+  firstName: string;
+  lastName: string;
+  profileImage: string | null;
+  points: number;
+  position: string;
+  tier: string;
+  level: number;
 }
 
-interface LeaderboardsProps {
-  timeframe?: 'weekly' | 'monthly' | 'allTime';
-  scope?: 'team' | 'school' | 'global';
-  limit?: number;
-  className?: string;
+interface LeaderboardProps {
+  timeframe?: LeaderboardTimeframe;
+  scope?: LeaderboardScope;
   showFilters?: boolean;
-  compact?: boolean;
+  limit?: number;
+  title?: string;
+  description?: string;
 }
 
 export function Leaderboard({
   timeframe: initialTimeframe = 'weekly',
-  scope: initialScope = 'global',
-  limit = 10,
-  className = '',
+  scope: initialScope = 'team',
   showFilters = true,
-  compact = false,
-}: LeaderboardsProps) {
-  // State for filters
-  const [timeframe, setTimeframe] = useState<'weekly' | 'monthly' | 'allTime'>(initialTimeframe);
-  const [scope, setScope] = useState<'team' | 'school' | 'global'>(initialScope);
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  // Get current user
+  limit = 10,
+  title = "Leaderboard",
+  description = "Top athletes by achievement points",
+}: LeaderboardProps) {
   const { user } = useAuth();
+  const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>(initialTimeframe);
+  const [scope, setScope] = useState<LeaderboardScope>(initialScope);
   
-  // Fetch leaderboard data
+  // Get leaderboard data
   const { data: leaderboard = [], isLoading } = useQuery<LeaderboardEntry[]>({
     queryKey: ['/api/leaderboard', timeframe, scope],
     enabled: !!user,
   });
   
-  // Filter leaderboard data by search term
-  const filteredLeaderboard = leaderboard.filter(entry => 
-    entry.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    entry.fullName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Find current user's position in leaderboard
+  const userEntry = user ? leaderboard.find(entry => entry.userId === user.id) : undefined;
   
-  // Find current user's rank
-  const currentUserRank = leaderboard.findIndex(entry => entry.userId === user?.id) + 1;
-  const currentUserEntry = leaderboard.find(entry => entry.userId === user?.id);
-  
-  // Get rank change icon
-  const getRankChangeIcon = (entry: LeaderboardEntry) => {
-    const change = entry.previousRank - entry.rank;
-    
-    if (change > 0) {
-      return <ArrowUp className="h-4 w-4 text-green-500" />;
-    } else if (change < 0) {
-      return <ArrowDown className="h-4 w-4 text-red-500" />;
-    } else {
-      return <Minus className="h-4 w-4 text-gray-400" />;
-    }
+  // Format timeframe for display
+  const timeframeDisplay = {
+    weekly: "This Week",
+    monthly: "This Month",
+    allTime: "All Time"
   };
   
-  // Get timeframe display text
-  const getTimeframeText = () => {
-    switch (timeframe) {
-      case 'weekly':
-        return 'This Week';
-      case 'monthly':
-        return 'This Month';
-      case 'allTime':
-        return 'All Time';
-    }
-  };
-  
-  // Get scope display text
-  const getScopeText = () => {
-    switch (scope) {
-      case 'team':
-        return 'Team';
-      case 'school':
-        return 'School';
-      case 'global':
-        return 'Global';
-    }
-  };
-  
-  // Format user's rank display
-  const formatRank = (rank: number) => {
-    if (rank === 1) return '1st';
-    if (rank === 2) return '2nd';
-    if (rank === 3) return '3rd';
-    return `${rank}th`;
-  };
-  
-  // Render a leaderboard entry
-  const renderLeaderboardEntry = (entry: LeaderboardEntry, index: number) => {
-    const isCurrentUser = entry.userId === user?.id;
-    const isTopThree = index < 3;
-    
-    return (
-      <div 
-        key={entry.userId}
-        className={`
-          flex items-center gap-3 py-2 px-3 rounded-md
-          ${isCurrentUser ? 'bg-primary/10 font-medium' : 'hover:bg-muted/40'}
-          ${index !== filteredLeaderboard.length - 1 ? 'border-b' : ''}
-          transition-colors
-        `}
-      >
-        <div className="flex-shrink-0 w-8 text-center font-semibold">
-          {isTopThree ? (
-            <div className="inline-flex items-center justify-center">
-              {index === 0 && <Trophy className="h-5 w-5 text-amber-500" />}
-              {index === 1 && <Medal className="h-5 w-5 text-slate-400" />}
-              {index === 2 && <Medal className="h-5 w-5 text-amber-700" />}
-            </div>
-          ) : (
-            <span className="text-muted-foreground">{entry.rank}</span>
-          )}
-        </div>
-        
-        <Avatar className="flex-shrink-0 h-8 w-8 border">
-          {entry.profileImage ? (
-            <AvatarImage src={entry.profileImage} alt={entry.fullName} />
-          ) : (
-            <AvatarFallback>
-              {entry.fullName.split(' ').map(n => n[0]).join('').substring(0, 2)}
-            </AvatarFallback>
-          )}
-        </Avatar>
-        
-        <div className="flex-grow truncate">
-          <div className="flex justify-between items-center">
-            <span className="truncate font-medium">
-              {entry.fullName}
-              {isCurrentUser && <span className="text-xs ml-1 opacity-70">(You)</span>}
-            </span>
-            
-            {!compact && (
-              <div className="flex items-center text-xs text-muted-foreground gap-1">
-                <span className="flex items-center gap-0.5">
-                  {getRankChangeIcon(entry)}
-                  <span className="w-6 text-center">{Math.abs(entry.previousRank - entry.rank) || '-'}</span>
-                </span>
-              </div>
-            )}
-          </div>
-          
-          {!compact && (
-            <div className="text-xs text-muted-foreground flex items-center gap-2">
-              <span className="flex items-center gap-1">
-                <Trophy className="h-3 w-3" />
-                <span>{entry.achievements} achievements</span>
-              </span>
-            </div>
-          )}
-        </div>
-        
-        <div className="flex-shrink-0 font-semibold text-primary">
-          {entry.points} pts
-        </div>
-      </div>
-    );
-  };
-  
-  // Loading skeleton
-  const renderSkeleton = () => {
-    return Array(5).fill(0).map((_, i) => (
-      <div key={i} className="flex items-center gap-3 py-2 px-3">
-        <Skeleton className="h-6 w-6 rounded-full" />
-        <Skeleton className="h-8 w-8 rounded-full" />
-        <div className="flex-grow space-y-2">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-3 w-32" />
-        </div>
-        <Skeleton className="h-4 w-16" />
-      </div>
-    ));
+  // Format scope for display
+  const scopeDisplay = {
+    team: "Team",
+    school: "School",
+    global: "Global"
   };
   
   return (
-    <Card className={className}>
-      <CardHeader className={compact ? 'pb-2' : ''}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-amber-500" />
-              <span>{compact ? 'Leaderboard' : `${getScopeText()} Leaderboard`}</span>
+              <Trophy className="h-5 w-5 text-primary" />
+              {title}
             </CardTitle>
-            {!compact && (
-              <CardDescription>
-                {getTimeframeText()} • See how you rank against other athletes
-              </CardDescription>
-            )}
+            <CardDescription>
+              {description}
+            </CardDescription>
           </div>
           
-          {currentUserEntry && !isLoading && (
-            <div className="flex items-center gap-1 px-3 py-1 bg-primary/10 rounded-full text-sm font-medium">
-              <span>Your rank:</span>
-              <span className="text-primary ml-1">{formatRank(currentUserRank)}</span>
-              <span className="mx-1">•</span>
-              <span>{currentUserEntry.points} pts</span>
-            </div>
-          )}
-        </div>
-        
-        {showFilters && !compact && (
-          <div className="flex flex-col sm:flex-row items-center gap-2 mt-4">
-            <div className="w-full flex gap-2">
+          {showFilters && (
+            <div className="flex gap-2">
               <Select
                 value={timeframe}
-                onValueChange={(value) => setTimeframe(value as 'weekly' | 'monthly' | 'allTime')}
+                onValueChange={(value) => setTimeframe(value as LeaderboardTimeframe)}
               >
-                <SelectTrigger className="w-[140px]">
-                  <Clock className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Timeframe" />
+                <SelectTrigger className="w-[120px]">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <SelectValue placeholder="Timeframe" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="weekly">This Week</SelectItem>
@@ -262,59 +116,167 @@ export function Leaderboard({
               
               <Select
                 value={scope}
-                onValueChange={(value) => setScope(value as 'team' | 'school' | 'global')}
+                onValueChange={(value) => setScope(value as LeaderboardScope)}
               >
-                <SelectTrigger className="w-[140px]">
-                  <Users className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Scope" />
+                <SelectTrigger className="w-[120px]">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    <SelectValue placeholder="Scope" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="team">Your Team</SelectItem>
-                  <SelectItem value="school">Your School</SelectItem>
+                  <SelectItem value="team">Team</SelectItem>
+                  <SelectItem value="school">School</SelectItem>
                   <SelectItem value="global">Global</SelectItem>
                 </SelectContent>
               </Select>
-              
-              <div className="relative flex-grow">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search players..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
             </div>
+          )}
+        </div>
+        {!showFilters && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>{timeframeDisplay[timeframe]}</span>
+            <span>•</span>
+            <Users className="h-3.5 w-3.5" />
+            <span>{scopeDisplay[scope]}</span>
           </div>
         )}
       </CardHeader>
-      
-      <CardContent className={compact ? 'pt-0' : ''}>
-        <ScrollArea className={`${compact ? 'max-h-[300px]' : 'max-h-[400px]'}`}>
-          {isLoading ? (
-            renderSkeleton()
-          ) : (
-            <>
-              {filteredLeaderboard.length > 0 ? (
-                filteredLeaderboard.slice(0, limit).map((entry, index) => renderLeaderboardEntry(entry, index))
-              ) : (
-                <div className="py-8 text-center">
-                  <UserCircle2 className="mx-auto h-10 w-10 text-muted-foreground opacity-20" />
-                  <p className="mt-2 text-muted-foreground">No athletes found</p>
+      <CardContent>
+        {isLoading ? (
+          // Loading state
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 py-3">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+              <Skeleton className="h-6 w-12" />
+            </div>
+          ))
+        ) : leaderboard.length > 0 ? (
+          // Leaderboard entries
+          <div className="space-y-1">
+            {leaderboard.slice(0, limit).map((entry, index) => {
+              const isCurrentUser = user?.id === entry.userId;
+              const medalColor = index === 0 ? "text-amber-500" : index === 1 ? "text-slate-400" : index === 2 ? "text-amber-700" : "text-gray-400";
+              
+              return (
+                <div 
+                  key={entry.id} 
+                  className={`
+                    flex items-center gap-3 p-2.5 rounded-md
+                    ${isCurrentUser ? 'bg-primary/10' : 'hover:bg-muted/40'} 
+                    transition-colors
+                  `}
+                >
+                  {/* Rank */}
+                  <div className="font-semibold w-7 text-center flex items-center justify-center">
+                    {index < 3 ? (
+                      <Medal className={`h-5 w-5 ${medalColor}`} />
+                    ) : (
+                      <span className="text-muted-foreground">{index + 1}</span>
+                    )}
+                  </div>
+                  
+                  {/* Avatar */}
+                  <Avatar className="h-8 w-8 border">
+                    <AvatarImage src={entry.profileImage || undefined} alt={`${entry.firstName} ${entry.lastName}`} />
+                    <AvatarFallback>
+                      {entry.firstName.charAt(0)}{entry.lastName.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  {/* User info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center">
+                      <div className="font-medium truncate">
+                        {entry.firstName} {entry.lastName}
+                        {isCurrentUser && (
+                          <span className="ml-1.5 text-xs text-primary">(You)</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center text-xs text-muted-foreground gap-1">
+                      <span className="truncate">{entry.position}</span>
+                      <span>•</span>
+                      <span className="flex items-center">
+                        <Star className="h-3 w-3 mr-1" />
+                        <span>Level {entry.level}</span>
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Points */}
+                  <div className="font-semibold text-primary">
+                    {entry.points} pts
+                  </div>
                 </div>
-              )}
-            </>
-          )}
-        </ScrollArea>
+              );
+            })}
+          </div>
+        ) : (
+          // Empty state
+          <div className="text-center py-6">
+            <Trophy className="h-12 w-12 text-muted-foreground/20 mx-auto mb-3" />
+            <p className="text-muted-foreground">No leaderboard data available yet</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Complete achievements to appear on the leaderboard
+            </p>
+          </div>
+        )}
+        
+        {/* User's position if not in top entries */}
+        {userEntry && !leaderboard.slice(0, limit).some(entry => entry.userId === user?.id) && (
+          <>
+            <div className="my-3 flex items-center gap-2">
+              <div className="flex-grow border-t border-border" />
+              <span className="text-xs text-muted-foreground">Your Position</span>
+              <div className="flex-grow border-t border-border" />
+            </div>
+            
+            <div className="flex items-center gap-3 p-2.5 rounded-md bg-primary/10">
+              {/* Rank */}
+              <div className="font-semibold w-7 text-center">
+                {userEntry.rank}
+              </div>
+              
+              {/* Avatar */}
+              <Avatar className="h-8 w-8 border">
+                <AvatarImage src={userEntry.profileImage || undefined} alt={`${userEntry.firstName} ${userEntry.lastName}`} />
+                <AvatarFallback>
+                  {userEntry.firstName.charAt(0)}{userEntry.lastName.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              
+              {/* User info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center">
+                  <div className="font-medium truncate">
+                    {userEntry.firstName} {userEntry.lastName}
+                    <span className="ml-1.5 text-xs text-primary">(You)</span>
+                  </div>
+                </div>
+                <div className="flex items-center text-xs text-muted-foreground gap-1">
+                  <span className="truncate">{userEntry.position}</span>
+                  <span>•</span>
+                  <span className="flex items-center">
+                    <Star className="h-3 w-3 mr-1" />
+                    <span>Level {userEntry.level}</span>
+                  </span>
+                </div>
+              </div>
+              
+              {/* Points */}
+              <div className="font-semibold text-primary">
+                {userEntry.points} pts
+              </div>
+            </div>
+          </>
+        )}
       </CardContent>
-      
-      {!compact && (
-        <CardFooter className="flex justify-center pt-2">
-          <Button variant="outline" size="sm" className="w-full" disabled={isLoading}>
-            View Full Leaderboard
-          </Button>
-        </CardFooter>
-      )}
     </Card>
   );
 }

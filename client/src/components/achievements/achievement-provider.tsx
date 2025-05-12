@@ -1,91 +1,98 @@
-import { createContext, ReactNode, useContext, useState, useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { useAchievementProgress } from "@/hooks/use-achievement-progress";
-import { Achievement, ACHIEVEMENT_BADGES } from "@/lib/achievement-badges";
-
-// Define the achievement progress type here
-interface AchievementProgress {
-  id: number;
-  athleteId: number;
-  achievementId: string;
-  progress: number;
-  completed: boolean;
-  completedAt?: string;
-  createdAt: string;
-}
-
-interface NewAchievementEvent {
-  achievementId: string;
-  title: string;
-  description: string;
-  points: number;
-  type: string;
-}
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { useAchievementProgress } from '@/hooks/use-achievement-progress';
+import { Achievement, getAchievementById } from '@/lib/achievement-badges';
+import { AchievementEarnedAnimation } from './achievement-earned-animation';
 
 interface AchievementContextType {
-  recentlyUnlocked: NewAchievementEvent[];
-  clearRecentlyUnlocked: () => void;
-  showAchievementUnlock: (achievement: NewAchievementEvent) => void;
+  showUnlockedAchievement: (achievementId: string) => void;
+  checkAndUpdateProgress: (type: string, action: string, value?: number) => void;
+  isAchievementUnlocked: (achievementId: string) => boolean;
+  getAchievementProgress: (achievementId: string) => number;
+  totalPoints: number;
 }
 
-export const AchievementContext = createContext<AchievementContextType | null>(null);
+const AchievementContext = createContext<AchievementContextType | null>(null);
 
-export function AchievementProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+export function useAchievements() {
+  const context = useContext(AchievementContext);
+  if (!context) {
+    throw new Error('useAchievements must be used within an AchievementProvider');
+  }
+  return context;
+}
+
+export function AchievementProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
-  const [recentlyUnlocked, setRecentlyUnlocked] = useState<NewAchievementEvent[]>([]);
+  const { 
+    updateProgress, 
+    isCompleted, 
+    getProgress,
+    totalPoints 
+  } = useAchievementProgress();
+  
+  const [newlyUnlockedAchievement, setNewlyUnlockedAchievement] = useState<Achievement | null>(null);
+  const [showAnimation, setShowAnimation] = useState(false);
 
-  // Query for stored achievements
-  const { data: achievementProgress = [] } = useQuery<AchievementProgress[]>({
-    queryKey: [`/api/athlete/${user?.athlete?.id}/achievements`],
-    enabled: !!user?.athlete?.id,
-  });
+  // Display a newly unlocked achievement with animation
+  const showUnlockedAchievement = (achievementId: string) => {
+    const achievement = getAchievementById(achievementId);
+    if (achievement) {
+      setNewlyUnlockedAchievement(achievement);
+      setShowAnimation(true);
+    }
+  };
 
-  // Function to show achievement unlock notification
-  const showAchievementUnlock = (achievement: NewAchievementEvent) => {
-    setRecentlyUnlocked(prev => [...prev, achievement]);
+  // Check and update progress for achievements based on user actions
+  const checkAndUpdateProgress = (type: string, action: string, value: number = 1) => {
+    // Find achievements that match this action type
+    const matchingAchievements = getMatchingAchievements(type, action);
     
-    // Show toast notification
-    toast({
-      title: "🏆 Achievement Unlocked!",
-      description: (
-        <div className="space-y-1">
-          <p className="font-medium">{achievement.title}</p>
-          <p className="text-sm">{achievement.description}</p>
-          <p className="text-sm font-semibold text-amber-600">+{achievement.points} points</p>
-        </div>
-      ),
-      duration: 5000,
+    // Update progress for each matching achievement
+    matchingAchievements.forEach(achievement => {
+      if (!isCompleted(achievement.id)) {
+        updateProgress(achievement.id, value, achievement);
+      }
     });
   };
 
-  // Clear recently unlocked achievements
-  const clearRecentlyUnlocked = () => {
-    setRecentlyUnlocked([]);
+  // Helper to find achievements that match a specific action
+  const getMatchingAchievements = (type: string, action: string): Achievement[] => {
+    // This is a simplified example - in a real app, you'd have a more 
+    // sophisticated mapping between actions and achievements
+    return [];
   };
 
-  // Achievement context value
-  const contextValue: AchievementContextType = {
-    recentlyUnlocked,
-    clearRecentlyUnlocked,
-    showAchievementUnlock,
+  // Check if an achievement is unlocked
+  const isAchievementUnlocked = (achievementId: string): boolean => {
+    return isCompleted(achievementId);
+  };
+
+  // Get progress for an achievement
+  const getAchievementProgress = (achievementId: string): number => {
+    return getProgress(achievementId);
   };
 
   return (
-    <AchievementContext.Provider value={contextValue}>
+    <AchievementContext.Provider
+      value={{
+        showUnlockedAchievement,
+        checkAndUpdateProgress,
+        isAchievementUnlocked,
+        getAchievementProgress,
+        totalPoints,
+      }}
+    >
       {children}
+      
+      {/* Achievement unlocked animation */}
+      {newlyUnlockedAchievement && (
+        <AchievementEarnedAnimation
+          achievement={newlyUnlockedAchievement}
+          visible={showAnimation}
+          onClose={() => setShowAnimation(false)}
+        />
+      )}
     </AchievementContext.Provider>
   );
-}
-
-// Custom hook to use achievement context
-export function useAchievementContext() {
-  const context = useContext(AchievementContext);
-  if (!context) {
-    throw new Error('useAchievementContext must be used within an AchievementProvider');
-  }
-  return context;
 }
