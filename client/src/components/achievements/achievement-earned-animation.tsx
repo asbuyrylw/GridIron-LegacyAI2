@@ -65,8 +65,14 @@ export function AchievementEarnedAnimation({
                   alt={achievement.name}
                   className="w-32 h-32 relative z-10" 
                   onError={(e) => {
-                    // Fallback to a default image if the badge SVG doesn't exist
-                    e.currentTarget.src = '/badges/default-badge.svg';
+                    // Use a tier-specific fallback if the exact badge doesn't exist
+                    const tierBadges = {
+                      'bronze': '/badges/performance-improvement-bronze.svg',
+                      'silver': '/badges/training-streak-silver.svg',
+                      'gold': '/badges/social-network-gold.svg',
+                      'platinum': '/badges/default-badge.svg'
+                    };
+                    e.currentTarget.src = tierBadges[achievement.tier] || '/badges/default-badge.svg';
                   }}
                 />
               </div>

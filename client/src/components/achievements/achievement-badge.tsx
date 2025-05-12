@@ -97,13 +97,38 @@ export function AchievementBadge({
                 'rounded-full p-1 flex items-center justify-center',
                 isCompleted ? tierColor : 'bg-gray-100'
               )}>
+                {isCompleted ? (
+                // If completed, attempt to show the SVG badge image
+                <div className="relative">
+                  <img 
+                    src={`/badges/${achievement.id}.svg`} 
+                    alt={achievement.name}
+                    className={cn(iconSizes[size])}
+                    onError={(e) => {
+                      // Fallback to the icon if image doesn't exist
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling.style.display = 'block';
+                    }}
+                  />
+                  <Icon 
+                    name={achievement.icon} 
+                    className={cn(
+                      iconSizes[size],
+                      'text-white absolute inset-0',
+                      'hidden' // Hidden by default, shown if image fails to load
+                    )}
+                  />
+                </div>
+              ) : (
+                // If not completed, just show the icon
                 <Icon 
                   name={achievement.icon} 
                   className={cn(
                     iconSizes[size],
-                    isCompleted ? 'text-white' : 'text-gray-400'
+                    'text-gray-400'
                   )}
                 />
+              )}
               </div>
               
               <div className={cn('font-medium mt-1 truncate w-full', fontSizes[size], isCompleted ? tierTextColor : 'text-gray-500')}>
