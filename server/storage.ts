@@ -282,18 +282,24 @@ export interface IStorage {
   getAchievements(category?: string): Promise<Achievement[]>;
   getAchievement(id: number): Promise<Achievement | undefined>;
   createAchievement(achievement: InsertAchievement): Promise<Achievement>;
+  
+  // Athlete Achievement Methods
   getAthleteAchievements(athleteId: number): Promise<AthleteAchievement[]>;
   getAthleteAchievement(athleteId: number, achievementId: number): Promise<AthleteAchievement | undefined>;
   getAthleteAchievementByStringId(athleteId: number, achievementStringId: string): Promise<AthleteAchievement | undefined>;
-  createAthleteAchievement(achievement: InsertAthleteAchievement): Promise<AthleteAchievement>;
+  createAthleteAchievement(athleteAchievement: InsertAthleteAchievement): Promise<AthleteAchievement>;
   updateAthleteAchievement(id: number, updates: Partial<InsertAthleteAchievement>): Promise<AthleteAchievement | undefined>;
+  
+  // Achievement Progress Methods
   getAchievementProgressByUserId(userId: number): Promise<any[]>;
   getAchievementProgressByAthleteId(athleteId: number): Promise<any[]>;
-  updateAchievementProgress(userId: number, achievementStringId: string, progress: number): Promise<any>;
+  updateAchievementProgress(userId: number, achievementId: string, progress: number): Promise<any>;
   
   // Leaderboard Methods
   getLeaderboards(active?: boolean): Promise<Leaderboard[]>;
+  getLeaderboardById(id: number): Promise<Leaderboard | undefined>;
   getLeaderboard(timeframe: string, scope: string): Promise<any[]>;
+  // Additional methods for future implementation
 }
 
 export class MemStorage implements IStorage {
