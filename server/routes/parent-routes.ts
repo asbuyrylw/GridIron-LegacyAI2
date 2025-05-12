@@ -11,18 +11,13 @@ const router = Router();
 // Schema for parent report request
 const parentReportSchema = z.object({
   athleteId: z.number(),
-  frequency: z.enum(['once', 'weekly', 'biweekly', 'monthly']),
-  period: z.enum(['week', 'month', 'season', 'year']),
-  format: z.enum(['email', 'pdf', 'both']),
-  includeMetrics: z.boolean(),
-  includeAchievements: z.boolean(),
-  includeTraining: z.boolean(),
-  includeNutrition: z.boolean(),
-  includeAcademic: z.boolean(),
-  scheduler: z.object({
-    startDate: z.date().optional(),
-    specificDay: z.string().optional(),
-  }),
+  parentIds: z.array(z.number()),
+  reportType: z.enum(['full', 'summary']),
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
+  sections: z.array(z.string()),
+  recurring: z.boolean(),
+  recurringFrequency: z.enum(['weekly', 'biweekly', 'monthly']).optional(),
 });
 
 // Schema for shopping list request
@@ -31,61 +26,63 @@ const shoppingListSchema = z.object({
     id: z.string(),
     name: z.string(),
     category: z.string(),
-    quantity: z.string(),
+    quantity: z.string().optional(),
     selected: z.boolean(),
   })),
+  parentIds: z.array(z.number()),
 });
 
-// Helper function to validate user has access to athlete
+// Helper function to validate athlete access
 async function validateAthleteAccess(req: Request, athleteId: number): Promise<boolean> {
-  // Check if user is logged in
-  if (!req.session.userId) {
-    return false;
-  }
+  if (!req.session) return false;
   
-  const user = await storage.getUser(req.session.userId);
-  if (!user) {
-    return false;
-  }
-  
-  // If user is the athlete, access is granted
-  if (user.userType === 'athlete') {
-    const athlete = await storage.getAthleteByUserId(req.session.userId);
-    return athlete?.id === athleteId;
-  }
-  
-  // If user is a coach, check if they coach this athlete
-  if (user.userType === 'coach') {
-    const coach = await storage.getCoachByUserId(req.session.userId);
-    if (!coach) return false;
+  try {
+    const user = await storage.getUser(req.session.userId as number);
+    if (!user) return false;
     
-    // Get teams coached by this coach
-    const teamIds = await storage.getTeamsByCoachId(coach.id);
-    if (!teamIds.length) return false;
+    // If admin, grant access
+    if (user.userType === 'admin') return true;
     
-    // Check if athlete is on any of these teams
-    for (const teamId of teamIds) {
-      const members = await storage.getTeamMembers(teamId);
-      if (members.some(member => member.athleteId === athleteId)) {
-        return true;
+    // If athlete, check if it's their own data
+    if (user.userType === 'athlete') {
+      const athlete = await storage.getAthlete(athleteId);
+      return athlete?.userId === user.id;
+    }
+    
+    // If coach, check if athlete is on their team
+    if (user.userType === 'coach') {
+      const coach = await storage.getCoachByUserId(user.id);
+      if (!coach) return false;
+      
+      const teams = await storage.getTeamsByCoachId(coach.id);
+      if (!teams.length) return false;
+      
+      // Check if athlete is on any of coach's teams
+      for (const team of teams) {
+        const members = await storage.getTeamMembers(team.id);
+        if (members.some(member => member.athleteId === athleteId)) {
+          return true;
+        }
       }
     }
+    
+    // If parent, check if they have a relationship with the athlete
+    if (user.userType === 'parent') {
+      const parent = await storage.getParentByUserId(user.id);
+      if (!parent) return false;
+      
+      const relationships = await storage.getParentAthleteRelationshipsByParentId(parent.id);
+      return relationships.some(rel => rel.athleteId === athleteId);
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error validating athlete access:', error);
     return false;
   }
-  
-  // If user is a parent, check if they have access to this athlete
-  if (user.userType === 'parent') {
-    const parent = await storage.getParentByUserId(req.session.userId);
-    if (!parent) return false;
-    
-    const relationships = await storage.getParentAthleteRelationshipsByParentId(parent.id);
-    return relationships.some(rel => rel.athleteId === athleteId);
-  }
-  
-  return false;
 }
 
-// Helper function to get eligible parents for athlete communications
+// Helper function to get parents eligible to receive athlete information
 async function getEligibleParents(athleteId: number, requireNutritionAccess: boolean = false): Promise<any[]> {
   try {
     const parentAccesses = await parentAccessService.getParentAccessesByAthleteId(athleteId);
@@ -108,7 +105,7 @@ router.get('/api/athlete/:athleteId/parent-access', async (req: Request, res: Re
     }
     
     const parentAccesses = await parentAccessService.getParentAccessesByAthleteId(athleteId);
-    res.json(parentAccesses);
+    res.json({ parents: parentAccesses });
   } catch (error) {
     console.error('Error getting parent access list:', error);
     res.status(500).json({ message: 'Failed to retrieve parent access list' });
@@ -118,35 +115,58 @@ router.get('/api/athlete/:athleteId/parent-access', async (req: Request, res: Re
 // Route to create a parent invitation
 router.post('/api/athlete/parent-invite', async (req: Request, res: Response) => {
   try {
-    if (!req.session.userId) {
+    if (!req.session?.userId) {
       return res.status(401).json({ message: 'Not authenticated' });
     }
     
-    const user = await storage.getUser(req.session.userId);
-    if (!user || user.userType !== 'athlete') {
-      return res.status(403).json({ message: 'Only athletes can send parent invitations' });
+    const { athleteId, email, name, relationship } = req.body;
+    
+    if (!athleteId || !email || !name || !relationship) {
+      return res.status(400).json({ message: 'Missing required fields' });
     }
     
-    const athlete = await storage.getAthleteByUserId(req.session.userId);
+    // Check if user has access to this athlete
+    if (!(await validateAthleteAccess(req, athleteId))) {
+      return res.status(403).json({ message: 'Not authorized to invite parents for this athlete' });
+    }
+    
+    // Get athlete
+    const athlete = await storage.getAthlete(athleteId);
     if (!athlete) {
-      return res.status(404).json({ message: 'Athlete profile not found' });
+      return res.status(404).json({ message: 'Athlete not found' });
     }
     
-    const { name, email, relationship, receiveUpdates, receiveNutritionInfo } = req.body;
+    // Check if parent already has access
+    const existingAccess = await parentAccessService.getParentAccessByEmail(email, athleteId);
+    if (existingAccess) {
+      if (existingAccess.active) {
+        return res.status(400).json({ message: 'This parent already has access' });
+      } else {
+        // Reactivate the existing access
+        await parentAccessService.updateParentAccess(existingAccess.id, { active: true });
+        return res.json({ success: true, message: 'Parent access has been reactivated' });
+      }
+    }
     
-    const parentAccess = await parentAccessService.inviteParent({
-      athleteId: athlete.id,
-      name,
-      email,
+    // Create new parent access invitation
+    const invite = {
+      athleteId, 
+      email, 
+      name, 
       relationship,
-      receiveUpdates: !!receiveUpdates,
-      receiveNutritionInfo: !!receiveNutritionInfo,
-    });
+      athleteName: `${athlete.firstName} ${athlete.lastName}`,
+    };
     
-    res.status(201).json(parentAccess);
+    const parentAccess = await parentAccessService.inviteParent(invite);
+    
+    res.json({ 
+      success: true, 
+      message: 'Parent invitation sent successfully',
+      parentAccess
+    });
   } catch (error) {
-    console.error('Error creating parent invitation:', error);
-    res.status(500).json({ message: 'Failed to create parent invitation' });
+    console.error('Error inviting parent:', error);
+    res.status(500).json({ message: 'Failed to send parent invitation' });
   }
 });
 
@@ -157,161 +177,244 @@ router.patch('/api/athlete/:athleteId/parent-access/:id', async (req: Request, r
     const accessId = parseInt(req.params.id);
     
     if (!(await validateAthleteAccess(req, athleteId))) {
-      return res.status(403).json({ message: 'Not authorized to modify this athlete\'s parent access' });
+      return res.status(403).json({ message: 'Not authorized to modify parent access for this athlete' });
     }
     
-    const updateData = req.body;
-    const updatedAccess = await parentAccessService.updateParentAccess(accessId, updateData);
+    const updates = req.body;
+    // Only allow certain fields to be updated
+    const allowedUpdates = ['active', 'receiveUpdates', 'receiveNutritionInfo'];
+    Object.keys(updates).forEach(key => {
+      if (!allowedUpdates.includes(key)) {
+        delete updates[key];
+      }
+    });
     
-    if (!updatedAccess) {
-      return res.status(404).json({ message: 'Parent access not found' });
+    const parentAccess = await parentAccessService.updateParentAccess(accessId, updates);
+    if (!parentAccess) {
+      return res.status(404).json({ message: 'Parent access record not found' });
     }
     
-    res.json(updatedAccess);
+    res.json({ 
+      success: true, 
+      message: 'Parent access updated successfully',
+      parentAccess
+    });
   } catch (error) {
     console.error('Error updating parent access:', error);
     res.status(500).json({ message: 'Failed to update parent access' });
   }
 });
 
-// Route to deactivate parent access
+// Route to delete/deactivate parent access
 router.delete('/api/athlete/:athleteId/parent-access/:id', async (req: Request, res: Response) => {
   try {
     const athleteId = parseInt(req.params.athleteId);
     const accessId = parseInt(req.params.id);
     
     if (!(await validateAthleteAccess(req, athleteId))) {
-      return res.status(403).json({ message: 'Not authorized to modify this athlete\'s parent access' });
+      return res.status(403).json({ message: 'Not authorized to modify parent access for this athlete' });
     }
     
     const success = await parentAccessService.deactivateParentAccess(accessId);
-    
     if (!success) {
-      return res.status(404).json({ message: 'Parent access not found' });
+      return res.status(404).json({ message: 'Parent access record not found' });
     }
     
-    res.json({ success });
+    res.json({ 
+      success: true, 
+      message: 'Parent access revoked successfully'
+    });
   } catch (error) {
-    console.error('Error deactivating parent access:', error);
-    res.status(500).json({ message: 'Failed to deactivate parent access' });
+    console.error('Error revoking parent access:', error);
+    res.status(500).json({ message: 'Failed to revoke parent access' });
   }
 });
 
-// Route to generate parent reports
+// Route to send parent report
 router.post('/api/athlete/:athleteId/parent-report', async (req: Request, res: Response) => {
   try {
     const athleteId = parseInt(req.params.athleteId);
     
     if (!(await validateAthleteAccess(req, athleteId))) {
-      return res.status(403).json({ message: 'Not authorized to generate reports for this athlete' });
+      return res.status(403).json({ message: 'Not authorized to send reports for this athlete' });
     }
     
     // Validate request body
     const validationResult = parentReportSchema.safeParse(req.body);
     if (!validationResult.success) {
-      return res.status(400).json({ message: 'Invalid report configuration', errors: validationResult.error.errors });
+      return res.status(400).json({ 
+        message: 'Invalid report data', 
+        errors: validationResult.error.errors 
+      });
     }
     
-    // Get eligible parents
-    const eligibleParents = await getEligibleParents(athleteId);
-    if (eligibleParents.length === 0) {
-      return res.status(400).json({ message: 'No eligible parent recipients found' });
-    }
+    const reportData = validationResult.data;
     
-    // Gather athlete data for the report
+    // Fetch athlete data
     const athlete = await storage.getAthlete(athleteId);
     if (!athlete) {
       return res.status(404).json({ message: 'Athlete not found' });
     }
     
-    const user = await storage.getUser(athlete.userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    // Generate report data
+    const reportContent: any = {
+      athleteName: `${athlete.firstName} ${athlete.lastName}`,
+      dateRange: {
+        start: new Date(reportData.startDate).toLocaleDateString(),
+        end: new Date(reportData.endDate).toLocaleDateString(),
+      },
+      reportType: reportData.reportType,
+      sections: {}
+    };
+    
+    // Include sections based on selection
+    if (reportData.sections.includes('performance')) {
+      // Get performance metrics
+      const metrics = await storage.getCombineMetrics(athleteId);
+      
+      reportContent.sections.performance = {
+        title: 'Performance Metrics',
+        metrics: metrics || {},
+      };
     }
     
-    const athleteName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    if (reportData.sections.includes('training')) {
+      // Get training data
+      const sessions = await storage.getAthleteWorkoutSessions(athleteId);
+      const plans = await storage.getAthleteTrainingPlans(athleteId);
+      
+      reportContent.sections.training = {
+        title: 'Training Summary',
+        sessions: sessions || [],
+        plans: plans || [],
+      };
+    }
     
-    // Generate reports based on configuration
-    const config = validationResult.data;
+    if (reportData.sections.includes('nutrition')) {
+      // Get nutrition data
+      const nutritionPlans = await storage.getAthleteNutritionPlans(athleteId);
+      
+      reportContent.sections.nutrition = {
+        title: 'Nutrition Overview',
+        plans: nutritionPlans?.map(plan => ({
+          title: plan.title,
+          goals: plan.goals,
+          startDate: plan.startDate,
+        })) || [],
+      };
+    }
     
-    // Get metrics if requested
-    let metricsData = null;
-    if (config.includeMetrics) {
-      const metrics = await storage.getAthleteMetrics(athleteId);
-      if (metrics.length > 0) {
-        metricsData = metrics[0]; // Most recent metrics
+    if (reportData.sections.includes('academics')) {
+      // Get academic data
+      reportContent.sections.academics = {
+        title: 'Academic Progress',
+        school: athlete.school,
+        grade: athlete.grade,
+        gpa: athlete.gpa,
+        actScore: athlete.actScore,
+      };
+    }
+    
+    if (reportData.sections.includes('achievements')) {
+      // Get achievements data
+      const achievements = await storage.getAthleteAchievements(athleteId);
+      
+      reportContent.sections.achievements = {
+        title: 'Recent Achievements',
+        achievements: achievements || [],
+      };
+    }
+    
+    if (reportData.sections.includes('upcoming')) {
+      // Get upcoming events
+      const athleteTeams = await storage.getTeamMembershipsByAthlete(athleteId);
+      const upcomingEvents = [];
+      
+      for (const team of athleteTeams) {
+        const events = await storage.getTeamEvents(team.teamId, { upcoming: true });
+        upcomingEvents.push(...events);
+      }
+      
+      reportContent.sections.upcoming = {
+        title: 'Upcoming Events',
+        events: upcomingEvents,
+      };
+    }
+    
+    if (reportData.sections.includes('recommendations')) {
+      // Include coach recommendations
+      reportContent.sections.recommendations = {
+        title: 'Coach Recommendations',
+        recommendations: [
+          'Continue focusing on improving 40-yard dash time',
+          'Work on catching technique during practice',
+          'Maintain consistent sleep schedule for recovery',
+        ],
+      };
+    }
+    
+    // Set up recurring reports if requested
+    if (reportData.recurring) {
+      // Store recurring report schedule in database
+      // This is just a placeholder; actual implementation would depend on your scheduling system
+      console.log(`Scheduled recurring ${reportData.recurringFrequency} report for athlete ${athleteId}`);
+    }
+    
+    // Send reports to selected parents
+    const successfulSends = [];
+    const failedSends = [];
+    
+    for (const parentId of reportData.parentIds) {
+      try {
+        const parentAccess = await parentAccessService.getParentAccessById(parentId);
+        if (!parentAccess || !parentAccess.active) {
+          failedSends.push({
+            parentId,
+            reason: "Parent does not have active access"
+          });
+          continue;
+        }
+        
+        // Send email with report
+        const emailSuccess = await emailService.sendNotification(
+          EmailNotificationType.PERFORMANCE_REPORT,
+          parentAccess.email,
+          parentAccess.name,
+          `${athlete.firstName} ${athlete.lastName}`,
+          reportContent
+        );
+        
+        if (emailSuccess) {
+          successfulSends.push(parentId);
+        } else {
+          failedSends.push({
+            parentId,
+            reason: "Email delivery failed"
+          });
+        }
+      } catch (error) {
+        console.error(`Error sending report to parent ${parentId}:`, error);
+        failedSends.push({
+          parentId,
+          reason: "Error processing report"
+        });
       }
     }
     
-    // Get achievements if requested
-    let achievementsData = null;
-    if (config.includeAchievements) {
-      achievementsData = await storage.getAthleteAchievements(athleteId);
-    }
-    
-    // Get training data if requested
-    let trainingData = null;
-    if (config.includeTraining) {
-      const workouts = await storage.getAthleteWorkoutSessions(athleteId);
-      const plans = await storage.getAthleteTrainingPlans(athleteId);
-      trainingData = { workouts, plans };
-    }
-    
-    // Get nutrition data if requested
-    let nutritionData = null;
-    if (config.includeNutrition) {
-      const plans = await storage.getAthleteNutritionPlans(athleteId);
-      nutritionData = plans.find(plan => plan.active) || null;
-    }
-    
-    // Compile report data
-    const reportData = {
-      athleteName,
-      athleteInfo: {
-        position: athlete.position,
-        school: athlete.school,
-        grade: athlete.grade,
-      },
-      metrics: metricsData,
-      achievements: achievementsData,
-      training: trainingData,
-      nutrition: nutritionData,
-      generatedAt: new Date(),
-      period: config.period,
-    };
-    
-    // For one-time reports, send immediately
-    if (config.frequency === 'once') {
-      // Send to all eligible parents
-      const emailPromises = eligibleParents.map(parent => {
-        return emailService.sendPerformanceUpdate(
-          parent.email,
-          parent.name,
-          athleteName,
-          reportData
-        );
-      });
-      
-      await Promise.all(emailPromises);
-    } else {
-      // For recurring reports, schedule them
-      // In a production app, we would use a job scheduler like node-cron
-      console.log(`Scheduled ${config.frequency} report starting on ${config.scheduler.startDate}`);
-      // This is a placeholder for the scheduling logic
-    }
-    
-    res.json({ 
-      success: true, 
-      message: 'Report generated successfully',
-      recipientCount: eligibleParents.length
+    res.json({
+      success: true,
+      message: `Report sent to ${successfulSends.length} parents`,
+      successfulSends,
+      failedSends,
+      reportContent: reportData.reportType === 'summary' ? null : reportContent,
     });
   } catch (error) {
     console.error('Error generating parent report:', error);
-    res.status(500).json({ message: 'Failed to generate parent report' });
+    res.status(500).json({ message: 'Failed to generate and send parent report' });
   }
 });
 
-// Route to send nutrition shopping lists to parents
+// Route to send nutrition shopping list
 router.post('/api/athlete/:athleteId/nutrition/shopping-list', async (req: Request, res: Response) => {
   try {
     const athleteId = parseInt(req.params.athleteId);
@@ -323,59 +426,103 @@ router.post('/api/athlete/:athleteId/nutrition/shopping-list', async (req: Reque
     // Validate request body
     const validationResult = shoppingListSchema.safeParse(req.body);
     if (!validationResult.success) {
-      return res.status(400).json({ message: 'Invalid shopping list', errors: validationResult.error.errors });
+      return res.status(400).json({ 
+        message: 'Invalid shopping list data', 
+        errors: validationResult.error.errors 
+      });
     }
     
-    // Get eligible parents (those who have opted in for nutrition info)
-    const eligibleParents = await getEligibleParents(athleteId, true);
-    if (eligibleParents.length === 0) {
-      return res.status(400).json({ message: 'No eligible parent recipients found' });
+    const { items, parentIds } = validationResult.data;
+    
+    // Filter only selected items
+    const selectedItems = items.filter(item => item.selected);
+    if (selectedItems.length === 0) {
+      return res.status(400).json({ message: 'No items selected for the shopping list' });
     }
     
-    // Get athlete info
+    // Fetch athlete data
     const athlete = await storage.getAthlete(athleteId);
     if (!athlete) {
       return res.status(404).json({ message: 'Athlete not found' });
     }
     
-    const user = await storage.getUser(athlete.userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    // Get active nutrition plan info
+    const nutritionPlans = await storage.getAthleteNutritionPlans(athleteId);
+    const activePlan = nutritionPlans?.find(plan => plan.active) || nutritionPlans?.[0];
     
-    const athleteName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    // Format shopping list
+    const shoppingListData = {
+      athleteName: `${athlete.firstName} ${athlete.lastName}`,
+      planTitle: activePlan?.title || 'Nutrition Plan',
+      date: new Date().toLocaleDateString(),
+      categories: {} as Record<string, any[]>,
+    };
     
-    // Extract selected items from the shopping list
-    const { items } = validationResult.data;
-    const selectedItems = items
-      .filter(item => item.selected)
-      .map(item => `${item.name}${item.quantity ? ` (${item.quantity})` : ''}`);
-    
-    if (selectedItems.length === 0) {
-      return res.status(400).json({ message: 'No items selected for the shopping list' });
-    }
-    
-    // Send shopping list emails to parents
-    const emailPromises = eligibleParents.map(parent => {
-      return emailService.sendNutritionShoppingList(
-        parent.email,
-        parent.name,
-        athleteName,
-        selectedItems
-      );
+    // Group items by category
+    selectedItems.forEach(item => {
+      if (!shoppingListData.categories[item.category]) {
+        shoppingListData.categories[item.category] = [];
+      }
+      shoppingListData.categories[item.category].push({
+        name: item.name,
+        quantity: item.quantity || '',
+      });
     });
     
-    await Promise.all(emailPromises);
+    // Send shopping list to selected parents
+    const successfulSends = [];
+    const failedSends = [];
     
-    res.json({ 
-      success: true, 
-      message: 'Shopping list sent successfully',
-      recipientCount: eligibleParents.length,
-      itemCount: selectedItems.length
+    for (const parentId of parentIds) {
+      try {
+        const parentAccess = await parentAccessService.getParentAccessById(parentId);
+        if (!parentAccess || !parentAccess.active || !parentAccess.receiveNutritionInfo) {
+          failedSends.push({
+            parentId,
+            reason: "Parent does not have active access or nutrition updates enabled"
+          });
+          continue;
+        }
+        
+        // Format items list for email
+        const itemsList = selectedItems.map(item => {
+          return `${item.name}${item.quantity ? ` (${item.quantity})` : ''}`;
+        });
+        
+        // Send email with shopping list
+        const emailSuccess = await emailService.sendNutritionShoppingList(
+          parentAccess.email,
+          parentAccess.name,
+          `${athlete.firstName} ${athlete.lastName}`,
+          itemsList
+        );
+        
+        if (emailSuccess) {
+          successfulSends.push(parentId);
+        } else {
+          failedSends.push({
+            parentId,
+            reason: "Email delivery failed"
+          });
+        }
+      } catch (error) {
+        console.error(`Error sending shopping list to parent ${parentId}:`, error);
+        failedSends.push({
+          parentId,
+          reason: "Error processing shopping list"
+        });
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: `Shopping list sent to ${successfulSends.length} parents`,
+      successfulSends,
+      failedSends,
     });
   } catch (error) {
-    console.error('Error sending shopping list:', error);
-    res.status(500).json({ message: 'Failed to send shopping list' });
+    console.error('Error sending nutrition shopping list:', error);
+    res.status(500).json({ message: 'Failed to send nutrition shopping list' });
   }
 });
 
@@ -388,53 +535,43 @@ router.get('/api/athlete/:athleteId/nutrition/recommendations', async (req: Requ
       return res.status(403).json({ message: 'Not authorized to access nutrition data for this athlete' });
     }
     
-    // Get active nutrition plan
-    const plans = await storage.getAthleteNutritionPlans(athleteId);
-    const activePlan = plans.find(plan => plan.active);
-    
-    if (!activePlan) {
-      return res.status(404).json({ message: 'No active nutrition plan found' });
+    // Get athlete
+    const athlete = await storage.getAthlete(athleteId);
+    if (!athlete) {
+      return res.status(404).json({ message: 'Athlete not found' });
     }
     
-    // Generate recommended shopping items based on nutrition plan
-    // In a real app, this would probably use an AI model or a nutrition database
-    const recommendedItems = [
-      { name: 'Chicken Breast', category: 'Proteins', quantity: '2 lbs' },
-      { name: 'Salmon', category: 'Proteins', quantity: '1 lb' },
-      { name: 'Greek Yogurt', category: 'Dairy', quantity: '32 oz' },
-      { name: 'Eggs', category: 'Proteins', quantity: '1 dozen' },
-      { name: 'Spinach', category: 'Vegetables', quantity: '2 bunches' },
-      { name: 'Broccoli', category: 'Vegetables', quantity: '1 head' },
-      { name: 'Sweet Potatoes', category: 'Carbohydrates', quantity: '3 medium' },
-      { name: 'Brown Rice', category: 'Carbohydrates', quantity: '1 bag' },
-      { name: 'Quinoa', category: 'Carbohydrates', quantity: '1 box' },
-      { name: 'Blueberries', category: 'Fruits', quantity: '1 pint' },
-      { name: 'Bananas', category: 'Fruits', quantity: '1 bunch' },
-      { name: 'Apples', category: 'Fruits', quantity: '5 medium' },
-      { name: 'Avocados', category: 'Healthy Fats', quantity: '2 medium' },
-      { name: 'Almonds', category: 'Snacks', quantity: '1 bag' },
-      { name: 'Oatmeal', category: 'Carbohydrates', quantity: '1 container' },
-      { name: 'Olive Oil', category: 'Healthy Fats', quantity: '1 bottle' },
-      { name: 'Protein Powder', category: 'Supplements', quantity: '1 container' },
-    ];
+    // Generate sample recommendations based on athlete position
+    const recommendations = {
+      position: athlete.position,
+      grade: athlete.grade,
+      items: [
+        { name: 'Chicken Breast', category: 'Proteins', quantity: '3 lbs' },
+        { name: 'Salmon', category: 'Proteins', quantity: '1 lb' },
+        { name: 'Greek Yogurt', category: 'Dairy', quantity: '32 oz container' },
+        { name: 'Eggs', category: 'Proteins', quantity: '1 dozen' },
+        { name: 'Spinach', category: 'Vegetables', quantity: '1 large bag' },
+        { name: 'Broccoli', category: 'Vegetables', quantity: '2 bunches' },
+        { name: 'Sweet Potatoes', category: 'Carbohydrates', quantity: '3 medium' },
+        { name: 'Brown Rice', category: 'Carbohydrates', quantity: '2 lb bag' },
+        { name: 'Quinoa', category: 'Carbohydrates', quantity: '1 lb bag' },
+        { name: 'Bananas', category: 'Fruits', quantity: '1 bunch' },
+        { name: 'Blueberries', category: 'Fruits', quantity: '1 pint' },
+        { name: 'Avocados', category: 'Healthy Fats', quantity: '3 medium' },
+        { name: 'Olive Oil', category: 'Healthy Fats', quantity: '1 bottle' },
+        { name: 'Almonds', category: 'Nuts & Seeds', quantity: '1 bag' },
+        { name: 'Protein Powder', category: 'Supplements', quantity: '1 container' }
+      ]
+    };
     
-    // If there are dietary restrictions, filter the recommendations
-    if (activePlan.restrictions) {
-      // Logic to filter items based on restrictions would go here
-      // For example, removing dairy products if lactose intolerant
-    }
-    
-    res.json({
-      plan: activePlan,
-      items: recommendedItems
-    });
+    res.json(recommendations);
   } catch (error) {
     console.error('Error getting nutrition recommendations:', error);
     res.status(500).json({ message: 'Failed to get nutrition recommendations' });
   }
 });
 
-// Route to access parent dashboard
+// Access parent dashboard via token (no authentication needed)
 router.get('/api/parent/access', async (req: Request, res: Response) => {
   try {
     const { token } = req.query;
@@ -443,27 +580,28 @@ router.get('/api/parent/access', async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Access token is required' });
     }
     
+    // Get parent access using token
     const parentAccess = await parentAccessService.getParentAccessByToken(token);
-    
-    if (!parentAccess || !parentAccess.active) {
-      return res.status(403).json({ message: 'Invalid or expired access token' });
+    if (!parentAccess) {
+      return res.status(404).json({ message: 'Invalid access token or access has been revoked' });
     }
     
+    // If access is not active, return error
+    if (!parentAccess.active) {
+      return res.status(403).json({ message: 'Access has been revoked' });
+    }
+    
+    // Get athlete information
     const athlete = await storage.getAthlete(parentAccess.athleteId);
     if (!athlete) {
       return res.status(404).json({ message: 'Athlete not found' });
     }
     
-    const user = await storage.getUser(athlete.userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    
-    // For security, only send necessary athlete information
+    // Prepare limited athlete data for parent viewing
     const athleteData = {
       id: athlete.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      firstName: athlete.firstName,
+      lastName: athlete.lastName,
       position: athlete.position,
       school: athlete.school,
       grade: athlete.grade,
@@ -480,4 +618,4 @@ router.get('/api/parent/access', async (req: Request, res: Response) => {
   }
 });
 
-export default router;
+export { router };

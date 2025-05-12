@@ -8,6 +8,7 @@ import { setupAuth } from "./auth";
 import session from "express-session";
 import { registerCollegeMatcherRoutes } from "./routes/college-matcher-routes";
 import { registerSavedCollegesRoutes } from "./routes/saved-colleges-routes";
+import { Router } from "express";
 
 // Extend the Express Session type to include our onboarding progress
 declare module "express-session" {
@@ -4709,200 +4710,14 @@ function registerSocialRoutes(app: Express): void {
 
 // Parent Dashboard API routes
 function registerParentRoutes(app: Express): void {
-  // Import parent access service here to avoid circular dependencies
-  import("./parent-access-service").then(({ parentAccessService }) => {
-    
-    // Test route for generating parent access tokens (development only)
-    app.post("/api/test/generate-parent-access", async (req, res, next) => {
-      try {
-        const { athleteId } = req.body;
-        
-        if (!athleteId) {
-          return res.status(400).json({ message: "Athlete ID is required" });
-        }
-        
-        // Get athlete
-        const athlete = await storage.getAthlete(athleteId);
-        if (!athlete) {
-          return res.status(404).json({ message: "Athlete not found" });
-        }
-        
-        // Get user information
-        const user = await storage.getUser(athlete.userId);
-        if (!user) {
-          return res.status(404).json({ message: "User not found" });
-        }
-        
-        // Generate a test parent access
-        const testParentAccess = {
-          athleteId,
-          email: "testparent@example.com",
-          name: "Test Parent",
-          relationship: "Parent",
-          receiveUpdates: true,
-          receiveNutritionInfo: true,
-          active: true
-        };
-        
-        const parentAccess = await parentAccessService.createParentAccess(testParentAccess);
-        
-        res.json({
-          token: parentAccess.accessToken,
-          parentAccess
-        });
-      } catch (error) {
-        next(error);
-      }
-    });
-    
-    // NEW PARENT ACCESS ROUTES
-    
-    // Access parent dashboard via token (no authentication needed)
-    app.get("/api/parent/access", async (req, res, next) => {
-      try {
-        const { token } = req.query;
-        
-        if (!token || typeof token !== 'string') {
-          return res.status(400).json({ message: "Valid access token is required" });
-        }
-        
-        const parentAccess = await parentAccessService.getParentAccessByToken(token);
-        
-        if (!parentAccess || !parentAccess.active) {
-          return res.status(404).json({ message: "Invalid or expired access token" });
-        }
-        
-        // Get athlete information
-        const athlete = await storage.getAthlete(parentAccess.athleteId);
-        if (!athlete) {
-          return res.status(404).json({ message: "Athlete not found" });
-        }
-        
-        // Get user information
-        const user = await storage.getUser(athlete.userId);
-        if (!user) {
-          return res.status(404).json({ message: "User not found" });
-        }
-        
-        // Return parent access info and basic athlete info
-        res.json({
-          parentAccess,
-          athlete: {
-            ...athlete,
-            firstName: user.firstName,
-            lastName: user.lastName
-          }
-        });
-      } catch (error) {
-        next(error);
-      }
-    });
-    
-    // Get athlete metrics (requires token)
-    app.get("/api/athlete/:athleteId/metrics", async (req, res, next) => {
-      try {
-        const { token } = req.query;
-        
-        if (!token || typeof token !== 'string') {
-          return res.status(400).json({ message: "Valid access token is required" });
-        }
-        
-        const parentAccess = await parentAccessService.getParentAccessByToken(token);
-        
-        if (!parentAccess || !parentAccess.active) {
-          return res.status(404).json({ message: "Invalid or expired access token" });
-        }
-        
-        const athleteId = parseInt(req.params.athleteId);
-        
-        // Ensure the parent is requesting data for the athlete they have access to
-        if (parentAccess.athleteId !== athleteId) {
-          return res.status(403).json({ message: "Access denied" });
-        }
-        
-        // Get athlete combine metrics
-        const metrics = await storage.getCombineMetrics(athleteId);
-        
-        res.json(metrics || []);
-      } catch (error) {
-        next(error);
-      }
-    });
-    
-    // Get athlete performance insights (requires token)
-    app.get("/api/athlete/:athleteId/performance/insights", async (req, res, next) => {
-      try {
-        const { token } = req.query;
-        
-        if (!token || typeof token !== 'string') {
-          return res.status(400).json({ message: "Valid access token is required" });
-        }
-        
-        const parentAccess = await parentAccessService.getParentAccessByToken(token);
-        
-        if (!parentAccess || !parentAccess.active) {
-          return res.status(404).json({ message: "Invalid or expired access token" });
-        }
-        
-        const athleteId = parseInt(req.params.athleteId);
-        
-        // Ensure the parent is requesting data for the athlete they have access to
-        if (parentAccess.athleteId !== athleteId) {
-          return res.status(403).json({ message: "Access denied" });
-        }
-        
-        // Get athlete performance insights
-        const insights = await storage.getPerformanceInsights(athleteId);
-        
-        if (!insights) {
-          // Get most recent metrics to generate insights
-          const metrics = await storage.getCombineMetricsByAthleteId(athleteId);
-          const latestMetric = metrics && metrics.length > 0 ? metrics[0] : null;
-          
-          if (!latestMetric) {
-            return res.status(404).json({ message: "No metrics available to generate insights" });
-          }
-          
-          // Get athlete for position
-          const athlete = await storage.getAthlete(athleteId);
-          
-          if (!athlete) {
-            return res.status(404).json({ message: "Athlete not found" });
-          }
-          
-          // Generate insights using the performance insights generator
-          const { generatePerformanceInsights } = await import('./performance-insights');
-          const generatedInsights = await generatePerformanceInsights(latestMetric, athlete.position);
-          
-          // Save the insights for future use
-          await storage.createPerformanceInsights(generatedInsights);
-          
-          return res.json(generatedInsights);
-        }
-        
-        res.json(insights);
-      } catch (error) {
-        next(error);
-      }
-    });
-    
-    // Get athlete nutrition plan (requires token)
-    app.get("/api/athlete/:athleteId/nutrition/plan", async (req, res, next) => {
-      try {
-        const { token } = req.query;
-        
-        if (!token || typeof token !== 'string') {
-          return res.status(400).json({ message: "Valid access token is required" });
-        }
-        
-        const parentAccess = await parentAccessService.getParentAccessByToken(token);
-        
-        if (!parentAccess || !parentAccess.active) {
-          return res.status(404).json({ message: "Invalid or expired access token" });
-        }
-        
-        const athleteId = parseInt(req.params.athleteId);
-        
+  try {
+    const parentRoutes = require('./routes/parent-routes');
+    app.use(parentRoutes.router);
+    console.log("Parent routes loaded successfully");
+  } catch (error) {
+    console.error("Error loading parent routes:", error);
+  }
+}
         // Ensure the parent is requesting data for the athlete they have access to
         if (parentAccess.athleteId !== athleteId) {
           return res.status(403).json({ message: "Access denied" });

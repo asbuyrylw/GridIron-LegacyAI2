@@ -1,357 +1,389 @@
-import React, { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DatePicker } from "@/components/ui/date-picker";
-import { ArrowRight, Calendar, FileText, Loader2, Mail } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { z } from 'zod';
+import { useToast } from '@/hooks/use-toast';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Loader2, Send, Calendar, FileText, AlertTriangle } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 
 interface ParentReportGeneratorProps {
   athleteId: number;
 }
 
-type ReportFrequency = "once" | "weekly" | "biweekly" | "monthly";
-type ReportPeriod = "week" | "month" | "season" | "year";
-type ReportFormat = "email" | "pdf" | "both";
-
-interface ReportConfig {
-  frequency: ReportFrequency;
-  period: ReportPeriod;
-  format: ReportFormat;
-  includeMetrics: boolean;
-  includeAchievements: boolean;
-  includeTraining: boolean;
-  includeNutrition: boolean;
-  includeAcademic: boolean;
-  scheduler: {
-    startDate: Date | undefined;
-    specificDay?: string;
-  };
+interface ParentAccess {
+  id: number;
+  email: string;
+  name: string;
+  relationship: string;
+  active: boolean;
 }
+
+// Define report sections
+const reportSections = [
+  { id: 'performance', label: 'Performance Metrics' },
+  { id: 'academics', label: 'Academic Progress' },
+  { id: 'training', label: 'Training Summary' },
+  { id: 'achievements', label: 'Recent Achievements' },
+  { id: 'upcoming', label: 'Upcoming Events' },
+  { id: 'nutrition', label: 'Nutrition Overview' },
+  { id: 'recommendations', label: 'Coach Recommendations' },
+];
 
 export function ParentReportGenerator({ athleteId }: ParentReportGeneratorProps) {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"once" | "recurring">("once");
+  const [reportType, setReportType] = useState<'full' | 'summary'>('full');
+  const [dateRange, setDateRange] = useState<'week' | 'month' | 'quarter' | 'custom'>('month');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [selectedParents, setSelectedParents] = useState<number[]>([]);
+  const [selectedSections, setSelectedSections] = useState<string[]>(reportSections.map(section => section.id));
+  const [scheduleRecurring, setScheduleRecurring] = useState(false);
+  const [recurringFrequency, setRecurringFrequency] = useState<'weekly' | 'biweekly' | 'monthly'>('monthly');
   
-  // Report configuration state
-  const [reportConfig, setReportConfig] = useState<ReportConfig>({
-    frequency: "once",
-    period: "month",
-    format: "email",
-    includeMetrics: true,
-    includeAchievements: true,
-    includeTraining: true,
-    includeNutrition: true,
-    includeAcademic: true,
-    scheduler: {
-      startDate: undefined,
-    },
+  // Fetch parent access list
+  const { data: parentAccessList, isLoading: loadingParents } = useQuery({
+    queryKey: ['/api/athlete', athleteId, 'parent-access'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/athlete/${athleteId}/parent-access`);
+      return response.json();
+    }
   });
   
-  // Report generation mutation
+  // Select all parents by default when list loads
+  useEffect(() => {
+    if (parentAccessList?.parents && parentAccessList.parents.length > 0) {
+      setSelectedParents(parentAccessList.parents
+        .filter((parent: ParentAccess) => parent.active)
+        .map((parent: ParentAccess) => parent.id));
+    }
+  }, [parentAccessList]);
+  
+  // Handle date range changes
+  useEffect(() => {
+    const now = new Date();
+    let start = new Date();
+    
+    switch(dateRange) {
+      case 'week':
+        start.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        start.setMonth(now.getMonth() - 1);
+        break;
+      case 'quarter':
+        start.setMonth(now.getMonth() - 3);
+        break;
+      case 'custom':
+        // Don't update dates for custom range
+        return;
+    }
+    
+    setStartDate(start);
+    setEndDate(now);
+  }, [dateRange]);
+  
+  // Toggle section selection
+  const toggleSection = (sectionId: string) => {
+    if (selectedSections.includes(sectionId)) {
+      setSelectedSections(selectedSections.filter(id => id !== sectionId));
+    } else {
+      setSelectedSections([...selectedSections, sectionId]);
+    }
+  };
+  
+  // Toggle parent selection
+  const toggleParent = (parentId: number) => {
+    if (selectedParents.includes(parentId)) {
+      setSelectedParents(selectedParents.filter(id => id !== parentId));
+    } else {
+      setSelectedParents([...selectedParents, parentId]);
+    }
+  };
+  
+  // Select all sections
+  const selectAllSections = () => {
+    setSelectedSections(reportSections.map(section => section.id));
+  };
+  
+  // Clear all sections
+  const clearSections = () => {
+    setSelectedSections([]);
+  };
+  
+  // Select all parents
+  const selectAllParents = () => {
+    if (parentAccessList?.parents) {
+      setSelectedParents(parentAccessList.parents
+        .filter((parent: ParentAccess) => parent.active)
+        .map((parent: ParentAccess) => parent.id));
+    }
+  };
+  
+  // Clear all parents
+  const clearParents = () => {
+    setSelectedParents([]);
+  };
+  
+  // Generate and send report mutation
   const generateReportMutation = useMutation({
-    mutationFn: async (config: ReportConfig) => {
-      const response = await apiRequest(
-        "POST", 
-        `/api/athlete/${athleteId}/parent-report`,
-        { ...config, athleteId }
-      );
+    mutationFn: async () => {
+      if (!startDate || !endDate) {
+        throw new Error('Please select a date range for the report');
+      }
+      
+      if (selectedParents.length === 0) {
+        throw new Error('Please select at least one parent to receive the report');
+      }
+      
+      if (selectedSections.length === 0) {
+        throw new Error('Please select at least one section to include in the report');
+      }
+      
+      const reportData = {
+        athleteId,
+        parentIds: selectedParents,
+        reportType,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        sections: selectedSections,
+        recurring: scheduleRecurring,
+        recurringFrequency: scheduleRecurring ? recurringFrequency : undefined
+      };
+      
+      const response = await apiRequest('POST', `/api/athlete/${athleteId}/parent-report`, reportData);
       return response.json();
     },
     onSuccess: () => {
       toast({
-        title: activeTab === "once" ? "Report generated successfully" : "Recurring reports scheduled",
-        description: activeTab === "once" 
-          ? "The report has been sent to the parent's email."
-          : `The ${reportConfig.frequency} reports will be sent starting ${reportConfig.scheduler.startDate?.toLocaleDateString()}.`,
+        title: "Report sent successfully",
+        description: scheduleRecurring 
+          ? `Recurring reports will be sent ${recurringFrequency}` 
+          : "The report has been sent to the selected parents",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to generate report",
+        title: "Failed to send report",
         description: error.message,
         variant: "destructive",
       });
-    },
-  });
-  
-  // Handle checkbox change
-  const handleCheckboxChange = (field: keyof Omit<ReportConfig, "frequency" | "period" | "format" | "scheduler">) => {
-    setReportConfig((prev) => ({
-      ...prev,
-      [field]: !prev[field],
-    }));
-  };
-  
-  // Handle select change
-  const handleSelectChange = (field: "frequency" | "period" | "format", value: string) => {
-    setReportConfig((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-  
-  // Handle date change
-  const handleDateChange = (date: Date | undefined) => {
-    setReportConfig((prev) => ({
-      ...prev,
-      scheduler: {
-        ...prev.scheduler,
-        startDate: date,
-      },
-    }));
-  };
-  
-  // Handle day of week selection
-  const handleDaySelect = (day: string) => {
-    setReportConfig((prev) => ({
-      ...prev,
-      scheduler: {
-        ...prev.scheduler,
-        specificDay: day,
-      },
-    }));
-  };
-  
-  // Handle report generation
-  const handleGenerateReport = () => {
-    // Set the frequency based on active tab
-    const config = {
-      ...reportConfig,
-      frequency: activeTab === "recurring" ? reportConfig.frequency : "once",
-    };
-    
-    // Validate configuration
-    if (activeTab === "recurring" && !config.scheduler.startDate) {
-      toast({
-        title: "Missing start date",
-        description: "Please select a start date for recurring reports.",
-        variant: "destructive",
-      });
-      return;
     }
-    
-    // Execute the mutation
-    generateReportMutation.mutate(config);
-  };
+  });
   
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Parent Report Generator
+        <CardTitle className="flex items-center">
+          <FileText className="mr-2 h-5 w-5" />
+          Generate Parent Report
         </CardTitle>
         <CardDescription>
-          Generate detailed reports for parents to track athlete progress
+          Create and send reports to keep parents updated on your progress
         </CardDescription>
       </CardHeader>
       
-      <CardContent>
-        <Tabs 
-          defaultValue="once" 
-          value={activeTab} 
-          onValueChange={(value) => setActiveTab(value as "once" | "recurring")}
-          className="space-y-4"
-        >
-          <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="once">One-Time Report</TabsTrigger>
-            <TabsTrigger value="recurring">Recurring Reports</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="once" className="space-y-4">
-            <div className="space-y-2">
-              <Label>Report Period</Label>
-              <Select
-                value={reportConfig.period}
-                onValueChange={(value) => handleSelectChange("period", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select period" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="week">Past Week</SelectItem>
-                  <SelectItem value="month">Past Month</SelectItem>
-                  <SelectItem value="season">Current Season</SelectItem>
-                  <SelectItem value="year">Past Year</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Delivery Format</Label>
-              <Select
-                value={reportConfig.format}
-                onValueChange={(value) => handleSelectChange("format", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select format" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="email">Email Report</SelectItem>
-                  <SelectItem value="pdf">PDF Download</SelectItem>
-                  <SelectItem value="both">Both Email & PDF</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="recurring" className="space-y-4">
-            <div className="space-y-2">
-              <Label>Report Frequency</Label>
-              <Select
-                value={reportConfig.frequency}
-                onValueChange={(value) => handleSelectChange("frequency", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select frequency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="biweekly">Bi-Weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Start Date</Label>
-              <DatePicker
-                date={reportConfig.scheduler.startDate}
-                setDate={handleDateChange}
-                className="w-full"
+      <CardContent className="space-y-6">
+        {/* Report Type */}
+        <div className="space-y-3">
+          <h3 className="font-medium">Report Type</h3>
+          <div className="flex space-x-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="radio"
+                id="full-report"
+                checked={reportType === 'full'}
+                onChange={() => setReportType('full')}
+                className="h-4 w-4 rounded-full text-primary"
               />
+              <Label htmlFor="full-report">Full Report</Label>
             </div>
-            
-            {reportConfig.frequency === "weekly" && (
-              <div className="space-y-2">
-                <Label>Day of Week</Label>
-                <Select
-                  value={reportConfig.scheduler.specificDay || "Monday"}
-                  onValueChange={handleDaySelect}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select day" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Monday">Monday</SelectItem>
-                    <SelectItem value="Tuesday">Tuesday</SelectItem>
-                    <SelectItem value="Wednesday">Wednesday</SelectItem>
-                    <SelectItem value="Thursday">Thursday</SelectItem>
-                    <SelectItem value="Friday">Friday</SelectItem>
-                    <SelectItem value="Saturday">Saturday</SelectItem>
-                    <SelectItem value="Sunday">Sunday</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label>Delivery Format</Label>
-              <Select
-                value={reportConfig.format}
-                onValueChange={(value) => handleSelectChange("format", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select format" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="email">Email Report</SelectItem>
-                  <SelectItem value="pdf">PDF Download</SelectItem>
-                  <SelectItem value="both">Both Email & PDF</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </TabsContent>
-          
-          <div className="pt-4 space-y-4">
-            <div>
-              <h3 className="text-sm font-medium mb-3">Include in Report</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="includeMetrics" 
-                    checked={reportConfig.includeMetrics}
-                    onCheckedChange={() => handleCheckboxChange("includeMetrics")}
-                  />
-                  <Label htmlFor="includeMetrics">Performance Metrics</Label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="includeAchievements" 
-                    checked={reportConfig.includeAchievements}
-                    onCheckedChange={() => handleCheckboxChange("includeAchievements")}
-                  />
-                  <Label htmlFor="includeAchievements">Achievements</Label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="includeTraining" 
-                    checked={reportConfig.includeTraining}
-                    onCheckedChange={() => handleCheckboxChange("includeTraining")}
-                  />
-                  <Label htmlFor="includeTraining">Training Activity</Label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="includeNutrition" 
-                    checked={reportConfig.includeNutrition}
-                    onCheckedChange={() => handleCheckboxChange("includeNutrition")}
-                  />
-                  <Label htmlFor="includeNutrition">Nutrition Plan</Label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="includeAcademic" 
-                    checked={reportConfig.includeAcademic}
-                    onCheckedChange={() => handleCheckboxChange("includeAcademic")}
-                  />
-                  <Label htmlFor="includeAcademic">Academic Standing</Label>
-                </div>
-              </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="radio"
+                id="summary-report"
+                checked={reportType === 'summary'}
+                onChange={() => setReportType('summary')}
+                className="h-4 w-4 rounded-full text-primary"
+              />
+              <Label htmlFor="summary-report">Summary Report</Label>
             </div>
           </div>
-        </Tabs>
+        </div>
+        
+        {/* Date Range */}
+        <div className="space-y-3">
+          <h3 className="font-medium">Time Period</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <Select value={dateRange} onValueChange={(value) => setDateRange(value as any)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select time period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="week">Past Week</SelectItem>
+                <SelectItem value="month">Past Month</SelectItem>
+                <SelectItem value="quarter">Past Quarter</SelectItem>
+                <SelectItem value="custom">Custom Range</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {dateRange === 'custom' && (
+              <div className="col-span-2 grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="start-date" className="mb-2 block">Start Date</Label>
+                  <DatePicker date={startDate} setDate={setStartDate} label="Start date" />
+                </div>
+                <div>
+                  <Label htmlFor="end-date" className="mb-2 block">End Date</Label>
+                  <DatePicker date={endDate} setDate={setEndDate} label="End date" />
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {startDate && endDate && (
+            <div className="text-sm text-muted-foreground flex items-center">
+              <Calendar className="w-4 h-4 mr-1" />
+              {startDate.toLocaleDateString()} to {endDate.toLocaleDateString()}
+            </div>
+          )}
+        </div>
+        
+        <Separator />
+        
+        {/* Report Sections */}
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <h3 className="font-medium">Report Sections</h3>
+            <div className="flex space-x-2">
+              <Button variant="outline" size="sm" onClick={selectAllSections}>
+                Select All
+              </Button>
+              <Button variant="outline" size="sm" onClick={clearSections}>
+                Clear
+              </Button>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            {reportSections.map((section) => (
+              <div key={section.id} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`section-${section.id}`}
+                  checked={selectedSections.includes(section.id)}
+                  onCheckedChange={() => toggleSection(section.id)}
+                />
+                <Label htmlFor={`section-${section.id}`}>{section.label}</Label>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <Separator />
+        
+        {/* Parents */}
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <h3 className="font-medium">Recipients</h3>
+            <div className="flex space-x-2">
+              <Button variant="outline" size="sm" onClick={selectAllParents}>
+                Select All
+              </Button>
+              <Button variant="outline" size="sm" onClick={clearParents}>
+                Clear
+              </Button>
+            </div>
+          </div>
+          
+          {loadingParents ? (
+            <div className="py-2 flex items-center justify-center">
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              <span>Loading parents...</span>
+            </div>
+          ) : parentAccessList?.parents && parentAccessList.parents.length > 0 ? (
+            <div className="grid grid-cols-1 gap-2">
+              {parentAccessList.parents
+                .filter((parent: ParentAccess) => parent.active)
+                .map((parent: ParentAccess) => (
+                  <div key={parent.id} className="flex items-center space-x-2 p-2 rounded-md border">
+                    <Checkbox 
+                      id={`parent-${parent.id}`}
+                      checked={selectedParents.includes(parent.id)}
+                      onCheckedChange={() => toggleParent(parent.id)}
+                    />
+                    <div>
+                      <Label htmlFor={`parent-${parent.id}`} className="font-medium">{parent.name}</Label>
+                      <div className="text-sm text-muted-foreground">{parent.email} • {parent.relationship}</div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <div className="py-4 text-center text-muted-foreground">
+              <AlertTriangle className="h-5 w-5 mx-auto mb-2" />
+              <p>No parents have access yet. Invite a parent first.</p>
+            </div>
+          )}
+        </div>
+        
+        <Separator />
+        
+        {/* Recurring settings */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium">Schedule Recurring Reports</h3>
+              <p className="text-sm text-muted-foreground">Send reports automatically on a regular schedule</p>
+            </div>
+            <Switch
+              checked={scheduleRecurring}
+              onCheckedChange={setScheduleRecurring}
+            />
+          </div>
+          
+          {scheduleRecurring && (
+            <Select 
+              value={recurringFrequency} 
+              onValueChange={(value) => setRecurringFrequency(value as any)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select frequency" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="biweekly">Bi-weekly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       </CardContent>
       
       <CardFooter className="flex justify-between">
+        <Button variant="outline">Preview Report</Button>
         <Button 
-          variant="outline" 
-          type="button"
-          onClick={() => setActiveTab(activeTab === "once" ? "recurring" : "once")}
+          onClick={() => generateReportMutation.mutate()}
+          disabled={generateReportMutation.isPending || selectedParents.length === 0 || selectedSections.length === 0}
         >
-          {activeTab === "once" ? "Set up Recurring" : "Switch to One-Time"}
-        </Button>
-        <Button
-          type="button"
-          onClick={handleGenerateReport}
-          disabled={generateReportMutation.isPending}
-        >
-          {generateReportMutation.isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
-            </>
-          ) : activeTab === "once" ? (
-            <>
-              <Mail className="mr-2 h-4 w-4" />
-              Generate Report
-            </>
-          ) : (
-            <>
-              <Calendar className="mr-2 h-4 w-4" />
-              Schedule Reports
-            </>
+          {generateReportMutation.isPending && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           )}
+          {!generateReportMutation.isPending && (
+            <Send className="mr-2 h-4 w-4" />
+          )}
+          {scheduleRecurring ? 'Schedule Reports' : 'Send Report'}
         </Button>
       </CardFooter>
     </Card>
