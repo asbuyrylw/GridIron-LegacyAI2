@@ -27,13 +27,13 @@ import {
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { 
   Achievement, 
-  AchievementType, 
+  AchievementCategory, 
   ACHIEVEMENT_BADGES, 
   getAchievementById 
 } from "@/lib/achievement-badges";
 
-// Achievement type to icon mapping
-const typeIcons = {
+// Achievement category to icon mapping
+const categoryIcons = {
   performance: Activity,
   training: Dumbbell,
   nutrition: Utensils,
@@ -43,8 +43,8 @@ const typeIcons = {
   academic: BookOpen,
 };
 
-// Achievement colors by type
-const typeColors = {
+// Achievement colors by category
+const categoryColors = {
   performance: "#3b82f6", // blue
   training: "#10b981", // green
   nutrition: "#f59e0b", // amber
@@ -63,12 +63,12 @@ export function AchievementsShowcase() {
     enabled: !!user?.athlete?.id,
   });
   
-  // Group frontend achievements by type
-  const achievementsByType = ACHIEVEMENT_BADGES.reduce((acc: Record<string, Achievement[]>, achievement) => {
-    if (!acc[achievement.type]) {
-      acc[achievement.type] = [];
+  // Group frontend achievements by category
+  const achievementsByCategory = ACHIEVEMENT_BADGES.reduce((acc: Record<string, Achievement[]>, achievement) => {
+    if (!acc[achievement.category]) {
+      acc[achievement.category] = [];
     }
-    acc[achievement.type].push(achievement);
+    acc[achievement.category].push(achievement);
     return acc;
   }, {});
   
@@ -80,7 +80,7 @@ export function AchievementsShowcase() {
   
   // Map frontend achievements with progress data
   const achievementsWithProgress = ACHIEVEMENT_BADGES.map(achievement => {
-    const achievementId = parseInt(achievement.id);
+    const achievementId = achievement.id;
     const athleteAchievement = athleteAchievementMap[achievementId];
     return {
       ...achievement,

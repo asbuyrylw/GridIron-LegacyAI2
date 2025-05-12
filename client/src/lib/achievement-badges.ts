@@ -224,3 +224,6 @@ export function getTierValue(tier: TierType): number {
     default: return 0;
   }
 }
+
+// Export the achievements array with the name ACHIEVEMENT_BADGES for consistency across components
+export const ACHIEVEMENT_BADGES = achievementData;
