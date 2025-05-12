@@ -1,7 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAchievementProgress } from '@/hooks/use-achievement-progress';
-import { Achievement, getAchievementById } from '@/lib/achievement-badges';
+import { 
+  Achievement, 
+  getAchievementById, 
+  getAllAchievements,
+  AchievementCategory 
+} from '@/lib/achievement-badges';
 import { AchievementEarnedAnimation } from './achievement-earned-animation';
 
 interface AchievementContextType {
@@ -40,6 +45,13 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
     if (achievement) {
       setNewlyUnlockedAchievement(achievement);
       setShowAnimation(true);
+      
+      // Show toast notification
+      toast({
+        title: "Achievement Unlocked!",
+        description: `${achievement.name} - ${achievement.description}`,
+        duration: 5000,
+      });
     }
   };
 
@@ -51,10 +63,11 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
     // Update progress for each matching achievement
     matchingAchievements.forEach(achievement => {
       if (!isCompleted(achievement.id)) {
+        const currentProgress = getProgress(achievement.id);
         updateProgress(achievement.id, value, achievement);
         
         // Check if this update completes the achievement
-        if (getProgress(achievement.id) + value >= achievement.progressMax) {
+        if (currentProgress + value >= achievement.progressMax) {
           // Show the achievement unlocked animation
           showUnlockedAchievement(achievement.id);
         }
