@@ -7,6 +7,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import session from "express-session";
 import { registerCollegeMatcherRoutes } from "./routes/college-matcher-routes";
+import { registerSavedCollegesRoutes } from "./routes/saved-colleges-routes";
 
 // Extend the Express Session type to include our onboarding progress
 declare module "express-session" {

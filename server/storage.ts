@@ -92,6 +92,12 @@ export interface IStorage {
   createPerformanceInsights(insights: InsertPerformanceInsights): Promise<PerformanceInsights>;
   updatePerformanceInsights(athleteId: number, insights: Partial<InsertPerformanceInsights>): Promise<PerformanceInsights>;
   
+  // Saved Colleges Methods
+  getSavedColleges(userId: number): Promise<MatchedCollege[]>;
+  saveCollege(userId: number, collegeId: number): Promise<SavedCollege>;
+  unsaveCollege(userId: number, collegeId: number): Promise<boolean>;
+  isCollegeSaved(userId: number, collegeId: number): Promise<boolean>;
+  
   // Strength & Conditioning Methods
   getStrengthConditioning(athleteId: number): Promise<StrengthConditioning | undefined>;
   createStrengthConditioning(strengthConditioning: InsertStrengthConditioning): Promise<StrengthConditioning>;
