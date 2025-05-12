@@ -12,7 +12,47 @@ import { enhancedCollegeMatcher } from "../services/enhanced-college-matcher";
  */
 export function registerCollegeMatcherRoutes(app: Express) {
   /**
-   * Get college matches for an athlete
+   * Get college matches for the current authenticated athlete
+   */
+  app.get("/api/college-matcher/me", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      // Get athlete ID from the authenticated user
+      const athlete = await req.app.locals.storage.getAthleteByUserId(req.user.id);
+      
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete profile not found" });
+      }
+
+      // Extract query parameters for options
+      const options = {
+        region: req.query.region as string | undefined,
+        preferredMajor: req.query.preferredMajor as string | undefined,
+        maxDistance: req.query.maxDistance ? parseInt(req.query.maxDistance as string) : undefined,
+        preferredState: req.query.preferredState as string | undefined,
+        financialAidImportance: req.query.financialAidImportance ? 
+          parseInt(req.query.financialAidImportance as string) : undefined,
+        athleticScholarshipRequired: req.query.athleticScholarshipRequired === 'true',
+        minEnrollment: req.query.minEnrollment ? parseInt(req.query.minEnrollment as string) : undefined,
+        maxEnrollment: req.query.maxEnrollment ? parseInt(req.query.maxEnrollment as string) : undefined,
+        publicOnly: req.query.publicOnly === 'true',
+        privateOnly: req.query.privateOnly === 'true',
+        useAI: req.query.useAI === 'true'
+      };
+
+      const matches = await enhancedCollegeMatcher.generateCollegeMatches(athlete.id, options);
+      res.json(matches);
+    } catch (error: any) {
+      console.error("Error in college matcher route:", error);
+      res.status(500).json({ message: error.message || "Error generating college matches" });
+    }
+  });
+
+  /**
+   * Get college matches for a specific athlete
    */
   app.get("/api/college-matcher/:athleteId", async (req: Request, res: Response) => {
     try {

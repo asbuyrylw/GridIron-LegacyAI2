@@ -58,7 +58,7 @@ import {
 } from "@/hooks/use-recruiting-hooks";
 
 const formSchema = z.object({
-  schoolId: z.string().min(1, "School is required"),
+  schoolId: z.number().min(1, "School is required"),
   subject: z.string().min(5, "Subject is required and must be at least 5 characters"),
   content: z.string().min(10, "Message content is required and must be at least 10 characters")
 });
@@ -106,7 +106,7 @@ export default function RecruitingPage() {
   const messageForm = useForm<SendMessageData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      schoolId: "",
+      schoolId: 0,
       subject: "",
       content: ""
     }
