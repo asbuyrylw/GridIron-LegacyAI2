@@ -1517,7 +1517,7 @@ export class MemStorage implements IStorage {
     this.athleteAchievementsMap.set(id, athleteAchievement);
     return athleteAchievement;
   }
-
+  
   async updateAthleteAchievement(id: number, updates: Partial<InsertAthleteAchievement>): Promise<AthleteAchievement | undefined> {
     const athleteAchievement = this.athleteAchievementsMap.get(id);
     if (!athleteAchievement) return undefined;
