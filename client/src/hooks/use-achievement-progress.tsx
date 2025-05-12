@@ -13,7 +13,7 @@ export interface AchievementProgress {
 }
 
 interface AchievementContextType {
-  achievements: AchievementProgress[];
+  progressData: AchievementProgress[];
   updateProgress: (achievementId: string, progress: number, achievement?: Achievement) => void;
   isCompleted: (achievementId: string) => boolean;
   getProgress: (achievementId: string) => number;

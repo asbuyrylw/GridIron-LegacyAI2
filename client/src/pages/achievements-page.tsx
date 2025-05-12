@@ -8,12 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Award, Trophy, Loader2, Info } from "lucide-react";
 import { AchievementGrid } from "@/components/achievements/achievement-grid";
-import { ACHIEVEMENT_BADGES, getAchievementsByType } from "@/lib/achievement-badges";
+import { ACHIEVEMENT_BADGES } from "@/lib/achievement-badges";
 import { useAchievementProgress } from "@/hooks/use-achievement-progress";
 
 export default function AchievementsPage() {
   const { user, isLoading } = useAuth();
-  const { achievements, isCompleted } = useAchievementProgress();
+  const { progressData, isCompleted } = useAchievementProgress();
   const [activeTab, setActiveTab] = useState("all");
   
   // Loading state
@@ -36,19 +36,23 @@ export default function AchievementsPage() {
   }
   
   // Calculate achievement stats
-  const completedCount = achievements.filter(a => a.completed).length;
+  const completedCount = progressData && progressData.length ? 
+    progressData.filter(a => a.completed).length : 0;
   const totalCount = ACHIEVEMENT_BADGES.length;
   
   // Calculate total points
-  const totalPoints = achievements
-    .filter(a => a.completed)
-    .reduce((sum, a) => {
-      const achievement = ACHIEVEMENT_BADGES.find(badge => badge.id === a.achievementId);
-      return sum + (achievement?.points || 0);
-    }, 0);
+  const totalPoints = progressData && progressData.length ? 
+    progressData
+      .filter(a => a.completed)
+      .reduce((sum, a) => {
+        const achievement = ACHIEVEMENT_BADGES.find(badge => badge.id === a.achievementId);
+        return sum + (achievement?.pointValue || 0);
+      }, 0)
+    : 0;
   
   // Get in-progress achievements (not completed but has some progress)
-  const inProgressCount = achievements.filter(a => !a.completed && a.progress > 0).length;
+  const inProgressCount = progressData && progressData.length ? 
+    progressData.filter(a => !a.completed && a.progress > 0).length : 0;
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-16 relative">
@@ -135,25 +139,19 @@ export default function AchievementsPage() {
           
           <TabsContent value="all">
             <AchievementGrid 
-              title="All Achievements" 
-              description="View all available achievements and your progress"
-              showTypeFilter={true}
+              showFilters={true}
             />
           </TabsContent>
           
           <TabsContent value="earned">
             <AchievementGrid 
-              title="Earned Achievements"
-              description="Achievements you've already completed"
-              showTypeFilter={true}
+              showFilters={true}
             />
           </TabsContent>
           
           <TabsContent value="in-progress">
             <AchievementGrid 
-              title="In-Progress Achievements"
-              description="Achievements you're currently working towards"
-              showTypeFilter={true}
+              showFilters={true}
             />
           </TabsContent>
         </Tabs>
