@@ -155,9 +155,11 @@ class ParentAccessService {
     return parentAccess;
   }
 
-  // Generate a secure URL for parent dashboard access
+  // This method is now deprecated as we've moved to email-only approach
+  // Kept for backward compatibility
   getParentDashboardUrl(accessToken: string): string {
-    return `/parent-view?token=${accessToken}`;
+    console.log('Warning: getParentDashboardUrl is deprecated as we\'ve moved to email-only approach');
+    return ''; // No longer returning a URL as dashboard access is removed
   }
 }
 

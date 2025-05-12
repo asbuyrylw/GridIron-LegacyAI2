@@ -50,24 +50,25 @@ class EmailService {
 
   // Generate parent invite email
   async sendParentInvite(athleteName: string, parentEmail: string, parentName: string, accessToken: string): Promise<boolean> {
-    const accessUrl = `${process.env.BASE_URL || 'https://app.gridironlegacyai.com'}/parent-view?token=${accessToken}`;
+    // We no longer use the access token for a dashboard link since we're using email-only approach
     
     const emailData: EmailData = {
       to: parentEmail,
       from: this.fromEmail,
-      subject: `${athleteName} has invited you to track their football progress on GridIron LegacyAI`,
+      subject: `${athleteName} has invited you to receive football progress updates from GridIron LegacyAI`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Hello ${parentName},</h2>
-          <p>${athleteName} has invited you to view their football training and recruiting progress on GridIron LegacyAI.</p>
-          <p>This special access will allow you to:</p>
+          <p>${athleteName} has invited you to receive their football training and recruiting progress updates via email from GridIron LegacyAI.</p>
+          <p>You'll now receive regular email updates that include:</p>
           <ul>
-            <li>View their performance stats and progress</li>
-            <li>Get nutrition shopping lists from their meal plans</li>
-            <li>Receive updates on achievements and milestones</li>
+            <li>Performance stats and progress reports</li>
+            <li>Nutrition shopping lists based on their meal plans</li>
+            <li>Updates on achievements and milestones</li>
           </ul>
-          <p><a href="${accessUrl}" style="display: inline-block; background-color: #4A90E2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">View Progress Dashboard</a></p>
-          <p>This link is unique to you and should not be shared with others.</p>
+          <p style="background-color: #f7f7f7; padding: 15px; border-left: 4px solid #4A90E2; margin: 20px 0;">
+            <strong>No account or login is required.</strong> All updates will be delivered directly to this email address.
+          </p>
           <p>Thank you for supporting ${athleteName}'s football journey!</p>
           <p>- The GridIron LegacyAI Team</p>
         </div>
