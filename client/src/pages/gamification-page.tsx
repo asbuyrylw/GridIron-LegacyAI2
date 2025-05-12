@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AchievementGrid } from '@/components/achievements/achievement-grid';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Award, Users, Trophy } from 'lucide-react';
@@ -10,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAchievementProgress } from '@/hooks/use-achievement-progress';
 import { AchievementCategory, TierType } from '@/lib/achievement-badges';
-import { Leaderboard } from '@/components/gamification/leaderboard';
+import LeaderboardSection from '@/components/gamification/leaderboard-section';
 
 const categories: { id: AchievementCategory; label: string; icon: React.ReactNode }[] = [
   { id: 'performance', label: 'Performance', icon: <Trophy className="h-4 w-4" /> },
@@ -34,7 +33,7 @@ export default function GamificationPage() {
   const [activeTab, setActiveTab] = useState('achievements');
   const [selectedCategory, setSelectedCategory] = useState<AchievementCategory | null>(null);
   const [selectedTier, setSelectedTier] = useState<TierType | null>(null);
-  const [selectedTimeframe, setSelectedTimeframe] = useState('week');
+  // No longer need the timeframe state as LeaderboardSection handles this internally
 
   return (
     <div className="container px-4 py-6 max-w-7xl mx-auto">
@@ -124,31 +123,48 @@ export default function GamificationPage() {
         </TabsContent>
         
         <TabsContent value="leaderboard" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Performance Leaderboard</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4">
-                <Select 
-                  value={selectedTimeframe}
-                  onValueChange={value => setSelectedTimeframe(value)}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select timeframe" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="today">Today</SelectItem>
-                    <SelectItem value="week">This Week</SelectItem>
-                    <SelectItem value="month">This Month</SelectItem>
-                    <SelectItem value="alltime">All Time</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <Leaderboard timeframe={selectedTimeframe} />
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Performance Leaderboards */}
+            <div className="md:col-span-2">
+              <LeaderboardSection 
+                title="Performance Leaderboards" 
+                description="See how your performance metrics compare to other players"
+                showTabs={true}
+              />
+            </div>
+            
+            {/* Points Leaderboard */}
+            <div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Points Leaderboard</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <LeaderboardSection 
+                    title="Overall Points" 
+                    description="Athletes with the most achievement points"
+                    showTabs={false}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Training Leaderboard */}
+            <div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Training Leaderboard</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <LeaderboardSection 
+                    title="Training Leaders" 
+                    description="Most consistent training athletes"
+                    showTabs={false}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

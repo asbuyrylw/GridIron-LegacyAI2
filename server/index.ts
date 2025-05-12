@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { createTestUser } from "./create-test-user";
 import { createTestUsers } from "./create-test-users";
 import { seedAchievements } from "./seed-achievements";
+import { seedLeaderboards } from "./leaderboard-storage";
 import { storage } from "./storage";
 
 const app = express();
@@ -54,6 +55,11 @@ app.use((req, res, next) => {
   // Seed default achievements
   await seedAchievements(storage).catch(err => {
     console.error('Error seeding achievements:', err);
+  });
+  
+  // Seed default leaderboards
+  await seedLeaderboards(storage).catch(err => {
+    console.error('Error seeding leaderboards:', err);
   });
   
   const server = await registerRoutes(app);
