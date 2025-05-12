@@ -2178,6 +2178,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const activeOnly = req.query.active === "true";
+      const period = req.query.period as string;
+      
+      // If period is specified, filter by period
+      if (period && ['daily', 'weekly', 'monthly', 'all-time'].includes(period)) {
+        const leaderboards = await storage.getLeaderboards(activeOnly);
+        const filteredLeaderboards = leaderboards.filter(lb => lb.period === period);
+        return res.json(filteredLeaderboards);
+      }
+      
+      // Otherwise return all
       const leaderboards = await storage.getLeaderboards(activeOnly);
       res.json(leaderboards);
     } catch (error) {
@@ -2199,8 +2209,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Leaderboard not found" });
       }
       
+      // Get all entries for this leaderboard
       const entries = await storage.getLeaderboardEntries(leaderboardId);
-      res.json(entries);
+
+      // Add athlete names to the entries
+      const entriesWithNames = await Promise.all(
+        entries.map(async (entry) => {
+          const athlete = await storage.getAthleteById(entry.athleteId);
+          return {
+            ...entry,
+            athleteName: athlete 
+              ? `${athlete.firstName} ${athlete.lastName}` 
+              : `Athlete #${entry.athleteId}`
+          };
+        })
+      );
+
+      // Sort the entries based on the leaderboard's metric
+      // Note: lower is better for some metrics like time
+      const sortedEntries = entriesWithNames.sort((a, b) => {
+        if (leaderboard.lowerIsBetter) {
+          return a.value - b.value; // Lower values first
+        } else {
+          return b.value - a.value; // Higher values first
+        }
+      });
+
+      // Add rank to entries
+      const rankedEntries = sortedEntries.map((entry, index) => ({
+        ...entry,
+        rank: index + 1
+      }));
+
+      res.json(rankedEntries);
     } catch (error) {
       next(error);
     }
