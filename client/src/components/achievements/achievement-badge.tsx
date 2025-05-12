@@ -107,7 +107,9 @@ export function AchievementBadge({
                     onError={(e) => {
                       // Fallback to the icon if image doesn't exist
                       e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling.style.display = 'block';
+                      if (e.currentTarget.nextElementSibling) {
+                        (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block';
+                      }
                     }}
                   />
                   <Icon 

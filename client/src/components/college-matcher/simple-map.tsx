@@ -1,8 +1,10 @@
 import React from 'react';
 
 interface SimpleMapProps {
-  city: string;
-  state: string;
+  city?: string;
+  state?: string;
+  location?: string;
+  name?: string;
   className?: string;
 }
 
@@ -10,9 +12,23 @@ interface SimpleMapProps {
  * A simple component to display a static map image of a location
  * Uses Google Maps Static API to generate a map image for a city/state
  */
-export function SimpleMap({ city, state, className = "" }: SimpleMapProps) {
+export function SimpleMap({ city, state, location, name, className = "" }: SimpleMapProps) {
   // Create a clean, URL-friendly location string
-  const locationQuery = encodeURIComponent(`${city}, ${state}`);
+  let locationQuery = "";
+  let displayLocation = "";
+  
+  if (location) {
+    // If a full location string is provided (e.g., "New York, NY")
+    locationQuery = encodeURIComponent(location);
+    displayLocation = location;
+  } else if (city && state) {
+    // If city and state are provided separately
+    locationQuery = encodeURIComponent(`${city}, ${state}`);
+    displayLocation = `${city}, ${state}`;
+  } else {
+    // Fallback if no location info is provided
+    displayLocation = name || "Location";
+  }
   
   // Create a placeholder map image (would normally use Google Maps Static API)
   // For this demo, we'll use a placeholder gradient with location name
@@ -42,7 +58,7 @@ export function SimpleMap({ city, state, className = "" }: SimpleMapProps) {
             <circle cx="12" cy="10" r="3" />
             <path d="M12 2a8 8 0 0 0-8 8c0 1.892.402 3.13 1.5 4.5L12 22l6.5-7.5c1.098-1.37 1.5-2.608 1.5-4.5a8 8 0 0 0-8-8z" />
           </svg>
-          <span className="text-xs text-muted-foreground font-medium">{city}, {state}</span>
+          <span className="text-xs text-muted-foreground font-medium">{displayLocation}</span>
           <span className="text-[0.65rem] text-muted-foreground/70">Map data unavailable</span>
         </div>
       </div>
