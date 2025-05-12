@@ -3,13 +3,14 @@ import { PageHeader } from '@/components/layout/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AchievementGrid } from '@/components/achievements/achievement-grid';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, Award, Users, Trophy } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChevronRight, Award, Users, Trophy, Zap, User, BookOpen, Apple, Dumbbell } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAchievementProgress } from '@/hooks/use-achievement-progress';
 import { AchievementCategory, TierType } from '@/lib/achievement-badges';
 import LeaderboardSection from '@/components/gamification/leaderboard-section';
+import { useAchievements } from '@/components/achievements/achievement-provider';
 
 const categories: { id: AchievementCategory; label: string; icon: React.ReactNode }[] = [
   { id: 'performance', label: 'Performance', icon: <Trophy className="h-4 w-4" /> },
@@ -27,6 +28,47 @@ const tiers: { id: TierType; label: string }[] = [
   { id: 'gold', label: 'Gold' },
   { id: 'platinum', label: 'Platinum' },
 ];
+
+// Achievement test component
+function AchievementTester() {
+  const { checkAndUpdateProgress } = useAchievements();
+  
+  const achievementActions = [
+    { type: 'performance', action: 'improve_forty', label: 'Performance: Improve 40-yard', icon: <Zap className="h-4 w-4" /> },
+    { type: 'training', action: 'complete_workout', label: 'Training: Complete Workout', icon: <Dumbbell className="h-4 w-4" /> },
+    { type: 'nutrition', action: 'log_meal', label: 'Nutrition: Log Meal', icon: <Apple className="h-4 w-4" /> },
+    { type: 'profile', action: 'update_profile', label: 'Profile: Update', icon: <User className="h-4 w-4" /> },
+    { type: 'academic', action: 'update_academic', label: 'Academic: Update', icon: <BookOpen className="h-4 w-4" /> },
+    { type: 'social', action: 'join_team', label: 'Social: Join Team', icon: <Users className="h-4 w-4" /> },
+  ];
+
+  return (
+    <Card className="mt-4">
+      <CardHeader>
+        <CardTitle>Achievement Testing</CardTitle>
+        <CardDescription>Click the buttons to trigger achievement progress</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {achievementActions.map((action) => (
+            <Button
+              key={`${action.type}-${action.action}`}
+              onClick={() => checkAndUpdateProgress(action.type, action.action)}
+              variant="outline"
+              className="flex items-center"
+            >
+              {action.icon}
+              <span className="ml-2">{action.label}</span>
+            </Button>
+          ))}
+        </div>
+      </CardContent>
+      <CardFooter className="text-xs text-muted-foreground">
+        <p>These buttons simulate user actions that would trigger achievement progress.</p>
+      </CardFooter>
+    </Card>
+  );
+}
 
 export default function GamificationPage() {
   const { totalPoints } = useAchievementProgress();
@@ -61,6 +103,9 @@ export default function GamificationPage() {
         </TabsList>
         
         <TabsContent value="achievements" className="mt-4">
+          {/* Achievement Tester (for development/testing) */}
+          <AchievementTester />
+          
           {/* Category filters */}
           <div className="flex items-center space-x-2 mb-4 overflow-auto py-2">
             <Button
