@@ -3,6 +3,8 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { createTestUser } from "./create-test-user";
 import { createTestUsers } from "./create-test-users";
+import { seedAchievements } from "./seed-achievements";
+import { storage } from "./storage";
 
 const app = express();
 app.use(express.json());
@@ -47,6 +49,11 @@ app.use((req, res, next) => {
   // Create additional test users (parents and coaches)
   await createTestUsers().catch(err => {
     console.error('Error creating additional test users:', err);
+  });
+  
+  // Seed default achievements
+  await seedAchievements(storage).catch(err => {
+    console.error('Error seeding achievements:', err);
   });
   
   const server = await registerRoutes(app);

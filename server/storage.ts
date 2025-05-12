@@ -1476,7 +1476,7 @@ export class MemStorage implements IStorage {
     let achievements = Array.from(this.achievementsMap.values());
     
     if (category) {
-      achievements = achievements.filter(achievement => achievement.type === category);
+      achievements = achievements.filter(achievement => achievement.category === category);
     }
     
     return achievements.sort((a, b) => a.name.localeCompare(b.name));
