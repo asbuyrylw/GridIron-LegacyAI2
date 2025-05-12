@@ -27,12 +27,14 @@ import TeamDetailsPage from "@/pages/team-details-page";
 import RecruitingPage from "@/pages/recruiting-page";
 import EnhancedCollegeMatcherPage from "@/pages/enhanced-college-matcher-fixed";
 import RecruitingProfileBuilderPage from "@/pages/recruiting-profile-builder-page";
-import ParentDashboard from "@/pages/parent-dashboard";
+// Removing ParentDashboard import as we're using email-only approach
 import CoachDashboard from "@/pages/coach-dashboard";
 import ParentManagementPage from "@/pages/parent-management";
-import ParentViewPage from "@/pages/parent-view";
+// Removing ParentViewPage import as we're using email-only approach 
 import ParentAccessTester from "@/pages/parent-access-tester";
 import WebSocketTester from "@/pages/websocket-tester";
+// Import GameificationPage component directly to fix lazy loading issue
+import GameificationPage from "@/pages/gamification-page";
 
 // Landing Pages
 import LandingIndex from "@/pages/landing/index";
@@ -56,7 +58,7 @@ function Router() {
       <Switch>
         {/* Public Routes */}
         <Route path="/auth" component={AuthPage} />
-        <Route path="/parent-view" component={ParentViewPage} />
+        {/* Removed parent-view as we're using email-only approach */}
         <Route path="/parent-access-tester" component={ParentAccessTester} />
         <Route path="/websocket-tester" component={WebSocketTester} />
         
@@ -89,7 +91,7 @@ function Router() {
         <ProtectedRoute path="/settings" component={SettingsPage} />
         <ProtectedRoute path="/social-achievements" component={SocialAchievementsPage} />
         <ProtectedRoute path="/achievements" component={AchievementsPage} />
-        <ProtectedRoute path="/gamification" component={lazy(() => import("@/pages/gamification-page"))} />
+        <ProtectedRoute path="/gamification" component={GameificationPage} />
         <ProtectedRoute path="/social-feed" component={SocialFeedPage} />
         <ProtectedRoute path="/social-settings" component={SocialSettingsPage} />
         <ProtectedRoute path="/teams" component={TeamsPage} />
@@ -97,14 +99,14 @@ function Router() {
         <ProtectedRoute path="/recruiting" component={RecruitingPage} />
         <ProtectedRoute path="/recruiting-profile-builder" component={RecruitingProfileBuilderPage} />
         <ProtectedRoute path="/college-matcher" component={EnhancedCollegeMatcherPage} />
-        <ProtectedRoute path="/parent-dashboard" component={ParentDashboard} />
+        {/* Removed parent-dashboard as we're using email-only approach */}
         <ProtectedRoute path="/coach-dashboard" component={CoachDashboard} />
         <ProtectedRoute path="/parent-management" component={ParentManagementPage} />
         <ProtectedRoute path="/parent-access-tester" component={ParentAccessTester} />
         
         {/* Public Routes */}
         <Route path="/auth" component={AuthPage} />
-        <Route path="/parent-view" component={ParentViewPage} />
+        {/* Removed parent-view as we're using email-only approach */}
         
         {/* Landing Pages (still accessible when logged in) */}
         <Route path="/landing" component={LandingIndex} />

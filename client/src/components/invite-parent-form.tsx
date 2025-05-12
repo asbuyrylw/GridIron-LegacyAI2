@@ -62,7 +62,7 @@ export function InviteParentForm() {
       queryClient.invalidateQueries({ queryKey: ["/api/athlete", "parent-access"] });
       toast({
         title: "Invitation sent",
-        description: "Your parent/guardian will receive an email with access instructions.",
+        description: "Your parent/guardian will receive updates via email. No login portal is needed as all information is sent directly to their inbox.",
       });
       form.reset();
     },
@@ -109,7 +109,7 @@ export function InviteParentForm() {
                 <Input type="email" placeholder="parent@example.com" {...field} />
               </FormControl>
               <FormDescription>
-                We'll send performance updates and reports directly to this email. No account or login required.
+                We'll send performance updates and reports directly to this email. No account or login required - parents receive everything via email only.
               </FormDescription>
               <FormMessage />
             </FormItem>
