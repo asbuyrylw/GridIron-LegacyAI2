@@ -30,10 +30,10 @@ export async function getAchievementProgressByUserId(this: MemStorage, userId: n
   
   // Map to the format expected by the frontend
   return athleteAchievements.map(aa => ({
-    achievementId: aa.achievementStringId,
-    progress: aa.progress,
-    completed: aa.completed,
-    completedAt: aa.completedAt?.toISOString()
+    achievementId: aa.achievementId,
+    progress: aa.progress || 0,
+    completed: aa.completed || false,
+    completedAt: aa.earnedAt?.toISOString()
   }));
 }
 
@@ -43,10 +43,10 @@ export async function getAchievementProgressByAthleteId(this: MemStorage, athlet
   
   // Map to the format expected by the frontend
   return athleteAchievements.map(aa => ({
-    achievementId: aa.achievementStringId,
-    progress: aa.progress,
-    completed: aa.completed,
-    completedAt: aa.completedAt?.toISOString()
+    achievementId: aa.achievementId,
+    progress: aa.progress || 0,
+    completed: aa.completed || false,
+    completedAt: aa.earnedAt?.toISOString()
   }));
 }
 
@@ -63,8 +63,7 @@ export async function updateAchievementProgress(this: MemStorage, userId: number
   const previouslyCompleted = athleteAchievement?.completed || false;
   
   // Get the achievement to check if the progress is enough to complete it
-  const achievement = this.achievements.find(a => a.id === achievementId);
-  const progressMax = achievement?.progressMax || 100;
+  const progressMax = 100; // We'll set a default progress max of 100
   
   // Calculate if the achievement is completed
   const isCompleted = progress >= progressMax;
@@ -77,35 +76,34 @@ export async function updateAchievementProgress(this: MemStorage, userId: number
       completed: isCompleted,
     };
     
-    // If it was just completed, set the completedAt timestamp
+    // If it was just completed, set the earnedAt timestamp
     if (isCompleted && !previouslyCompleted) {
-      updatedAchievement.completedAt = new Date();
+      updatedAchievement.earnedAt = new Date();
     }
     
     // Update in storage
-    const index = this.athleteAchievements.findIndex(
-      aa => aa.id === athleteAchievement!.id
-    );
-    
-    if (index !== -1) {
-      this.athleteAchievements[index] = updatedAchievement;
-    }
+    const result = await this.updateAthleteAchievement(athleteAchievement.id, {
+      progress,
+      completed: isCompleted,
+      earnedAt: isCompleted && !previouslyCompleted ? new Date() : athleteAchievement.earnedAt
+    });
     
     return {
       achievementId,
       progress,
       completed: isCompleted,
       previouslyCompleted,
-      completedAt: updatedAchievement.completedAt?.toISOString(),
+      completedAt: result?.earnedAt?.toISOString(),
     };
   } else {
     // Create a new achievement record
     const newAchievement: InsertAthleteAchievement = {
       athleteId: athlete.id,
-      achievementStringId: achievementId,
+      achievementId,
       progress,
       completed: isCompleted,
-      completedAt: isCompleted ? new Date() : null,
+      earnedAt: isCompleted ? new Date() : null,
+      createdAt: new Date()
     };
     
     // Add to storage
@@ -116,7 +114,7 @@ export async function updateAchievementProgress(this: MemStorage, userId: number
       progress,
       completed: isCompleted,
       previouslyCompleted: false,
-      completedAt: createdAchievement.completedAt?.toISOString(),
+      completedAt: createdAchievement.earnedAt?.toISOString(),
     };
   }
 }
