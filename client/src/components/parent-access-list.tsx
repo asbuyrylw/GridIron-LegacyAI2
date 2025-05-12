@@ -142,9 +142,9 @@ export function ParentAccessList({ athleteId }: ParentAccessListProps) {
         </CardHeader>
         <CardContent className="text-center py-6">
           <Mail className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
-          <p className="mb-2">You can invite parents to view your progress dashboard.</p>
+          <p className="mb-2">You can invite parents to receive your progress updates via email.</p>
           <p className="text-sm text-muted-foreground">
-            They'll get a special link by email with read-only access to your stats.
+            They'll receive performance updates and statistics directly in their inbox - no login required.
           </p>
         </CardContent>
       </Card>
@@ -156,7 +156,7 @@ export function ParentAccessList({ athleteId }: ParentAccessListProps) {
       <CardHeader>
         <CardTitle>Parent Access</CardTitle>
         <CardDescription>
-          {parentAccesses.length} {parentAccesses.length === 1 ? 'parent' : 'parents'} have been given access to view your progress.
+          {parentAccesses.length} {parentAccesses.length === 1 ? 'parent' : 'parents'} have been given access to receive your progress updates via email.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -231,7 +231,7 @@ export function ParentAccessList({ athleteId }: ParentAccessListProps) {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Revoke Parent Access?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            {access.name} will no longer be able to view your dashboard or receive updates.
+                            {access.name} will no longer receive email updates about your performance and nutrition.
                             This action can be reversed by sending a new invitation.
                           </AlertDialogDescription>
                         </AlertDialogHeader>

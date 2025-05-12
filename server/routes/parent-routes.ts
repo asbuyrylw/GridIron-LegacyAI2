@@ -571,51 +571,8 @@ router.get('/api/athlete/:athleteId/nutrition/recommendations', async (req: Requ
   }
 });
 
-// Access parent dashboard via token (no authentication needed)
-router.get('/api/parent/access', async (req: Request, res: Response) => {
-  try {
-    const { token } = req.query;
-    
-    if (!token || typeof token !== 'string') {
-      return res.status(400).json({ message: 'Access token is required' });
-    }
-    
-    // Get parent access using token
-    const parentAccess = await parentAccessService.getParentAccessByToken(token);
-    if (!parentAccess) {
-      return res.status(404).json({ message: 'Invalid access token or access has been revoked' });
-    }
-    
-    // If access is not active, return error
-    if (!parentAccess.active) {
-      return res.status(403).json({ message: 'Access has been revoked' });
-    }
-    
-    // Get athlete information
-    const athlete = await storage.getAthlete(parentAccess.athleteId);
-    if (!athlete) {
-      return res.status(404).json({ message: 'Athlete not found' });
-    }
-    
-    // Prepare limited athlete data for parent viewing
-    const athleteData = {
-      id: athlete.id,
-      firstName: athlete.firstName,
-      lastName: athlete.lastName,
-      position: athlete.position,
-      school: athlete.school,
-      grade: athlete.grade,
-      graduationYear: athlete.graduationYear,
-    };
-    
-    res.json({
-      parentAccess,
-      athlete: athleteData,
-    });
-  } catch (error) {
-    console.error('Error accessing parent dashboard:', error);
-    res.status(500).json({ message: 'Failed to access parent dashboard' });
-  }
-});
+// Note: Parent dashboard token access endpoint has been removed.
+// Parents now receive all updates exclusively via email, eliminating the need
+// for a dashboard login or token-based access.
 
 export { router };
