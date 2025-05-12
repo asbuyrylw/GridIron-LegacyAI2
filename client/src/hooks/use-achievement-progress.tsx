@@ -1,62 +1,129 @@
-import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "./use-auth";
-import { Achievement, ACHIEVEMENT_BADGES } from "@/lib/achievement-badges";
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useAuth } from "@/hooks/use-auth";
+import { Achievement } from "@/lib/achievement-badges";
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from '@/hooks/use-toast';
 
 export interface AchievementProgress {
-  id: number;
-  athleteId: number;
   achievementId: string;
-  progress: number; // 0-100
+  progress: number;
   completed: boolean;
-  completedAt?: string; // ISO date string
-  createdAt: string; // ISO date string
+  completedAt?: string;
+}
+
+interface AchievementContextType {
+  achievements: AchievementProgress[];
+  updateProgress: (achievementId: string, progress: number, achievement?: Achievement) => void;
+  isCompleted: (achievementId: string) => boolean;
+  getProgress: (achievementId: string) => number;
+  isLoading: boolean;
+  totalPoints: number;
+}
+
+const AchievementContext = createContext<AchievementContextType | undefined>(undefined);
+
+export function AchievementProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [newlyUnlocked, setNewlyUnlocked] = useState<string[]>([]);
+  
+  // Fetch user's achievement progress from the server
+  const { data: achievements = [], isLoading, refetch } = useQuery<AchievementProgress[]>({
+    queryKey: ['/api/achievements'],
+    enabled: !!user,
+  });
+  
+  // Calculate total points
+  const totalPoints = achievements.reduce((total, achievement) => {
+    if (achievement.completed) {
+      // We need to find the achievement in the database to get the point value
+      const achData = ACHIEVEMENT_DATABASE[achievement.achievementId];
+      if (achData) {
+        return total + achData.pointsReward;
+      }
+    }
+    return total;
+  }, 0);
+  
+  // Placeholder for achievement details - this would normally come from your achievement badges lib
+  const ACHIEVEMENT_DATABASE: Record<string, Achievement> = {};
+  
+  // Update achievement progress
+  const updateProgressMutation = useMutation({
+    mutationFn: async (data: { achievementId: string; progress: number }) => {
+      const response = await apiRequest('POST', '/api/achievements/progress', data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/achievements'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/leaderboard'] });
+      
+      // Check if this update unlocked the achievement
+      if (data.completed && !data.previouslyCompleted) {
+        setNewlyUnlocked(prev => [...prev, data.achievementId]);
+        
+        // Show a toast notification
+        toast({
+          title: "Achievement Unlocked!",
+          description: `You've unlocked a new achievement.`,
+          variant: "default",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to update progress",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Check if an achievement is completed
+  const isCompleted = (achievementId: string): boolean => {
+    return achievements.some(a => a.achievementId === achievementId && a.completed);
+  };
+  
+  // Get progress for an achievement
+  const getProgress = (achievementId: string): number => {
+    const achievement = achievements.find(a => a.achievementId === achievementId);
+    return achievement ? achievement.progress : 0;
+  };
+  
+  // Update progress and check for completion
+  const updateProgress = (achievementId: string, progress: number, achievement?: Achievement) => {
+    if (!user) return;
+    
+    updateProgressMutation.mutate({
+      achievementId,
+      progress
+    });
+  };
+  
+  // Value object for the context
+  const contextValue: AchievementContextType = {
+    achievements,
+    updateProgress,
+    isCompleted,
+    getProgress,
+    isLoading,
+    totalPoints
+  };
+  
+  return (
+    <AchievementContext.Provider value={contextValue}>
+      {children}
+    </AchievementContext.Provider>
+  );
 }
 
 export function useAchievementProgress() {
-  const { user } = useAuth();
-  const athleteId = user?.athlete?.id;
+  const context = useContext(AchievementContext);
   
-  const { data: achievements = [], isLoading, isError } = useQuery<AchievementProgress[]>({
-    queryKey: [`/api/athlete/${athleteId}/achievements`],
-    enabled: !!athleteId,
-  });
-
-  // Check if all achievements are completed
-  const isCompleted = achievements.every(a => a.completed);
+  if (context === undefined) {
+    throw new Error('useAchievementProgress must be used within an AchievementProvider');
+  }
   
-  // Helper function to get achievements by completion status
-  const getAchievementsByStatus = (completed: boolean) => {
-    return achievements.filter(a => a.completed === completed);
-  };
-  
-  // Helper function to get achievements by type
-  const getAchievementsByType = (type: string) => {
-    const typeAchievementIds = ACHIEVEMENT_BADGES
-      .filter(badge => badge.type === type)
-      .map(badge => badge.id);
-      
-    return achievements.filter(a => typeAchievementIds.includes(a.achievementId));
-  };
-  
-  // Get in-progress achievements (not completed but has some progress)
-  const inProgressAchievements = achievements.filter(a => !a.completed && a.progress > 0);
-  
-  // Calculate total points earned
-  const totalPoints = achievements
-    .filter(a => a.completed)
-    .reduce((sum, a) => {
-      const achievement = ACHIEVEMENT_BADGES.find(badge => badge.id === a.achievementId);
-      return sum + (achievement?.points || 0);
-    }, 0);
-  
-  return {
-    achievements,
-    isLoading,
-    isError,
-    isCompleted,
-    getAchievementsByStatus,
-    getAchievementsByType,
-    inProgressAchievements,
-    totalPoints,
-  };
+  return context;
 }

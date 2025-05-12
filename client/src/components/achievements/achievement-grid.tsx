@@ -1,51 +1,36 @@
-import { useState } from "react";
-import { 
-  Card, 
-  CardContent, 
+import { useState, useEffect } from 'react';
+import { useAuth } from "@/hooks/use-auth";
+import { useAchievementProgress } from "@/hooks/use-achievement-progress";
+import { ACHIEVEMENT_BADGES, Achievement } from "@/lib/achievement-badges";
+import { AchievementBadge } from './achievement-badge';
+import { AchievementEarnedAnimation } from './achievement-earned-animation';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription
 } from "@/components/ui/card";
-import { 
-  Tabs, 
-  TabsList, 
-  TabsTrigger
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from "@/components/ui/tabs";
 import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Award, BarChart3, Medal, Trophy } from "lucide-react";
-import { AchievementBadge } from "./achievement-badge";
-import { AchievementType, ACHIEVEMENT_BADGES, getAchievementById } from "@/lib/achievement-badges";
-import { useAchievementProgress } from "@/hooks/use-achievement-progress";
-import { useAchievementContext } from "./achievement-provider";
-import { AchievementEarnedAnimation } from "./achievement-earned-animation";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Search, Filter, ChevronDown, Trophy, Award, Medal } from "lucide-react";
 
-const typeLabels: Record<AchievementType, string> = {
-  performance: "Performance",
-  training: "Training",
-  nutrition: "Nutrition",
-  profile: "Profile",
-  social: "Social",
-  recruiting: "Recruiting",
-  academic: "Academic"
-};
-
-const typeIcons: Record<string, React.ElementType> = {
-  performance: BarChart3,
-  training: Award,
-  nutrition: Award,
-  profile: Award,
-  social: Award,
-  recruiting: Award,
-  academic: Award
-};
+type AchievementType = 'performance' | 'training' | 'nutrition' | 'profile' | 'social' | 'recruiting' | 'academic';
 
 interface AchievementGridProps {
   title: string;
@@ -57,106 +42,190 @@ interface AchievementGridProps {
 export function AchievementGrid({
   title,
   description,
-  showTypeFilter = false,
-  filterType = 'all'
+  showTypeFilter = true,
+  filterType: initialFilterType = 'all',
 }: AchievementGridProps) {
-  const { achievements } = useAchievementProgress();
-  const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedAchievement, setSelectedAchievement] = useState<string | null>(null);
-  const [showEarnedAnimation, setShowEarnedAnimation] = useState(false);
+  const { user } = useAuth();
+  const { achievements, isLoading } = useAchievementProgress();
   
-  // Extract unique achievement types for filtering
-  const achievementTypes = Array.from(new Set(ACHIEVEMENT_BADGES.map(a => a.type)));
+  // States
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState<AchievementType | 'all'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'in-progress'>(initialFilterType);
+  const [showAchievementModal, setShowAchievementModal] = useState(false);
+  const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   
-  // Create a map of athlete achievements by achievement ID for easier lookup
-  const achievementMap = achievements.reduce((acc: Record<string, any>, achievement) => {
-    acc[achievement.achievementId] = achievement;
-    return acc;
-  }, {});
-  
-  // Filter achievements based on type and completion status
-  let filteredAchievements = ACHIEVEMENT_BADGES;
-  
-  // Filter by selected type
-  if (selectedType !== "all") {
-    filteredAchievements = filteredAchievements.filter(a => a.type === selectedType);
-  }
-  
-  // Filter by completion status
-  if (filterType === "completed") {
-    filteredAchievements = filteredAchievements.filter(a => {
-      const athleteAchievement = achievementMap[a.id];
-      return athleteAchievement && athleteAchievement.completed;
-    });
-  } else if (filterType === "in-progress") {
-    filteredAchievements = filteredAchievements.filter(a => {
-      const athleteAchievement = achievementMap[a.id];
-      return athleteAchievement && !athleteAchievement.completed && athleteAchievement.progress > 0;
-    });
-  }
-  
-  // Handler for clicking on an achievement badge
-  const handleBadgeClick = (achievement: any) => {
-    setSelectedAchievement(achievement.id);
+  // When an achievement badge is clicked
+  const handleAchievementClick = (achievement: Achievement) => {
+    setSelectedAchievement(achievement);
+    setShowAchievementModal(true);
   };
   
-  // Get the selected achievement details
-  const achievement = selectedAchievement ? ACHIEVEMENT_BADGES.find(a => a.id === selectedAchievement) : null;
-  const achievementProgress = selectedAchievement ? achievementMap[selectedAchievement] : null;
+  // Get the user's achievement progress
+  const getAchievementProgress = (achievementId: string) => {
+    const achievementProgress = achievements.find(a => a.achievementId === achievementId);
+    return {
+      progress: achievementProgress?.progress || 0,
+      isCompleted: achievementProgress?.completed || false,
+      earnedDate: achievementProgress?.completedAt
+    };
+  };
   
-  // Calculate total points and completion percentage
-  const completedAchievements = achievements.filter(a => a.completed);
-  const totalPoints = completedAchievements.reduce((sum, a) => {
-    const achievement = ACHIEVEMENT_BADGES.find(badge => badge.id === a.achievementId);
-    return sum + (achievement?.points || 0);
+  // Filter achievements based on search, type, and completion status
+  const filteredAchievements = ACHIEVEMENT_BADGES.filter(achievement => {
+    // Filter by type
+    if (selectedType !== 'all' && achievement.type !== selectedType) {
+      return false;
+    }
+    
+    // Filter by status
+    const { isCompleted } = getAchievementProgress(achievement.id);
+    if (filterStatus === 'completed' && !isCompleted) {
+      return false;
+    } else if (filterStatus === 'in-progress' && isCompleted) {
+      return false;
+    }
+    
+    // Filter by search term
+    if (searchTerm && !achievement.name.toLowerCase().includes(searchTerm.toLowerCase()) && 
+        !achievement.description.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    // Hide coach-only achievements for non-coaches
+    if (achievement.coachOnly && user?.userType !== 'coach') {
+      return false;
+    }
+    
+    return true;
+  });
+  
+  // Count achievements by type
+  const countByType = {
+    all: filteredAchievements.length,
+    performance: filteredAchievements.filter(a => a.type === 'performance').length,
+    training: filteredAchievements.filter(a => a.type === 'training').length,
+    nutrition: filteredAchievements.filter(a => a.type === 'nutrition').length,
+    profile: filteredAchievements.filter(a => a.type === 'profile').length,
+    social: filteredAchievements.filter(a => a.type === 'social').length,
+    recruiting: filteredAchievements.filter(a => a.type === 'recruiting').length,
+    academic: filteredAchievements.filter(a => a.type === 'academic').length,
+  };
+  
+  // Count by status
+  const completedCount = ACHIEVEMENT_BADGES.filter(achievement => {
+    // Filter by type if needed
+    if (selectedType !== 'all' && achievement.type !== selectedType) {
+      return false;
+    }
+    
+    const { isCompleted } = getAchievementProgress(achievement.id);
+    return isCompleted;
+  }).length;
+  
+  // Total points earned
+  const totalPoints = ACHIEVEMENT_BADGES.reduce((total, achievement) => {
+    const { isCompleted } = getAchievementProgress(achievement.id);
+    if (isCompleted) {
+      return total + achievement.pointsReward;
+    }
+    return total;
   }, 0);
-  const completionPercentage = Math.round((completedAchievements.length / ACHIEVEMENT_BADGES.length) * 100);
+  
+  // Display achievement types with color-coded badges
+  const achievementTypes = [
+    { id: 'all', name: 'All', color: 'default' },
+    { id: 'performance', name: 'Performance', color: 'blue' },
+    { id: 'training', name: 'Training', color: 'green' },
+    { id: 'nutrition', name: 'Nutrition', color: 'orange' },
+    { id: 'profile', name: 'Profile', color: 'purple' },
+    { id: 'social', name: 'Social', color: 'pink' },
+    { id: 'recruiting', name: 'Recruiting', color: 'yellow' },
+    { id: 'academic', name: 'Academic', color: 'indigo' },
+  ];
   
   return (
-    <>
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>{title}</CardTitle>
-              {description && (
-                <CardDescription>{description}</CardDescription>
-              )}
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-amber-600">{totalPoints} pts</div>
-              <div className="text-sm text-gray-500">
-                {completionPercentage}% Complete
-              </div>
-            </div>
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <CardTitle className="text-xl">{title}</CardTitle>
+            {description && <CardDescription>{description}</CardDescription>}
           </div>
-        </CardHeader>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="px-3 py-1">
+              <Trophy className="h-3.5 w-3.5 mr-1 text-amber-500" />
+              <span>{totalPoints} Points</span>
+            </Badge>
+            <Badge variant="outline" className="px-3 py-1">
+              <Medal className="h-3.5 w-3.5 mr-1 text-blue-500" />
+              <span>{completedCount} / {ACHIEVEMENT_BADGES.length}</span>
+            </Badge>
+          </div>
+        </div>
         
-        <CardContent>
-          {showTypeFilter && (
-            <Tabs defaultValue="all" className="mb-6">
-              <TabsList className="mb-2 flex flex-wrap h-auto">
-                <TabsTrigger value="all" onClick={() => setSelectedType("all")}>
-                  All
-                </TabsTrigger>
-                {achievementTypes.map(type => (
+        <div className="flex flex-col sm:flex-row gap-2 mt-2">
+          <div className="relative flex-grow">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search achievements..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-1">
+                <Filter className="h-4 w-4" />
+                <span>{filterStatus === 'all' ? 'All' : filterStatus === 'completed' ? 'Completed' : 'In Progress'}</span>
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setFilterStatus('all')}>
+                All
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterStatus('completed')}>
+                Completed
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilterStatus('in-progress')}>
+                In Progress
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </CardHeader>
+      
+      {showTypeFilter && (
+        <div className="px-6">
+          <Tabs defaultValue={selectedType} onValueChange={(value) => setSelectedType(value as AchievementType | 'all')}>
+            <ScrollArea className="w-full whitespace-nowrap pb-2">
+              <TabsList className="mb-4 inline-flex h-9">
+                {achievementTypes.map((type) => (
                   <TabsTrigger 
-                    key={type} 
-                    value={type}
-                    onClick={() => setSelectedType(type)}
+                    key={type.id} 
+                    value={type.id}
+                    className="flex items-center gap-1"
                   >
-                    {typeLabels[type as AchievementType]}
+                    <span>{type.name}</span>
+                    <Badge variant="secondary" className="ml-1 text-xs">
+                      {countByType[type.id as keyof typeof countByType] || 0}
+                    </Badge>
                   </TabsTrigger>
                 ))}
               </TabsList>
-            </Tabs>
-          )}
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            </ScrollArea>
+          </Tabs>
+        </div>
+      )}
+      
+      <CardContent>
+        {filteredAchievements.length > 0 ? (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 p-2">
             {filteredAchievements.map((achievement) => {
-              const progress = achievementMap[achievement.id]?.progress || 0;
-              const isCompleted = achievementMap[achievement.id]?.completed || false;
-              const earnedDate = achievementMap[achievement.id]?.completedAt;
+              const { progress, isCompleted, earnedDate } = getAchievementProgress(achievement.id);
               
               return (
                 <AchievementBadge
@@ -165,105 +234,29 @@ export function AchievementGrid({
                   progress={progress}
                   isCompleted={isCompleted}
                   earnedDate={earnedDate}
-                  onClick={() => handleBadgeClick(achievement)}
+                  onClick={() => handleAchievementClick(achievement)}
                 />
               );
             })}
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* Achievement details dialog */}
-      <Dialog 
-        open={!!selectedAchievement} 
-        onOpenChange={(open) => !open && setSelectedAchievement(null)}
-      >
-        {achievement && (
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <span className="text-xl">{achievement.icon}</span>
-                {achievement.name}
-              </DialogTitle>
-              <DialogDescription>
-                {achievement.description}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="py-4">
-              <div className="flex items-center mb-4">
-                <div className="p-2 rounded-full bg-primary/10 mr-2">
-                  <Trophy className="h-5 w-5 text-primary" />
-                </div>
-                <div className="text-sm font-medium">
-                  {achievement.points} points
-                </div>
-                <div className="ml-auto px-2 py-1 rounded text-xs font-semibold" style={{
-                  backgroundColor: achievement.level === 'bronze' ? '#cd7f32' : 
-                                  achievement.level === 'silver' ? '#c0c0c0' :
-                                  achievement.level === 'gold' ? '#ffd700' : '#e5e4e2',
-                  color: achievement.level === 'gold' ? '#000' : '#fff'
-                }}>
-                  {achievement.level.charAt(0).toUpperCase() + achievement.level.slice(1)}
-                </div>
-              </div>
-              
-              <div className="text-sm">
-                <div className="font-medium mb-2">Requirements:</div>
-                <ul className="space-y-2">
-                  {achievement.requirements.map((req, index) => (
-                    <li key={index} className="flex items-start">
-                      <div className="h-5 w-5 rounded-full flex items-center justify-center bg-muted mr-2 flex-shrink-0">
-                        <span className="text-xs">{index + 1}</span>
-                      </div>
-                      <span>{req.description}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              {achievementProgress && (
-                <div className="mt-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium">Progress</span>
-                    <span className="text-sm">{achievementProgress.progress}%</span>
-                  </div>
-                  <div className="w-full bg-muted h-2 rounded-full">
-                    <div 
-                      className={`${achievementProgress.completed ? 'bg-green-600' : 'bg-primary'} h-2 rounded-full`} 
-                      style={{ width: `${achievementProgress.progress}%` }} 
-                    />
-                  </div>
-                  
-                  {achievementProgress.completed && achievementProgress.completedAt && (
-                    <div className="mt-2 text-sm text-green-600">
-                      Completed on {new Date(achievementProgress.completedAt).toLocaleDateString()}
-                    </div>
-                  )}
-                </div>
-              )}
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
+            <Award className="h-12 w-12 text-muted-foreground opacity-20" />
+            <div>
+              <p className="text-muted-foreground">No achievements found</p>
+              <p className="text-sm text-muted-foreground">Try adjusting your filters</p>
             </div>
-            
-            <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => setSelectedAchievement(null)}
-              >
-                Close
-              </Button>
-            </DialogFooter>
-          </DialogContent>
+          </div>
         )}
-      </Dialog>
+      </CardContent>
       
-      {/* Achievement earned animation - demo purposes - normally triggered by actual achievement completion */}
-      {achievement && (
-        <AchievementEarnedAnimation 
-          achievement={achievement}
-          visible={showEarnedAnimation}
-          onClose={() => setShowEarnedAnimation(false)}
+      {showAchievementModal && selectedAchievement && (
+        <AchievementEarnedAnimation
+          achievement={selectedAchievement}
+          visible={showAchievementModal}
+          onClose={() => setShowAchievementModal(false)}
         />
       )}
-    </>
+    </Card>
   );
 }
