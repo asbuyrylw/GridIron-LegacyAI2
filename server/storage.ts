@@ -31,6 +31,7 @@ import {
   teamEventAttendance, type TeamEventAttendance, type InsertTeamEventAttendance,
   teamAnnouncements, type TeamAnnouncement, type InsertTeamAnnouncement
 } from "@shared/schema";
+import { savedColleges, type SavedCollege, type InsertSavedCollege } from "@shared/saved-colleges-schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -258,6 +259,12 @@ export interface IStorage {
 
   // Session Store
   sessionStore: any; // Use any for session store to avoid type issues
+  
+  // Saved Colleges Methods
+  getSavedColleges(userId: number): Promise<any[]>; // Return college details, not just saved college records
+  saveCollege(userId: number, collegeId: number): Promise<SavedCollege>;
+  unsaveCollege(userId: number, collegeId: number): Promise<boolean>;
+  isCollegeSaved(userId: number, collegeId: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -266,6 +273,7 @@ export class MemStorage implements IStorage {
   private parentsMap: Map<number, Parent>;
   private coachesMap: Map<number, Coach>;
   private parentAthleteRelationshipsMap: Map<number, ParentAthleteRelationship>;
+  private savedCollegesMap: Map<number, SavedCollege>;
   private combineMetricsMap: Map<number, CombineMetric>;
   private exerciseLibraryMap: Map<number, ExerciseLibrary>;
   private workoutSessionsMap: Map<number, WorkoutSession>;
@@ -334,6 +342,7 @@ export class MemStorage implements IStorage {
     this.parentsMap = new Map();
     this.coachesMap = new Map();
     this.parentAthleteRelationshipsMap = new Map();
+    this.savedCollegesMap = new Map();
     this.combineMetricsMap = new Map();
     this.exerciseLibraryMap = new Map();
     this.workoutSessionsMap = new Map();
