@@ -64,6 +64,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // College Matcher API endpoints
   registerCollegeMatcherRoutes(app);
   
+  // Saved Colleges API endpoints
+  registerSavedCollegesRoutes(app);
+  
   // Recruiting Profile API endpoints
   registerRecruitingProfileRoutes(app);
   

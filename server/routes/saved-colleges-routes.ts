@@ -4,7 +4,6 @@
  */
 import { Request, Response, Express } from "express";
 import { storage } from "../storage";
-import { isAuthenticated } from "../auth";
 
 /**
  * Register saved colleges routes
@@ -13,7 +12,10 @@ export function registerSavedCollegesRoutes(app: Express) {
   /**
    * Get saved colleges for the authenticated user
    */
-  app.get("/api/saved-colleges", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/saved-colleges", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
     try {
       // Get user ID from session
       const userId = req.user?.id;
@@ -33,7 +35,10 @@ export function registerSavedCollegesRoutes(app: Express) {
   /**
    * Save a college for the authenticated user
    */
-  app.post("/api/saved-colleges/:collegeId", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/saved-colleges/:collegeId", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
     try {
       // Get user ID from session
       const userId = req.user?.id;
@@ -59,7 +64,10 @@ export function registerSavedCollegesRoutes(app: Express) {
   /**
    * Delete a saved college for the authenticated user
    */
-  app.delete("/api/saved-colleges/:collegeId", isAuthenticated, async (req: Request, res: Response) => {
+  app.delete("/api/saved-colleges/:collegeId", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
     try {
       // Get user ID from session
       const userId = req.user?.id;
