@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { GraduationCap, Trophy, BookOpen, Search, MapPin, Filter, DollarSign, Check } from "lucide-react";
+import { GraduationCap, Trophy, BookOpen, Search, MapPin, Filter, DollarSign, Check, Globe } from "lucide-react";
 import { 
   Card, CardContent, CardDescription, CardHeader, CardTitle 
 } from "@/components/ui/card";
+import { SimpleMap } from "@/components/college-matcher/simple-map";
+import { SaveCollegeButton } from "@/components/college-matcher/save-college-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -88,6 +90,7 @@ export default function CollegeMatcherPage() {
   
   // State for filters
   const [filters, setFilters] = useState({
+    searchQuery: "",
     region: "",
     preferredState: "",
     maxDistance: "",
@@ -118,6 +121,7 @@ export default function CollegeMatcherPage() {
   const applyFilters = () => {
     // Build query params
     const params = new URLSearchParams();
+    if (filters.searchQuery) params.append("query", filters.searchQuery);
     if (filters.region) params.append("region", filters.region);
     if (filters.preferredState) params.append("preferredState", filters.preferredState);
     if (filters.maxDistance) params.append("maxDistance", filters.maxDistance);
@@ -181,6 +185,20 @@ export default function CollegeMatcherPage() {
             </CardHeader>
             <CardContent>
               {/* Search and Location Filters */}
+              {/* Search bar */}
+              <div className="mb-4">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search for a college by name..."
+                    className="pl-8"
+                    value={filters.searchQuery || ""}
+                    onChange={(e) => handleFilterChange("searchQuery", e.target.value)}
+                  />
+                </div>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="region" className="mb-1 block">
@@ -621,30 +639,52 @@ export default function CollegeMatcherPage() {
                                 <AccordionContent>
                                   <div className="space-y-4 mt-1 text-sm">
                                     {/* School Information */}
-                                    <div>
-                                      <h4 className="font-medium mb-1 text-sm">School Details</h4>
-                                      <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
-                                        {school.admissionRate && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                      <div>
+                                        <h4 className="font-medium mb-1 text-sm">School Details</h4>
+                                        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                                          {school.admissionRate && (
+                                            <div className="flex justify-between">
+                                              <span className="text-muted-foreground">Acceptance:</span>
+                                              <span>{(school.admissionRate * 100).toFixed(0)}%</span>
+                                            </div>
+                                          )}
+                                          {school.averageGPA && (
+                                            <div className="flex justify-between">
+                                              <span className="text-muted-foreground">Avg GPA:</span>
+                                              <span>{school.averageGPA.toFixed(1)}</span>
+                                            </div>
+                                          )}
                                           <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Acceptance:</span>
-                                            <span>{(school.admissionRate * 100).toFixed(0)}%</span>
+                                            <span className="text-muted-foreground">In-state:</span>
+                                            <span>${school.tuition.inState.toLocaleString()}</span>
                                           </div>
-                                        )}
-                                        {school.averageGPA && (
                                           <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Avg GPA:</span>
-                                            <span>{school.averageGPA.toFixed(1)}</span>
+                                            <span className="text-muted-foreground">Out-of-state:</span>
+                                            <span>${school.tuition.outOfState.toLocaleString()}</span>
                                           </div>
-                                        )}
-                                        <div className="flex justify-between">
-                                          <span className="text-muted-foreground">In-state:</span>
-                                          <span>${school.tuition.inState.toLocaleString()}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                          <span className="text-muted-foreground">Out-of-state:</span>
-                                          <span>${school.tuition.outOfState.toLocaleString()}</span>
+                                          {school.website && (
+                                            <div className="col-span-2 mt-1 pt-1 border-t flex items-center gap-1">
+                                              <Globe className="h-3 w-3 text-muted-foreground" />
+                                              <a 
+                                                href={school.website} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="text-primary underline text-xs truncate"
+                                              >
+                                                Visit website
+                                              </a>
+                                            </div>
+                                          )}
                                         </div>
                                       </div>
+                                      
+                                      {/* Location Map */}
+                                      <SimpleMap 
+                                        city={school.city} 
+                                        state={school.state} 
+                                        className="md:mt-0 mt-2 h-24"
+                                      />
                                     </div>
                                     
                                     {/* Football Program */}
