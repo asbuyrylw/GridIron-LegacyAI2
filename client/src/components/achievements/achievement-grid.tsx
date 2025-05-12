@@ -269,8 +269,8 @@ export function AchievementGrid({
                 <div>
                   <span className="font-medium">Status:</span>
                   <Badge 
-                    variant={isCompleted(selectedAchievement.id) ? "success" : "outline"} 
-                    className="ml-2"
+                    variant={isCompleted(selectedAchievement.id) ? "default" : "outline"} 
+                    className={`ml-2 ${isCompleted(selectedAchievement.id) ? "bg-green-500 hover:bg-green-600 text-white" : ""}`}
                   >
                     {isCompleted(selectedAchievement.id) ? "Completed" : "In Progress"}
                   </Badge>

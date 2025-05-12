@@ -34,20 +34,20 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
     enabled: !!user,
   });
   
+  // Import the achievement badges
+  const { ACHIEVEMENT_BADGES } = require('@/lib/achievement-badges');
+
   // Calculate total points
   const totalPoints = achievements.reduce((total, achievement) => {
     if (achievement.completed) {
-      // We need to find the achievement in the database to get the point value
-      const achData = ACHIEVEMENT_DATABASE[achievement.achievementId];
+      // Find the achievement in the badges list to get the point value
+      const achData = ACHIEVEMENT_BADGES.find(a => a.id === achievement.achievementId);
       if (achData) {
-        return total + achData.pointsReward;
+        return total + achData.pointValue;
       }
     }
     return total;
   }, 0);
-  
-  // Placeholder for achievement details - this would normally come from your achievement badges lib
-  const ACHIEVEMENT_DATABASE: Record<string, Achievement> = {};
   
   // Update achievement progress
   const updateProgressMutation = useMutation({
