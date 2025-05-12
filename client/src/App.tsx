@@ -25,7 +25,7 @@ import SocialSettingsPage from "@/pages/social-settings-page";
 import TeamsPage from "@/pages/teams-page";
 import TeamDetailsPage from "@/pages/team-details-page";
 import RecruitingPage from "@/pages/recruiting-page";
-import EnhancedCollegeMatcherPage from "@/pages/enhanced-college-matcher-page";
+import EnhancedCollegeMatcherPage from "@/pages/enhanced-college-matcher-fixed";
 import RecruitingProfileBuilderPage from "@/pages/recruiting-profile-builder-page";
 import ParentDashboard from "@/pages/parent-dashboard";
 import CoachDashboard from "@/pages/coach-dashboard";
