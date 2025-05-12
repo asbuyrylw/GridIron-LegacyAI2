@@ -1,343 +1,273 @@
 import { useState } from "react";
-import { Header } from "@/components/layout/header";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import { useAchievementProgress } from "@/hooks/use-achievement-progress";
+import { Helmet } from "react-helmet";
 import { ACHIEVEMENT_BADGES } from "@/lib/achievement-badges";
 import { AchievementGrid } from "@/components/achievements/achievement-grid";
-import { Leaderboards } from "@/components/gamification/leaderboards";
-import { AchievementEarnedAnimation } from "@/components/achievements/achievement-earned-animation";
-import { Award, Trophy, Medal, Star, BookOpen, Rocket, Crown } from "lucide-react";
+import { Leaderboard } from "@/components/gamification/leaderboard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { Award, Medal, Trophy, Target, Star, Crown, Users } from "lucide-react";
 
 export default function GamificationPage() {
-  // Achievements and leaderboards section
-  const { achievements, totalPoints } = useAchievementProgress();
-  const [showDemo, setShowDemo] = useState(false);
-  const [selectedAchievementIndex, setSelectedAchievementIndex] = useState(0);
+  const { user } = useAuth();
+  const { totalPoints, isLoading } = useAchievementProgress();
+  const totalPossiblePoints = ACHIEVEMENT_BADGES.reduce((sum, achievement) => sum + achievement.pointsReward, 0);
+  const progressPercentage = (totalPoints / totalPossiblePoints) * 100;
   
-  // Calculate some stats
-  const completedCount = achievements.filter(a => a.completed).length;
-  const totalCount = ACHIEVEMENT_BADGES.length;
-  const completionPercentage = Math.round((completedCount / totalCount) * 100);
+  const yourLevel = getLevelFromPoints(totalPoints);
+  const nextLevel = yourLevel + 1;
+  const pointsForNextLevel = getPointsForLevel(nextLevel);
+  const pointsForCurrentLevel = getPointsForLevel(yourLevel);
+  const progressToNextLevel = Math.min(100, ((totalPoints - pointsForCurrentLevel) / (pointsForNextLevel - pointsForCurrentLevel)) * 100);
   
-  // Get the completion count by type
-  const getCompletionByType = (type: string) => {
-    const typeAchievements = ACHIEVEMENT_BADGES.filter(a => a.type === type);
-    const completedTypeAchievements = achievements.filter(a => {
-      const achievement = ACHIEVEMENT_BADGES.find(badge => badge.id === a.achievementId);
-      return a.completed && achievement?.type === type;
-    });
-    
-    return {
-      completed: completedTypeAchievements.length,
-      total: typeAchievements.length,
-      percentage: Math.round((completedTypeAchievements.length / typeAchievements.length) * 100)
-    };
-  };
+  // Get level and title based on points
+  function getLevelFromPoints(points: number): number {
+    if (points < 50) return 1;
+    if (points < 150) return 2;
+    if (points < 300) return 3;
+    if (points < 500) return 4;
+    if (points < 750) return 5;
+    if (points < 1000) return 6;
+    if (points < 1500) return 7;
+    if (points < 2000) return 8;
+    if (points < 3000) return 9;
+    return 10;
+  }
   
-  // Achievement types with their display names and icons
-  const achievementTypes = [
-    { type: 'performance', name: 'Performance', icon: <Trophy className="h-4 w-4" /> },
-    { type: 'training', name: 'Training', icon: <Award className="h-4 w-4" /> },
-    { type: 'nutrition', name: 'Nutrition', icon: <BookOpen className="h-4 w-4" /> },
-    { type: 'profile', name: 'Profile', icon: <Star className="h-4 w-4" /> },
-    { type: 'social', name: 'Social', icon: <Crown className="h-4 w-4" /> },
-    { type: 'recruiting', name: 'Recruiting', icon: <Rocket className="h-4 w-4" /> },
-    { type: 'academic', name: 'Academic', icon: <Medal className="h-4 w-4" /> },
-  ];
+  // Get points required for a level
+  function getPointsForLevel(level: number): number {
+    switch (level) {
+      case 1: return 0;
+      case 2: return 50;
+      case 3: return 150;
+      case 4: return 300;
+      case 5: return 500;
+      case 6: return 750;
+      case 7: return 1000;
+      case 8: return 1500;
+      case 9: return 2000;
+      case 10: return 3000;
+      default: return 0;
+    }
+  }
   
-  // Show achievement earned animation demo
-  const showAchievementDemo = (index: number) => {
-    setSelectedAchievementIndex(index);
-    setShowDemo(true);
-  };
+  // Get title based on level
+  function getTitleForLevel(level: number): string {
+    switch (level) {
+      case 1: return "Rookie";
+      case 2: return "Prospect";
+      case 3: return "Rising Star";
+      case 4: return "Contender";
+      case 5: return "Veteran";
+      case 6: return "All-Star";
+      case 7: return "MVP";
+      case 8: return "Champion";
+      case 9: return "Legend";
+      case 10: return "Hall of Famer";
+      default: return "Rookie";
+    }
+  }
   
   return (
-    <div className="pb-20">
-      <Header />
+    <>
+      <Helmet>
+        <title>Achievements & Leaderboards | GridIron LegacyAI</title>
+      </Helmet>
       
-      <main className="container mx-auto px-4 pt-6">
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold">Achievements & Leaderboards</h1>
+      <div className="container py-6 space-y-6">
+        <div className="flex flex-col space-y-2">
+          <h1 className="text-3xl font-bold">Achievements & Leaderboards</h1>
           <p className="text-muted-foreground">
-            Track your progress, earn badges, and see how you rank against other athletes
+            Track your progress, earn achievements, and compete with other athletes
           </p>
         </div>
         
-        {/* Stats Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-primary/10 rounded-full mr-3">
-                  <Trophy className="h-6 w-6 text-primary" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Progress Overview */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-primary" />
+                Your Progress
+              </CardTitle>
+              <CardDescription>
+                Track your achievements and level progress
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Overall Progress */}
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <div className="relative h-20 w-20">
+                        <div className="absolute inset-0 rounded-full border-4 border-primary/20 flex items-center justify-center">
+                          <Crown className="h-8 w-8 text-primary" />
+                        </div>
+                        <svg className="h-20 w-20 transform -rotate-90">
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="36"
+                            stroke="currentColor"
+                            strokeWidth="8"
+                            fill="transparent"
+                            className="text-primary/20"
+                          />
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r="36"
+                            stroke="currentColor"
+                            strokeWidth="8"
+                            fill="transparent"
+                            strokeDasharray={`${2 * Math.PI * 36}`}
+                            strokeDashoffset={`${(2 * Math.PI * 36) * (1 - progressPercentage / 100)}`}
+                            className="text-primary"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold">{totalPoints} / {totalPossiblePoints}</div>
+                    <div className="text-sm text-muted-foreground">Total Achievement Points</div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Points</p>
-                  <div className="text-2xl font-bold">{totalPoints}</div>
+                
+                {/* Current Level */}
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="inline-flex items-center justify-center mb-2 bg-primary/10 text-primary h-20 w-20 rounded-full">
+                      <div>
+                        <div className="text-3xl font-bold">{yourLevel}</div>
+                        <div className="text-xs">Level</div>
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold">{getTitleForLevel(yourLevel)}</div>
+                    <div className="text-sm text-muted-foreground">Current Rank</div>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-amber-500/10 rounded-full mr-3">
-                  <Award className="h-6 w-6 text-amber-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Achievements Unlocked</p>
-                  <div className="text-2xl font-bold">
-                    {completedCount} <span className="text-base text-muted-foreground">/ {totalCount}</span>
+                
+                {/* Level Progress */}
+                <div className="space-y-4">
+                  <div className="flex flex-col justify-center h-full">
+                    <h4 className="text-sm font-medium mb-1">Progress to Level {nextLevel}</h4>
+                    <Progress value={progressToNextLevel} className="h-2" />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>Level {yourLevel}</span>
+                      <span>{totalPoints - pointsForCurrentLevel} / {pointsForNextLevel - pointsForCurrentLevel} points</span>
+                      <span>Level {nextLevel}</span>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <h4 className="text-sm font-medium mb-1">Achievements Completed</h4>
+                      <div className="flex gap-3 items-center justify-between">
+                        <div className="flex gap-2">
+                          <Award className="text-amber-500 h-5 w-5" />
+                          <Medal className="text-slate-400 h-5 w-5" />
+                          <Medal className="text-amber-700 h-5 w-5" />
+                        </div>
+                        <div className="text-sm font-medium">
+                          {/* This should be calculated based on user's completed achievements */}
+                          12 / {ACHIEVEMENT_BADGES.length}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-green-500/10 rounded-full mr-3">
-                  <Star className="h-6 w-6 text-green-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Performance Milestones</p>
-                  <div className="text-2xl font-bold">
-                    {getCompletionByType('performance').completed} <span className="text-base text-muted-foreground">/ {getCompletionByType('performance').total}</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-blue-500/10 rounded-full mr-3">
-                  <Medal className="h-6 w-6 text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Your Leaderboard Rank</p>
-                  <div className="text-2xl font-bold">
-                    <span className="text-base text-muted-foreground">#</span> 1
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Leaderboard */}
+          <Leaderboard />
         </div>
         
-        {/* Main content tabs */}
-        <Tabs defaultValue="achievements" className="mb-8">
-          <TabsList className="mb-4">
-            <TabsTrigger value="achievements">Achievements</TabsTrigger>
-            <TabsTrigger value="leaderboards">Leaderboards</TabsTrigger>
+        <Tabs defaultValue="achievements" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="achievements" className="flex items-center gap-1">
+              <Award className="h-4 w-4" />
+              <span>Achievements</span>
+            </TabsTrigger>
+            <TabsTrigger value="leaderboards" className="flex items-center gap-1">
+              <Trophy className="h-4 w-4" />
+              <span>Leaderboards</span>
+            </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="achievements">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <AchievementGrid 
-                  title="All Achievements" 
-                  description="Track your progress and unlock new achievements"
-                  showTypeFilter={true}
-                />
-              </div>
-              
-              <div className="space-y-6">
-                {/* Achievement Categories */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Achievement Categories</CardTitle>
-                    <CardDescription>Your progress across all categories</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {achievementTypes.map(({ type, name, icon }) => {
-                        const { completed, total, percentage } = getCompletionByType(type);
-                        return (
-                          <div key={type} className="space-y-1">
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center">
-                                <div className="mr-2">{icon}</div>
-                                <span className="text-sm font-medium">{name}</span>
-                              </div>
-                              <span className="text-sm text-muted-foreground">
-                                {completed} / {total}
-                              </span>
-                            </div>
-                            <div className="h-2 bg-primary/10 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-primary rounded-full"
-                                style={{ width: `${percentage}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Demo Section (for development) */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Achievement Demo</CardTitle>
-                    <CardDescription>See how achievements look when unlocked</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <p className="text-sm text-muted-foreground">
-                        Click the button below to see how achievement notifications appear when unlocked.
-                      </p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button 
-                          onClick={() => showAchievementDemo(0)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          Performance Badge
-                        </Button>
-                        <Button 
-                          onClick={() => showAchievementDemo(20)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          Training Badge
-                        </Button>
-                        <Button 
-                          onClick={() => showAchievementDemo(33)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          Academic Badge
-                        </Button>
-                        <Button 
-                          onClick={() => showAchievementDemo(28)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          Social Badge
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+          <TabsContent value="achievements" className="space-y-4 pt-2">
+            <AchievementGrid
+              title="All Achievements"
+              description="Complete achievements to earn points and unlock rewards"
+            />
           </TabsContent>
           
-          <TabsContent value="leaderboards">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <Leaderboards 
-                  initialLeaderboardId="weekly-points"
-                  showFilters={true}
-                  highlightCurrentUser={true}
-                  title="Performance Leaderboards"
-                />
-              </div>
-              
-              <div>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>How Leaderboards Work</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <p className="text-sm">
-                        Leaderboards showcase the top performing athletes across various metrics:
-                      </p>
+          <TabsContent value="leaderboards" className="space-y-4 pt-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Leaderboard 
+                timeframe="weekly" 
+                scope="team" 
+                showFilters={false}
+              />
+              <Leaderboard 
+                timeframe="monthly" 
+                scope="school" 
+                showFilters={false}
+              />
+              <Leaderboard
+                timeframe="allTime"
+                scope="global"
+                showFilters={false}
+              />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-primary" />
+                    Achievement Categories
+                  </CardTitle>
+                  <CardDescription>
+                    Top performers by achievement category
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {['performance', 'training', 'nutrition', 'recruiting'].map((category) => (
+                    <div key={category} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium capitalize">{category}</h4>
+                        <div className="text-xs text-muted-foreground">Top 3</div>
+                      </div>
                       
                       <div className="space-y-2">
-                        <div className="flex items-center">
-                          <Trophy className="h-4 w-4 text-amber-500 mr-2" />
-                          <p className="text-sm"><span className="font-medium">Points Leaderboards</span> - Achievement points earned</p>
-                        </div>
-                        <div className="flex items-center">
-                          <Crown className="h-4 w-4 text-purple-500 mr-2" />
-                          <p className="text-sm"><span className="font-medium">Performance Metrics</span> - Speed, strength, agility</p>
-                        </div>
-                        <div className="flex items-center">
-                          <Award className="h-4 w-4 text-blue-500 mr-2" />
-                          <p className="text-sm"><span className="font-medium">Training Stats</span> - Workout consistency and progress</p>
-                        </div>
-                        <div className="flex items-center">
-                          <Medal className="h-4 w-4 text-green-500 mr-2" />
-                          <p className="text-sm"><span className="font-medium">Academic Excellence</span> - GPA and academic achievements</p>
-                        </div>
-                      </div>
-                      
-                      <p className="text-sm">
-                        Leaderboards reset on different schedules:
-                      </p>
-                      <ul className="list-disc pl-5 space-y-1 text-sm">
-                        <li>Weekly leaderboards reset every Monday at midnight</li>
-                        <li>Monthly leaderboards reset on the 1st of each month</li>
-                        <li>All-time leaderboards never reset</li>
-                      </ul>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Recent Rank Changes */}
-                <Card className="mt-6">
-                  <CardHeader>
-                    <CardTitle>Your Recent Rankings</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center border-b pb-2">
-                        <span className="text-sm">Weekly Points</span>
-                        <div className="flex items-center text-sm">
-                          <span className="font-medium">Rank #1</span>
-                          <span className="text-green-500 ml-2">▲2</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-between items-center border-b pb-2">
-                        <span className="text-sm">40-Yard Dash</span>
-                        <div className="flex items-center text-sm">
-                          <span className="font-medium">Rank #5</span>
-                          <span className="text-red-500 ml-2">▼1</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-between items-center border-b pb-2">
-                        <span className="text-sm">Workouts Completed</span>
-                        <div className="flex items-center text-sm">
-                          <span className="font-medium">Rank #3</span>
-                          <span className="text-green-500 ml-2">▲5</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-between items-center pb-2">
-                        <span className="text-sm">Vertical Jump</span>
-                        <div className="flex items-center text-sm">
-                          <span className="font-medium">Rank #9</span>
-                          <span className="text-gray-400 ml-2">-</span>
-                        </div>
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="flex items-center gap-2 p-2 bg-muted/40 rounded-md">
+                            <div className="font-medium w-6 text-center">{i}</div>
+                            <Avatar className="h-6 w-6">
+                              <AvatarFallback>
+                                {i === 1 ? 'JD' : i === 2 ? 'TS' : 'RW'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-grow">
+                              {i === 1 ? 'John Doe' : i === 2 ? 'Tom Smith' : 'Ryan Wilson'}
+                            </div>
+                            <div className="text-primary font-medium">
+                              {i === 1 ? '125' : i === 2 ? '110' : '95'} pts
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  ))}
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>
-      </main>
-      
-      {/* Achievement Earned Animation Demo */}
-      {showDemo && ACHIEVEMENT_BADGES[selectedAchievementIndex] && (
-        <AchievementEarnedAnimation
-          achievement={ACHIEVEMENT_BADGES[selectedAchievementIndex]}
-          visible={showDemo}
-          onClose={() => setShowDemo(false)}
-        />
-      )}
-    </div>
+      </div>
+    </>
   );
 }
+
+import { useMedia } from "react-use";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";

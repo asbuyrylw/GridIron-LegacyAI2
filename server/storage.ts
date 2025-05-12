@@ -162,8 +162,12 @@ export interface IStorage {
   // Athlete Achievement Methods
   getAthleteAchievements(athleteId: number): Promise<AthleteAchievement[]>;
   getAthleteAchievement(athleteId: number, achievementId: number): Promise<AthleteAchievement | undefined>;
+  getAthleteAchievementByStringId(athleteId: number, achievementStringId: string): Promise<AthleteAchievement | undefined>;
   createAthleteAchievement(athleteAchievement: InsertAthleteAchievement): Promise<AthleteAchievement>;
   updateAthleteAchievement(id: number, updates: Partial<InsertAthleteAchievement>): Promise<AthleteAchievement | undefined>;
+  getAchievementProgressByUserId(userId: number): Promise<any[]>;
+  getAchievementProgressByAthleteId(athleteId: number): Promise<any[]>;
+  updateAchievementProgress(userId: number, achievementId: string, progress: number): Promise<any>;
 
   // Nutrition Plan Methods
   getNutritionPlans(athleteId: number): Promise<NutritionPlan[]>;
