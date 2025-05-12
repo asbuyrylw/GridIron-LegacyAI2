@@ -68,22 +68,23 @@ export function NutritionShoppingListGenerator({ athleteId }: NutritionShoppingL
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/athlete/${athleteId}/nutrition/recommendations`);
       return response.json();
-    },
-    onSuccess: (data) => {
-      // If no items have been added yet, use the recommendations
-      if (shoppingItems.length === 0 && data.items && data.items.length > 0) {
-        setShoppingItems(
-          data.items.map((item: any, index: number) => ({
-            id: `rec-${index}`,
-            name: item.name,
-            category: item.category,
-            quantity: item.quantity || "",
-            selected: true,
-          }))
-        );
-      }
     }
   });
+  
+  // Handle recommendations data when it changes
+  React.useEffect(() => {
+    if (recommendations && shoppingItems.length === 0 && recommendations.items && recommendations.items.length > 0) {
+      setShoppingItems(
+        recommendations.items.map((item, index) => ({
+          id: `rec-${index}`,
+          name: item.name,
+          category: item.category,
+          quantity: item.quantity || "",
+          selected: true,
+        }))
+      );
+    }
+  }, [recommendations, shoppingItems.length]);
   
   // Send shopping list to parents
   const sendShoppingListMutation = useMutation({
