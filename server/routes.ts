@@ -4129,7 +4129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  // Helper function to handle parent view access
+  // Helper function to handle parent token validation (deprecated - parent dashboard removed)
   async function handleParentViewAccess(ws: WebSocket, token: string) {
     try {
       // Load parent-access-service dynamically to avoid circular dependencies
@@ -4146,73 +4146,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
       
-      // Send confirmation
+      // Send information about email-only approach
       ws.send(JSON.stringify({
-        type: 'parent_view_success',
-        data: {
-          accessId: parentAccess.id,
-          name: parentAccess.name,
-          athleteId: parentAccess.athleteId
-        }
+        type: 'parent_view_deprecated',
+        message: 'Parent dashboard access has been replaced with email-only communications. Parents will receive updates directly via email - no login required.'
       }));
       
-      // Load athlete data
-      const athlete = await storage.getAthlete(parentAccess.athleteId);
-      if (athlete) {
-        // Send athlete basic info
-        ws.send(JSON.stringify({
-          type: 'athlete_data',
-          data: {
-            id: athlete.id,
-            firstName: athlete.firstName,
-            lastName: athlete.lastName,
-            position: athlete.position,
-            school: athlete.school,
-            grade: athlete.grade
-          }
-        }));
-        
-        // Send latest metrics data
-        const metrics = await loadLatestMetrics(parentAccess.athleteId);
-        if (metrics) {
-          ws.send(JSON.stringify({
-            type: 'metrics_update',
-            data: metrics
-          }));
+      // Close the websocket connection as there's no dashboard to maintain
+      setTimeout(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
         }
-        
-        // Send performance insights
-        const insights = await loadInsights(parentAccess.athleteId);
-        if (insights) {
-          ws.send(JSON.stringify({
-            type: 'insights_update',
-            data: insights
-          }));
-        }
-        
-        // Set up a periodic update interval (every 30 seconds)
-        // This simulates real-time updates for the demo
-        const intervalId = setInterval(async () => {
-          if (ws.readyState === WebSocket.OPEN) {
-            // Only send if we're still connected
-            const updatedMetrics = await loadLatestMetrics(parentAccess.athleteId);
-            if (updatedMetrics) {
-              ws.send(JSON.stringify({
-                type: 'metrics_update',
-                data: updatedMetrics
-              }));
-            }
-          } else {
-            // Clean up interval if connection is closed
-            clearInterval(intervalId);
-          }
-        }, 30000); // 30 seconds
-        
-        // Clean up interval when connection closes
-        ws.on('close', () => {
-          clearInterval(intervalId);
-        });
-      }
+      }, 5000); // Give the client 5 seconds to display the message before closing
+      
     } catch (error) {
       console.error('Error handling parent view access:', error);
       ws.send(JSON.stringify({

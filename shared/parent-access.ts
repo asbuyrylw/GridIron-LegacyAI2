@@ -7,7 +7,7 @@ export const parentAccessSchema = z.object({
   email: z.string().email("Valid email is required"),
   name: z.string().min(1, "Name is required"),
   relationship: z.string().min(1, "Relationship is required"),
-  accessToken: z.string(), // Unique token for accessing the read-only dashboard
+  accessToken: z.string(), // Access token for verification (not used for dashboard access - email-only approach)
   createdAt: z.date(),
   lastEmailSent: z.date().nullable(),
   receiveUpdates: z.boolean().default(true),
