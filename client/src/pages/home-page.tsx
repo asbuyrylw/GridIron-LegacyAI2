@@ -7,7 +7,6 @@ import { CombineMetric } from "@shared/schema";
 import { Redirect } from "wouter";
 
 // New Dashboard Components
-import { QuickActions } from "@/components/dashboard/quick-actions";
 import { MilestoneTrackers } from "@/components/dashboard/milestone-trackers";
 import { YearlyGoals } from "@/components/dashboard/yearly-goals";
 import { DailyPlans } from "@/components/dashboard/daily-plans";
@@ -59,49 +58,36 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen pb-16 relative bg-gradient-to-b from-blue-50/50 to-white">
-      <Header>
-        {/* Header Quick Actions */}
-        <div className="ml-auto">
-          <QuickActions />
-        </div>
-      </Header>
+      <Header />
       
       <main className="container mx-auto px-4 pt-4 pb-20">
-        {/* Top Section: Welcome + Daily Quote + Milestones */}
+        {/* Top Section: Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Left Section - Welcome */}
+          {/* Left Column - 2/3 width */}
           <div className="lg:col-span-2">
             {/* Welcome & Name */}
             <h1 className="text-2xl font-bold mb-3">Welcome back, {user?.firstName || 'Athlete'}!</h1>
             
             {/* Daily Quote */}
-            <div className="mb-6">
+            <div className="mb-4">
               <DailyQuote />
             </div>
             
-            {/* Milestone Trackers */}
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-3">Performance Milestones</h2>
-              <MilestoneTrackers metrics={latestMetrics} />
-            </div>
-          </div>
-          
-          {/* Right Section - Reminders */}
-          <div>
-            {/* Reminders Section */}
-            <div className="dashboard-card bg-blue-50 border-blue-100 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Reminders</h2>
+            {/* Reminders (Smaller, under daily quote) */}
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <BellRing className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-semibold">Reminders</h2>
               </div>
               
-              <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row gap-2">
                 {reminders.map(reminder => (
-                  <div key={reminder.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-100">
-                    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <div key={reminder.id} className="flex items-center gap-2 p-2 bg-white rounded-lg border border-blue-100 flex-1">
+                    <div className="h-8 w-8 flex items-center justify-center rounded-full bg-primary/10 text-primary">
                       {reminder.icon}
                     </div>
                     <div>
-                      <h3 className="font-medium">{reminder.title}</h3>
+                      <h3 className="text-sm font-medium">{reminder.title}</h3>
                       <p className="text-xs text-muted-foreground">{reminder.description}</p>
                     </div>
                   </div>
@@ -109,16 +95,13 @@ export default function HomePage() {
               </div>
             </div>
             
-            {/* Yearly Goals Section */}
-            <YearlyGoals />
-          </div>
-        </div>
-        
-        {/* Main Dashboard Layout - 2 column grid on larger screens */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - 2/3 width */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Daily Plans */}
+            {/* Milestone Trackers */}
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold mb-3">Performance Milestones</h2>
+              <MilestoneTrackers metrics={latestMetrics} />
+            </div>
+            
+            {/* Daily Plans - Moved up directly under milestones */}
             <div>
               <h2 className="text-lg font-semibold mb-3">Today's Plans</h2>
               <DailyPlans />
@@ -127,6 +110,9 @@ export default function HomePage() {
           
           {/* Right Column - 1/3 width */}
           <div className="space-y-6">
+            {/* Yearly Goals Section - Moved up to top */}
+            <YearlyGoals />
+            
             {/* Achievements */}
             <AchievementSummary />
             

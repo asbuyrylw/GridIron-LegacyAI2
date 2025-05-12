@@ -94,10 +94,21 @@ export function MilestoneTrackers({ metrics }: MilestoneTrackersProps) {
             <span className="font-medium">Target: {milestone.target}{milestone.unit}</span>
           </div>
           
-          <Progress 
-            value={calculateProgress(milestone.current, milestone.target, milestone.isLowerBetter)} 
-            className="h-2 mb-2"
-          />
+          <div className="relative mb-2">
+            <Progress 
+              value={calculateProgress(milestone.current, milestone.target, milestone.isLowerBetter)} 
+              className="h-3 mb-2"
+            />
+            <div 
+              className="absolute -top-1 text-xs font-semibold bg-primary text-white rounded-full px-1.5 flex items-center justify-center transform -translate-y-full"
+              style={{ 
+                left: `${Math.min(Math.max(calculateProgress(milestone.current, milestone.target, milestone.isLowerBetter) - 5, 0), 95)}%`,
+                display: milestone.current ? 'flex' : 'none'
+              }}
+            >
+              {calculateProgress(milestone.current, milestone.target, milestone.isLowerBetter)}%
+            </div>
+          </div>
           
           <div className="text-xs text-muted-foreground mt-auto">
             {milestone.daysLeft} days to reach goal
