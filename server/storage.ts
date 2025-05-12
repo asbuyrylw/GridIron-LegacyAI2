@@ -215,6 +215,7 @@ export interface IStorage {
   getLeaderboardById(id: number): Promise<Leaderboard | undefined>;
   createLeaderboard(leaderboard: InsertLeaderboard): Promise<Leaderboard>;
   updateLeaderboard(id: number, active: boolean): Promise<Leaderboard | undefined>;
+  getLeaderboard(timeframe: string, scope: string): Promise<any[]>;
 
   // Leaderboard Entry Methods
   getLeaderboardEntries(leaderboardId: number): Promise<LeaderboardEntry[]>;
@@ -2043,6 +2044,15 @@ MemStorage.prototype.getSavedColleges = savedCollegesMethods.getSavedColleges;
 MemStorage.prototype.saveCollege = savedCollegesMethods.saveCollege;
 MemStorage.prototype.unsaveCollege = savedCollegesMethods.unsaveCollege;
 MemStorage.prototype.isCollegeSaved = savedCollegesMethods.isCollegeSaved;
+
+// Add gamification methods to MemStorage prototype
+import * as gamificationMethods from './gamification-storage';
+MemStorage.prototype.getAthleteAchievements = gamificationMethods.getAthleteAchievements;
+MemStorage.prototype.getAthleteAchievementByStringId = gamificationMethods.getAthleteAchievementByStringId;
+MemStorage.prototype.getAchievementProgressByUserId = gamificationMethods.getAchievementProgressByUserId;
+MemStorage.prototype.getAchievementProgressByAthleteId = gamificationMethods.getAchievementProgressByAthleteId;
+MemStorage.prototype.updateAchievementProgress = gamificationMethods.updateAchievementProgress;
+MemStorage.prototype.getLeaderboard = gamificationMethods.getLeaderboard;
 
 // Add a method to add team members (not defined elsewhere)
 MemStorage.prototype.addTeamMember = async function(teamMember: InsertTeamMember): Promise<TeamMember> {
