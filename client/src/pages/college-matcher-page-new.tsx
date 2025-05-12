@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { GraduationCap, Trophy, BookOpen, Search, MapPin, Filter, DollarSign, Check, Globe } from "lucide-react";
+import { GraduationCap, Trophy, BookOpen, Search, MapPin, Filter, DollarSign, Check, Globe, Bookmark as BookmarkIcon } from "lucide-react";
 import { 
   Card, CardContent, CardDescription, CardHeader, CardTitle 
 } from "@/components/ui/card";
@@ -106,10 +106,18 @@ export default function CollegeMatcherPage() {
   
   // State for active tab
   const [activeTab, setActiveTab] = useState("matches");
+  
+  // State for saved colleges
+  const [savedColleges, setSavedColleges] = useState<MatchedCollege[]>([]);
 
   // Fetch college matches
   const { data, isLoading, refetch } = useQuery<CollegeMatchResult>({
     queryKey: ["/api/college-matcher/1"], // Hardcoded athlete ID for now
+  });
+  
+  // Fetch saved colleges
+  const { data: savedCollegesData, isLoading: isSavedCollegesLoading } = useQuery<MatchedCollege[]>({
+    queryKey: ["/api/saved-colleges"],
   });
 
   // Handle filter changes
@@ -144,6 +152,18 @@ export default function CollegeMatcherPage() {
       setCollegeMatches(data);
     }
   }, [data]);
+  
+  // Update saved colleges when data is loaded
+  useEffect(() => {
+    if (savedCollegesData) {
+      setSavedColleges(savedCollegesData);
+    }
+  }, [savedCollegesData]);
+
+  // Helper function to check if a college is saved
+  const isCollegeSaved = (collegeId: number): boolean => {
+    return savedColleges.some(college => college.id === collegeId);
+  };
 
   // Division color mapping
   const divisionColors: Record<string, string> = {
@@ -172,8 +192,135 @@ export default function CollegeMatcherPage() {
       <Tabs defaultValue="matches" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="matches">Your Matches</TabsTrigger>
+          <TabsTrigger value="saved">
+            Saved Colleges
+            {savedColleges.length > 0 && (
+              <span className="ml-2 bg-primary/10 text-primary text-xs py-0.5 px-2 rounded-full">
+                {savedColleges.length}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="filters">Filters & Preferences</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="saved">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>Saved Colleges</CardTitle>
+              <CardDescription>
+                Colleges you've saved for future reference
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isSavedCollegesLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                    <p className="text-sm text-muted-foreground">Loading saved colleges...</p>
+                  </div>
+                </div>
+              ) : savedColleges.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
+                    <BookmarkIcon className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium">No saved colleges</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    You haven't saved any colleges yet. Click the bookmark icon on colleges you're interested in.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {savedColleges.map((school) => (
+                    <Card key={school.id} className="overflow-hidden border border-muted">
+                      <div className="relative">
+                        {/* Header with school color */}
+                        <div 
+                          className={`h-20 flex items-center justify-center ${
+                            school.division === "D1"
+                              ? "bg-gradient-to-r from-amber-500/80 to-amber-300/30"
+                              : school.division === "D2"
+                              ? "bg-gradient-to-r from-blue-500/80 to-blue-300/30"
+                              : school.division === "D3"
+                              ? "bg-gradient-to-r from-green-500/80 to-green-300/30"
+                              : school.division === "NAIA"
+                              ? "bg-gradient-to-r from-purple-500/80 to-purple-300/30"
+                              : "bg-gradient-to-r from-gray-500/80 to-gray-300/30"
+                          }`}
+                        >
+                          {/* Division badge */}
+                          <div className="absolute inset-0 flex justify-between items-start p-2 z-10">
+                            <SaveCollegeButton 
+                              collegeId={school.id} 
+                              initialSaved={true}
+                              size="sm"
+                            />
+                            <Badge 
+                              className={`${
+                                school.division === "D1"
+                                  ? "bg-amber-100 hover:bg-amber-100 text-amber-800"
+                                  : school.division === "D2"
+                                  ? "bg-blue-100 hover:bg-blue-100 text-blue-800"
+                                  : school.division === "D3"
+                                  ? "bg-green-100 hover:bg-green-100 text-green-800"
+                                  : school.division === "NAIA"
+                                  ? "bg-purple-100 hover:bg-purple-100 text-purple-800"
+                                  : "bg-gray-100 hover:bg-gray-100 text-gray-800"
+                              }`}
+                            >
+                              {school.division}
+                            </Badge>
+                          </div>
+                        </div>
+                        
+                        <div className="px-4 py-3">
+                          {/* School name and location */}
+                          <div className="flex flex-col">
+                            <h3 className="text-lg font-semibold truncate">{school.name}</h3>
+                            <div className="text-sm text-muted-foreground flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              <span>{`${school.city}, ${school.state}`}</span>
+                            </div>
+                          </div>
+                          
+                          {/* College details */}
+                          <div className="mt-3">
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              <Badge variant="outline" className="text-xs font-normal">
+                                {school.isPublic ? 'Public' : 'Private'}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs font-normal">
+                                {school.enrollment.toLocaleString()} students
+                              </Badge>
+                              {school.conference && (
+                                <Badge variant="outline" className="text-xs font-normal">
+                                  {school.conference}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Visit link */}
+                          {school.website && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="w-full mt-2"
+                              onClick={() => window.open(school.website, '_blank')}
+                            >
+                              <Globe className="h-3 w-3 mr-2" />
+                              Visit Website
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
         
         <TabsContent value="filters">
           <Card>
@@ -535,7 +682,12 @@ export default function CollegeMatcherPage() {
                             }`}
                           >
                             {/* Division badge */}
-                            <div className="absolute right-2 top-2 z-10">
+                            <div className="absolute inset-0 flex justify-between items-start p-2 z-10">
+                              <SaveCollegeButton 
+                                collegeId={school.id} 
+                                initialSaved={isCollegeSaved(school.id)}
+                                size="sm"
+                              />
                               <Badge 
                                 className={`${
                                   school.division === "D1"
