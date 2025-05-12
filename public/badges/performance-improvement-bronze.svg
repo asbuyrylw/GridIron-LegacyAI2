@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Bronze badge base -->
+  <circle cx="100" cy="100" r="90" fill="#8c5227" />
+  <circle cx="100" cy="100" r="80" fill="#a86932" />
+  
+  <!-- Shine effect -->
+  <circle cx="100" cy="100" r="75" fill="none" stroke="#c78446" stroke-width="2" />
+  <circle cx="100" cy="100" r="70" fill="none" stroke="#be732e" stroke-width="2" />
+  
+  <!-- Speed icon (lightning bolt) -->
+  <path d="M120,70H95l-10,50l25-10l-10,50l35-60h-25L120,70z" fill="#f8f8f8" stroke="#e2e2e2" stroke-width="2"/>
+  
+  <!-- Text for "Speed Demon" -->
+  <text x="100" y="150" font-family="Arial" font-size="14" font-weight="bold" fill="#f8f8f8" text-anchor="middle">Speed Demon</text>
+  <!-- Text for "Bronze" -->
+  <text x="100" y="170" font-family="Arial" font-size="12" fill="#e2e2e2" text-anchor="middle">Bronze</text>
+</svg>

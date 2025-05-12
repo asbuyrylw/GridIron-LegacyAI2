@@ -4,7 +4,7 @@ import { useAchievementProgress } from '@/hooks/use-achievement-progress';
 import { 
   Achievement, 
   getAchievementById, 
-  getAllAchievements,
+  ACHIEVEMENT_BADGES,
   AchievementCategory 
 } from '@/lib/achievement-badges';
 import { AchievementEarnedAnimation } from './achievement-earned-animation';
@@ -77,7 +77,7 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
 
   // Helper to find achievements that match a specific action
   const getMatchingAchievements = (type: string, action: string): Achievement[] => {
-    const achievements = getAllAchievements();
+    const achievements = ACHIEVEMENT_BADGES;
     
     // Map achievement categories to action types
     const categoryMap: Record<string, AchievementCategory> = {
@@ -126,7 +126,7 @@ export function AchievementProvider({ children }: { children: React.ReactNode })
     const achievementIds = actionMap[action] || [];
     
     // Filter achievements by type and IDs
-    return achievements.filter(achievement => 
+    return achievements.filter((achievement: Achievement) => 
       (type === 'all' || achievement.category === categoryMap[type]) && 
       achievementIds.includes(achievement.id)
     );

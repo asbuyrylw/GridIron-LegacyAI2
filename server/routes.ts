@@ -163,6 +163,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Direct endpoint for updating achievement progress
+  app.post("/api/achievements/progress", async (req, res, next) => {
+    try {
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const { achievementId, progress } = req.body;
+      
+      if (!achievementId) {
+        return res.status(400).json({ message: "Achievement ID is required" });
+      }
+      
+      // Update the achievement progress
+      const updatedAchievement = await storage.updateAchievementProgress(
+        req.user.id,
+        achievementId,
+        progress || 0
+      );
+      
+      res.json(updatedAchievement);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Get all achievements (for reference)
+  app.get("/api/achievements", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Get the user's achievement progress
+      const achievements = await storage.getAchievementProgressByUserId(req.user.id);
+      
+      // If no achievements are found, return an empty array
+      res.json(achievements || []);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   // Get leaderboard
   app.get("/api/leaderboard", async (req, res, next) => {
     try {
