@@ -8,7 +8,9 @@ import {
 
 // Leaderboard methods implementation
 export async function getLeaderboards(this: MemStorage, activeOnly: boolean = false): Promise<Leaderboard[]> {
-  const leaderboards = Array.from(this.leaderboardsMap.values());
+  // Use type assertion to access private class member
+  const leaderboardsMap = (this as any).leaderboardsMap;
+  const leaderboards = Array.from(leaderboardsMap.values());
   
   if (activeOnly) {
     return leaderboards.filter(lb => lb.active);
@@ -18,25 +20,42 @@ export async function getLeaderboards(this: MemStorage, activeOnly: boolean = fa
 }
 
 export async function getLeaderboardById(this: MemStorage, id: number): Promise<Leaderboard | undefined> {
-  return this.leaderboardsMap.get(id);
+  // Use type assertion to access private class member
+  const leaderboardsMap = (this as any).leaderboardsMap;
+  return leaderboardsMap.get(id);
 }
 
 export async function createLeaderboard(this: MemStorage, leaderboard: InsertLeaderboard): Promise<Leaderboard> {
-  const id = ++this.currentLeaderboardId;
+  // Use type assertion to access private class member
+  let currentId = (this as any).currentLeaderboardId;
+  const leaderboardsMap = (this as any).leaderboardsMap;
+  
+  // Increment the ID counter
+  currentId = currentId + 1;
+  (this as any).currentLeaderboardId = currentId;
   
   const newLeaderboard: Leaderboard = {
     ...leaderboard,
-    id,
+    id: currentId,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    // Ensure all nullable fields are explicitly set
+    startDate: leaderboard.startDate || null,
+    endDate: leaderboard.endDate || null,
+    active: leaderboard.active !== undefined ? leaderboard.active : true,
+    lowerIsBetter: leaderboard.lowerIsBetter !== undefined ? leaderboard.lowerIsBetter : false,
+    rules: leaderboard.rules || null
   };
   
-  this.leaderboardsMap.set(id, newLeaderboard);
+  leaderboardsMap.set(currentId, newLeaderboard);
   return newLeaderboard;
 }
 
 export async function updateLeaderboard(this: MemStorage, id: number, updates: Partial<InsertLeaderboard>): Promise<Leaderboard | undefined> {
-  const leaderboard = this.leaderboardsMap.get(id);
+  // Use type assertion to access private class member
+  const leaderboardsMap = (this as any).leaderboardsMap;
+  
+  const leaderboard = leaderboardsMap.get(id);
   
   if (!leaderboard) {
     return undefined;
@@ -48,21 +67,27 @@ export async function updateLeaderboard(this: MemStorage, id: number, updates: P
     updatedAt: new Date()
   };
   
-  this.leaderboardsMap.set(id, updatedLeaderboard);
+  leaderboardsMap.set(id, updatedLeaderboard);
   return updatedLeaderboard;
 }
 
 export async function deleteLeaderboard(this: MemStorage, id: number): Promise<boolean> {
-  return this.leaderboardsMap.delete(id);
+  // Use type assertion to access private class member
+  const leaderboardsMap = (this as any).leaderboardsMap;
+  return leaderboardsMap.delete(id);
 }
 
 // Leaderboard entry methods
-export async function getLeaderboardEntries(this: MemStorage, leaderboardId: number): Promise<any[]> {
-  const entries = Array.from(this.leaderboardEntriesMap.values())
+export async function getLeaderboardEntries(this: MemStorage, leaderboardId: number): Promise<LeaderboardEntry[]> {
+  // Use type assertion to access private class members
+  const leaderboardEntriesMap = (this as any).leaderboardEntriesMap;
+  const leaderboardsMap = (this as any).leaderboardsMap;
+  
+  const entries = Array.from(leaderboardEntriesMap.values())
     .filter(entry => entry.leaderboardId === leaderboardId);
   
   // Sort entries by value - descending or ascending based on the metric type
-  const leaderboard = this.leaderboardsMap.get(leaderboardId);
+  const leaderboard = leaderboardsMap.get(leaderboardId);
   const isLowerBetter = leaderboard?.lowerIsBetter || false;
   
   entries.sort((a, b) => {
@@ -73,62 +98,99 @@ export async function getLeaderboardEntries(this: MemStorage, leaderboardId: num
     }
   });
   
-  // Get all athletes for name lookups
-  const athletes = await this.getAllAthletes();
-  
-  // Add rank and athlete name to each entry
-  return entries.map((entry, index) => {
-    const athlete = athletes.find(a => a.id === entry.athleteId);
-    
-    return {
-      ...entry,
-      rank: index + 1,
-      athleteName: athlete ? `${athlete.firstName} ${athlete.lastName}` : `Athlete #${entry.athleteId}`
-    };
-  });
+  return entries;
 }
 
 export async function getLeaderboardEntry(this: MemStorage, id: number): Promise<LeaderboardEntry | undefined> {
-  return this.leaderboardEntriesMap.get(id);
+  // Use type assertion to access private class member
+  const leaderboardEntriesMap = (this as any).leaderboardEntriesMap;
+  return leaderboardEntriesMap.get(id);
 }
 
 export async function getLeaderboardEntryByAthlete(this: MemStorage, leaderboardId: number, athleteId: number): Promise<LeaderboardEntry | undefined> {
-  return Array.from(this.leaderboardEntriesMap.values())
+  // Use type assertion to access private class member
+  const leaderboardEntriesMap = (this as any).leaderboardEntriesMap;
+  
+  return Array.from(leaderboardEntriesMap.values())
     .find(entry => entry.leaderboardId === leaderboardId && entry.athleteId === athleteId);
 }
 
+export async function createLeaderboardEntry(this: MemStorage, entry: InsertLeaderboardEntry): Promise<LeaderboardEntry> {
+  // Use type assertion to access private class members
+  let currentId = (this as any).currentLeaderboardEntryId;
+  const leaderboardEntriesMap = (this as any).leaderboardEntriesMap;
+  
+  // Increment the ID counter
+  currentId = currentId + 1;
+  (this as any).currentLeaderboardEntryId = currentId;
+  
+  const newEntry: LeaderboardEntry = {
+    ...entry,
+    id: currentId,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    rank: null // Ensure rank is set explicitly
+  };
+  
+  leaderboardEntriesMap.set(currentId, newEntry);
+  return newEntry;
+}
+
+export async function updateLeaderboardEntry(this: MemStorage, id: number, updates: Partial<LeaderboardEntry>): Promise<LeaderboardEntry | undefined> {
+  // Use type assertion to access private class member
+  const leaderboardEntriesMap = (this as any).leaderboardEntriesMap;
+  
+  const entry = leaderboardEntriesMap.get(id);
+  if (!entry) return undefined;
+  
+  const updatedEntry: LeaderboardEntry = {
+    ...entry,
+    ...updates,
+    updatedAt: new Date()
+  };
+  
+  leaderboardEntriesMap.set(id, updatedEntry);
+  return updatedEntry;
+}
+
+// This is for backward compatibility with existing code
 export async function createOrUpdateLeaderboardEntry(this: MemStorage, entry: InsertLeaderboardEntry): Promise<LeaderboardEntry> {
-  // Check if an entry already exists for this athlete and leaderboard
-  const existingEntry = await this.getLeaderboardEntryByAthlete(entry.leaderboardId, entry.athleteId);
+  // Get all leaderboard entries
+  const leaderboardEntriesMap = (this as any).leaderboardEntriesMap;
+  const entries = Array.from(leaderboardEntriesMap.values());
+  
+  // Find existing entry manually
+  const existingEntry = entries.find((e: any) => 
+    e.leaderboardId === entry.leaderboardId && 
+    e.athleteId === entry.athleteId
+  );
   
   if (existingEntry) {
-    // Update existing entry
+    // Update existing entry directly
     const updatedEntry: LeaderboardEntry = {
       ...existingEntry,
       value: entry.value,
       updatedAt: new Date()
     };
     
-    this.leaderboardEntriesMap.set(existingEntry.id, updatedEntry);
+    leaderboardEntriesMap.set(existingEntry.id, updatedEntry);
     return updatedEntry;
   } else {
     // Create new entry
-    const id = ++this.currentLeaderboardEntryId;
-    
-    const newEntry: LeaderboardEntry = {
-      ...entry,
-      id,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    
-    this.leaderboardEntriesMap.set(id, newEntry);
-    return newEntry;
+    return this.createLeaderboardEntry(entry);
   }
 }
 
 export async function deleteLeaderboardEntry(this: MemStorage, id: number): Promise<boolean> {
-  return this.leaderboardEntriesMap.delete(id);
+  // Use type assertion to access private class member
+  const leaderboardEntriesMap = (this as any).leaderboardEntriesMap;
+  return leaderboardEntriesMap.delete(id);
+}
+
+// Helper method to get leaderboards by period (daily, weekly, monthly, all-time)
+export async function getLeaderboardsByPeriod(this: MemStorage, period: string): Promise<Leaderboard[]> {
+  const leaderboards = await this.getLeaderboards(true);
+  return leaderboards.filter(lb => lb.period === period);
 }
 
 // Seed initial leaderboards
