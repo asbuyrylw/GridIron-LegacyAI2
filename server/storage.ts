@@ -328,6 +328,7 @@ export class MemStorage implements IStorage {
   currentLeaderboardId: number = 0;
   currentLeaderboardEntryId: number = 0;
   currentTeamId: number = 0;
+  currentSavedCollegeId: number = 0;
   currentTeamMemberId: number = 0;
   currentTeamEventId: number = 0;
   currentTeamEventAttendanceId: number = 0;
