@@ -1,24 +1,24 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/use-auth";
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/use-auth';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Users, Trophy, Medal, Calendar, Star } from "lucide-react";
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Award, Medal, Trophy } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type LeaderboardTimeframe = 'weekly' | 'monthly' | 'allTime';
 type LeaderboardScope = 'team' | 'school' | 'global';
@@ -48,233 +48,178 @@ interface LeaderboardProps {
 
 export function Leaderboard({
   timeframe: initialTimeframe = 'weekly',
-  scope: initialScope = 'team',
+  scope: initialScope = 'global',
   showFilters = true,
   limit = 10,
-  title = "Leaderboard",
-  description = "Top athletes by achievement points",
+  title = 'Leaderboard',
+  description = 'Top athletes ranked by achievement points'
 }: LeaderboardProps) {
   const { user } = useAuth();
   const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>(initialTimeframe);
   const [scope, setScope] = useState<LeaderboardScope>(initialScope);
-  
-  // Get leaderboard data
-  const { data: leaderboard = [], isLoading } = useQuery<LeaderboardEntry[]>({
-    queryKey: ['/api/leaderboard', timeframe, scope],
-    enabled: !!user,
+
+  const {
+    data: leaderboard,
+    isLoading,
+    error
+  } = useQuery({
+    queryKey: ['/api/leaderboard', { timeframe, scope }],
+    queryFn: async () => {
+      const response = await fetch(`/api/leaderboard?timeframe=${timeframe}&scope=${scope}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch leaderboard data');
+      }
+      return response.json() as Promise<LeaderboardEntry[]>;
+    }
   });
-  
-  // Find current user's position in leaderboard
-  const userEntry = user ? leaderboard.find(entry => entry.userId === user.id) : undefined;
-  
-  // Format timeframe for display
-  const timeframeDisplay = {
-    weekly: "This Week",
-    monthly: "This Month",
-    allTime: "All Time"
-  };
-  
-  // Format scope for display
-  const scopeDisplay = {
-    team: "Team",
-    school: "School",
-    global: "Global"
-  };
-  
+
+  // Find user's position on the leaderboard
+  const userEntry = leaderboard?.find(entry => entry.userId === user?.id);
+
+  function getRankIcon(rank: number) {
+    switch (rank) {
+      case 1:
+        return <Trophy className="h-5 w-5 text-yellow-500" />;
+      case 2: 
+        return <Medal className="h-5 w-5 text-gray-400" />;
+      case 3:
+        return <Medal className="h-5 w-5 text-amber-700" />;
+      default:
+        return <span className="text-sm font-medium text-muted-foreground">{rank}</span>;
+    }
+  }
+
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
-              {title}
-            </CardTitle>
-            <CardDescription>
-              {description}
-            </CardDescription>
-          </div>
-          
-          {showFilters && (
-            <div className="flex gap-2">
-              <Select
-                value={timeframe}
-                onValueChange={(value) => setTimeframe(value as LeaderboardTimeframe)}
-              >
-                <SelectTrigger className="w-[120px]">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <SelectValue placeholder="Timeframe" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="weekly">This Week</SelectItem>
-                  <SelectItem value="monthly">This Month</SelectItem>
-                  <SelectItem value="allTime">All Time</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select
-                value={scope}
-                onValueChange={(value) => setScope(value as LeaderboardScope)}
-              >
-                <SelectTrigger className="w-[120px]">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    <SelectValue placeholder="Scope" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="team">Team</SelectItem>
-                  <SelectItem value="school">School</SelectItem>
-                  <SelectItem value="global">Global</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </div>
-        {!showFilters && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-            <Calendar className="h-3.5 w-3.5" />
-            <span>{timeframeDisplay[timeframe]}</span>
-            <span>•</span>
-            <Users className="h-3.5 w-3.5" />
-            <span>{scopeDisplay[scope]}</span>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+        
+        {showFilters && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            <Select
+              value={timeframe}
+              onValueChange={(value) => setTimeframe(value as LeaderboardTimeframe)}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Time Period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="weekly">This Week</SelectItem>
+                <SelectItem value="monthly">This Month</SelectItem>
+                <SelectItem value="allTime">All Time</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select
+              value={scope}
+              onValueChange={(value) => setScope(value as LeaderboardScope)}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Scope" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="team">My Teams</SelectItem>
+                <SelectItem value="school">My School</SelectItem>
+                <SelectItem value="global">Global</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         )}
       </CardHeader>
+      
       <CardContent>
         {isLoading ? (
-          // Loading state
-          Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 py-3">
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-16" />
+          <div className="space-y-4">
+            {Array(5).fill(0).map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-[150px]" />
+                  <Skeleton className="h-4 w-[100px]" />
+                </div>
+                <Skeleton className="ml-auto h-5 w-10" />
               </div>
-              <Skeleton className="h-6 w-12" />
-            </div>
-          ))
-        ) : leaderboard.length > 0 ? (
-          // Leaderboard entries
-          <div className="space-y-1">
-            {leaderboard.slice(0, limit).map((entry, index) => {
-              const isCurrentUser = user?.id === entry.userId;
-              const medalColor = index === 0 ? "text-amber-500" : index === 1 ? "text-slate-400" : index === 2 ? "text-amber-700" : "text-gray-400";
-              
-              return (
-                <div 
-                  key={entry.id} 
-                  className={`
-                    flex items-center gap-3 p-2.5 rounded-md
-                    ${isCurrentUser ? 'bg-primary/10' : 'hover:bg-muted/40'} 
-                    transition-colors
-                  `}
-                >
-                  {/* Rank */}
-                  <div className="font-semibold w-7 text-center flex items-center justify-center">
-                    {index < 3 ? (
-                      <Medal className={`h-5 w-5 ${medalColor}`} />
-                    ) : (
-                      <span className="text-muted-foreground">{index + 1}</span>
-                    )}
+            ))}
+          </div>
+        ) : error ? (
+          <div className="text-center py-6 text-muted-foreground">
+            Failed to load leaderboard data. Please try again.
+          </div>
+        ) : leaderboard?.length === 0 ? (
+          <div className="text-center py-6 text-muted-foreground">
+            No data available for this leaderboard.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {leaderboard?.slice(0, limit).map((entry) => (
+              <div 
+                key={entry.id}
+                className={cn(
+                  "flex items-center p-3 rounded-lg",
+                  entry.userId === user?.id ? "bg-muted" : "hover:bg-muted/50 transition-colors"
+                )}
+              >
+                <div className="flex items-center justify-center w-8 h-8">
+                  {getRankIcon(entry.rank)}
+                </div>
+                
+                <Avatar className="h-10 w-10 border mx-2">
+                  <AvatarImage src={entry.profileImage || undefined} />
+                  <AvatarFallback>
+                    {entry.firstName[0]}{entry.lastName[0]}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="ml-2 flex-1 min-w-0">
+                  <div className="font-medium truncate">
+                    {entry.firstName} {entry.lastName}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {entry.position} • Level {entry.level}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-1.5">
+                  <Award className="h-4 w-4 text-primary" />
+                  <span className="font-semibold">{entry.points}</span>
+                </div>
+              </div>
+            ))}
+            
+            {/* Show user position if not in top entries */}
+            {userEntry && userEntry.rank > limit && (
+              <>
+                <div className="h-px bg-border my-2" />
+                <div className="flex items-center p-3 rounded-lg bg-muted">
+                  <div className="flex items-center justify-center w-8 h-8">
+                    <span className="text-sm font-medium text-muted-foreground">{userEntry.rank}</span>
                   </div>
                   
-                  {/* Avatar */}
-                  <Avatar className="h-8 w-8 border">
-                    <AvatarImage src={entry.profileImage || undefined} alt={`${entry.firstName} ${entry.lastName}`} />
+                  <Avatar className="h-10 w-10 border mx-2">
+                    <AvatarImage src={userEntry.profileImage || undefined} />
                     <AvatarFallback>
-                      {entry.firstName.charAt(0)}{entry.lastName.charAt(0)}
+                      {userEntry.firstName[0]}{userEntry.lastName[0]}
                     </AvatarFallback>
                   </Avatar>
                   
-                  {/* User info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center">
-                      <div className="font-medium truncate">
-                        {entry.firstName} {entry.lastName}
-                        {isCurrentUser && (
-                          <span className="ml-1.5 text-xs text-primary">(You)</span>
-                        )}
-                      </div>
+                  <div className="ml-2 flex-1 min-w-0">
+                    <div className="font-medium truncate">
+                      {userEntry.firstName} {userEntry.lastName}
                     </div>
-                    <div className="flex items-center text-xs text-muted-foreground gap-1">
-                      <span className="truncate">{entry.position}</span>
-                      <span>•</span>
-                      <span className="flex items-center">
-                        <Star className="h-3 w-3 mr-1" />
-                        <span>Level {entry.level}</span>
-                      </span>
+                    <div className="text-xs text-muted-foreground">
+                      {userEntry.position} • Level {userEntry.level}
                     </div>
                   </div>
                   
-                  {/* Points */}
-                  <div className="font-semibold text-primary">
-                    {entry.points} pts
+                  <div className="flex items-center gap-1.5">
+                    <Award className="h-4 w-4 text-primary" />
+                    <span className="font-semibold">{userEntry.points}</span>
                   </div>
                 </div>
-              );
-            })}
+              </>
+            )}
           </div>
-        ) : (
-          // Empty state
-          <div className="text-center py-6">
-            <Trophy className="h-12 w-12 text-muted-foreground/20 mx-auto mb-3" />
-            <p className="text-muted-foreground">No leaderboard data available yet</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Complete achievements to appear on the leaderboard
-            </p>
-          </div>
-        )}
-        
-        {/* User's position if not in top entries */}
-        {userEntry && !leaderboard.slice(0, limit).some(entry => entry.userId === user?.id) && (
-          <>
-            <div className="my-3 flex items-center gap-2">
-              <div className="flex-grow border-t border-border" />
-              <span className="text-xs text-muted-foreground">Your Position</span>
-              <div className="flex-grow border-t border-border" />
-            </div>
-            
-            <div className="flex items-center gap-3 p-2.5 rounded-md bg-primary/10">
-              {/* Rank */}
-              <div className="font-semibold w-7 text-center">
-                {userEntry.rank}
-              </div>
-              
-              {/* Avatar */}
-              <Avatar className="h-8 w-8 border">
-                <AvatarImage src={userEntry.profileImage || undefined} alt={`${userEntry.firstName} ${userEntry.lastName}`} />
-                <AvatarFallback>
-                  {userEntry.firstName.charAt(0)}{userEntry.lastName.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              
-              {/* User info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center">
-                  <div className="font-medium truncate">
-                    {userEntry.firstName} {userEntry.lastName}
-                    <span className="ml-1.5 text-xs text-primary">(You)</span>
-                  </div>
-                </div>
-                <div className="flex items-center text-xs text-muted-foreground gap-1">
-                  <span className="truncate">{userEntry.position}</span>
-                  <span>•</span>
-                  <span className="flex items-center">
-                    <Star className="h-3 w-3 mr-1" />
-                    <span>Level {userEntry.level}</span>
-                  </span>
-                </div>
-              </div>
-              
-              {/* Points */}
-              <div className="font-semibold text-primary">
-                {userEntry.points} pts
-              </div>
-            </div>
-          </>
         )}
       </CardContent>
     </Card>

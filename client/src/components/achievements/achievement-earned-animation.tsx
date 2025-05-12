@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import Confetti from "react-confetti";
-import { useWindowSize } from "react-use";
-import { Achievement } from "@/lib/achievement-badges";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import * as LucideIcons from "lucide-react";
-import { LucideIcon } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useWindowSize } from 'react-use';
+import Confetti from 'react-confetti';
+import { Achievement } from '@/lib/achievement-badges';
+import { Button } from '@/components/ui/button';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
 
 interface AchievementEarnedAnimationProps {
   achievement: Achievement;
@@ -17,30 +17,15 @@ interface AchievementEarnedAnimationProps {
 export function AchievementEarnedAnimation({
   achievement,
   visible,
-  onClose,
+  onClose
 }: AchievementEarnedAnimationProps) {
-  const [confettiActive, setConfettiActive] = useState(false);
   const { width, height } = useWindowSize();
+  const [confettiActive, setConfettiActive] = useState(false);
   
-  // Get icon from Lucide icons
-  const IconComponent = LucideIcons[achievement.icon as keyof typeof LucideIcons] as LucideIcon;
-  
-  // Get color based on tier
-  const tierColors = {
-    bronze: { bg: 'bg-amber-700/10', border: 'border-amber-700', text: 'text-amber-700' },
-    silver: { bg: 'bg-slate-400/10', border: 'border-slate-400', text: 'text-slate-400' },
-    gold: { bg: 'bg-amber-400/10', border: 'border-amber-400', text: 'text-amber-400' },
-    platinum: { bg: 'bg-cyan-400/10', border: 'border-cyan-400', text: 'text-cyan-400' }
-  };
-  
-  const tierColor = tierColors[achievement.tier];
-  
-  // Play animation when dialog opens
   useEffect(() => {
     if (visible) {
       setConfettiActive(true);
-      
-      // Stop confetti after 5 seconds
+      // Automatically turn off confetti after 5 seconds
       const timer = setTimeout(() => {
         setConfettiActive(false);
       }, 5000);
@@ -48,64 +33,78 @@ export function AchievementEarnedAnimation({
       return () => clearTimeout(timer);
     }
   }, [visible]);
-  
+
   return (
-    <Dialog open={visible} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md overflow-hidden bg-opacity-90 backdrop-blur-sm">
-        {confettiActive && (
-          <Confetti
-            width={width}
-            height={height}
-            recycle={false}
-            numberOfPieces={200}
-            gravity={0.15}
-          />
-        )}
-        
-        <div className="flex flex-col items-center py-4">
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ 
-              type: "spring", 
-              damping: 12,
-              duration: 0.8
-            }}
-            className={`
-              w-32 h-32 rounded-full flex items-center justify-center mb-4
-              ${tierColor.bg} ${tierColor.border} border-4
-            `}
-          >
-            {IconComponent && (
-              <IconComponent className={`${tierColor.text} w-16 h-16`} />
-            )}
-          </motion.div>
+    <>
+      {confettiActive && <Confetti width={width} height={height} recycle={false} />}
+      
+      <Dialog open={visible} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="sm:max-w-md text-center p-0 overflow-hidden">
+          <div className="absolute top-2 right-2 z-10">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-6 w-6 rounded-full"
+              onClick={onClose}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
           
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-center"
-          >
-            <h2 className="text-2xl font-bold mb-1">Achievement Unlocked!</h2>
-            <h3 className="text-xl font-semibold mb-3">{achievement.name}</h3>
+          <div className="bg-gradient-to-b from-amber-400 to-yellow-600 p-6 flex flex-col items-center">
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5, type: 'spring' }}
+              className="mb-4"
+            >
+              <div className="relative">
+                <div className="absolute inset-0 bg-white/20 rounded-full blur-lg"></div>
+                <img 
+                  src={`/badges/${achievement.id}.svg`} 
+                  alt={achievement.name}
+                  className="w-32 h-32 relative z-10" 
+                  onError={(e) => {
+                    // Fallback to a default image if the badge SVG doesn't exist
+                    e.currentTarget.src = '/badges/default-badge.svg';
+                  }}
+                />
+              </div>
+            </motion.div>
+            
+            <motion.h2
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="text-2xl font-bold text-white mb-2"
+            >
+              Achievement Unlocked!
+            </motion.h2>
+            
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+            >
+              <Badge className="mb-4" variant="secondary">
+                {achievement.pointValue || 50} Points
+              </Badge>
+            </motion.div>
+          </div>
+          
+          <div className="p-6">
+            <h3 className="text-xl font-bold mb-2">{achievement.name}</h3>
             <p className="text-muted-foreground mb-4">{achievement.description}</p>
             
-            <div className="bg-muted rounded-lg p-3 mb-4">
-              <div className="flex items-center justify-center gap-2">
-                <LucideIcons.Award className="text-amber-500 h-5 w-5" />
-                <span className="font-medium">{achievement.pointsReward} points earned!</span>
-              </div>
-            </div>
-            
-            <div className="flex justify-center">
-              <Button onClick={onClose}>
-                Continue
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      </DialogContent>
-    </Dialog>
+            <Button 
+              className="w-full bg-amber-500 hover:bg-amber-600"
+              onClick={onClose}
+            >
+              Awesome!
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

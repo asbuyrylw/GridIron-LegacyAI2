@@ -163,6 +163,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get leaderboard
+  app.get("/api/leaderboard", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const timeframe = req.query.timeframe as string || 'weekly';
+      const scope = req.query.scope as string || 'global';
+      
+      const leaderboard = await storage.getLeaderboard(timeframe, scope);
+      res.json(leaderboard);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   // Leaderboard routes
   app.get("/api/leaderboards", async (req, res, next) => {
     try {
