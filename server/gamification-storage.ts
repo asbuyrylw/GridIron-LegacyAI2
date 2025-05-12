@@ -121,38 +121,79 @@ export async function updateAchievementProgress(this: MemStorage, userId: number
 
 // Implementation of leaderboard methods
 export async function getLeaderboard(this: MemStorage, timeframe: string, scope: string): Promise<any[]> {
-  // For now, return mock data for the leaderboard
+  // Get all users and athletes
   const users = await this.getAllUsers();
   const athletes = await this.getAllAthletes();
   
   // Map users to athletes
-  const athleteUsers = athletes.map(athlete => {
-    const user = users.find(u => u.id === athlete.userId);
-    return {
-      userId: user?.id || 0,
-      athleteId: athlete.id,
-      username: user?.username || '',
-      fullName: `${athlete.firstName} ${athlete.lastName}`,
-      profileImage: athlete.profileImage,
-    };
-  }).filter(au => au.userId > 0);
+  const athleteUsers = athletes
+    .filter(athlete => athlete.firstName && athlete.lastName) // Only include athletes with names
+    .map(athlete => {
+      const user = users.find(u => u.id === athlete.userId);
+      return {
+        userId: user?.id || 0,
+        athleteId: athlete.id,
+        username: user?.username || '',
+        firstName: athlete.firstName || '',
+        lastName: athlete.lastName || '',
+        profileImage: athlete.profileImage,
+        achievements: 0,
+        points: 0
+      };
+    }).filter(au => au.userId > 0);
   
-  // Generate random leaderboard entries
-  return athleteUsers.map((au, index) => {
-    const rank = index + 1;
-    const previousRank = Math.max(1, rank + (Math.floor(Math.random() * 3) - 1));
-    
-    return {
-      userId: au.userId,
-      athleteId: au.athleteId,
-      username: au.username,
-      fullName: au.fullName,
-      profileImage: au.profileImage,
-      points: Math.max(0, 1000 - (index * 50) + Math.floor(Math.random() * 30)),
-      rank,
-      previousRank,
-      achievements: Math.floor(Math.random() * 20) + 1,
-      topAchievement: 'Performance Master',
-    };
-  });
+  // Get all athlete achievements
+  const allAchievements = Array.from(this.athleteAchievementsMap.values());
+  
+  // Filter achievements based on timeframe
+  let filteredAchievements = allAchievements;
+  if (timeframe === 'week') {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    filteredAchievements = allAchievements.filter(a => 
+      a.earnedAt && a.earnedAt > oneWeekAgo && a.completed
+    );
+  } else if (timeframe === 'month') {
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    filteredAchievements = allAchievements.filter(a => 
+      a.earnedAt && a.earnedAt > oneMonthAgo && a.completed
+    );
+  } else {
+    // 'all-time' - only count completed achievements
+    filteredAchievements = allAchievements.filter(a => a.completed);
+  }
+  
+  // Count achievements and calculate points for each athlete
+  for (const achievement of filteredAchievements) {
+    const athleteUser = athleteUsers.find(au => au.athleteId === achievement.athleteId);
+    if (athleteUser) {
+      // Each completed achievement is worth 50 points
+      athleteUser.points += 50;
+      athleteUser.achievements += 1;
+    }
+  }
+  
+  // Filter by scope if needed (e.g., team, region, position)
+  // This is a placeholder for future implementation
+  let scopedAthletes = athleteUsers;
+  
+  // Sort by points (descending)
+  const sortedLeaderboard = scopedAthletes
+    .sort((a, b) => b.points - a.points);
+  
+  // Add rank and format
+  return sortedLeaderboard.map((entry, index) => ({
+    userId: entry.userId,
+    athleteId: entry.athleteId,
+    username: entry.username,
+    firstName: entry.firstName,
+    lastName: entry.lastName,
+    fullName: `${entry.firstName} ${entry.lastName}`,
+    profileImage: entry.profileImage,
+    points: entry.points,
+    rank: index + 1,
+    achievements: entry.achievements,
+    isCurrentUser: false // This will be set on the client side
+  }));
 }
