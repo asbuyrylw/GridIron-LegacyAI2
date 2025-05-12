@@ -368,7 +368,10 @@ router.post('/api/athlete/:athleteId/parent-report', async (req: Request, res: R
     
     for (const parentId of reportData.parentIds) {
       try {
-        const parentAccess = await parentAccessService.getParentAccessById(parentId);
+        // Get all parent accesses for this athlete and find the one matching the parentId
+        const parentAccesses = await parentAccessService.getParentAccessesByAthleteId(athleteId);
+        const parentAccess = parentAccesses.find(access => access.id === parentId);
+        
         if (!parentAccess || !parentAccess.active) {
           failedSends.push({
             parentId,
@@ -379,11 +382,11 @@ router.post('/api/athlete/:athleteId/parent-report', async (req: Request, res: R
         
         // Send email with report
         const emailSuccess = await emailService.sendNotification(
-          EmailNotificationType.PERFORMANCE_REPORT,
+          EmailNotificationType.PERFORMANCE_UPDATE, // Using PERFORMANCE_UPDATE instead of PERFORMANCE_REPORT
           parentAccess.email,
           parentAccess.name,
           `${athlete.firstName} ${athlete.lastName}`,
-          reportContent
+          { stats: reportContent } // Wrapping in stats object as expected by the email service
         );
         
         if (emailSuccess) {
