@@ -480,7 +480,10 @@ router.post('/api/athlete/:athleteId/nutrition/shopping-list', async (req: Reque
     
     for (const parentId of parentIds) {
       try {
-        const parentAccess = await parentAccessService.getParentAccessById(parentId);
+        // Get all parent accesses for this athlete and find the one matching the parentId
+        const parentAccesses = await parentAccessService.getParentAccessesByAthleteId(athleteId);
+        const parentAccess = parentAccesses.find(access => access.id === parentId);
+        
         if (!parentAccess || !parentAccess.active || !parentAccess.receiveNutritionInfo) {
           failedSends.push({
             parentId,
