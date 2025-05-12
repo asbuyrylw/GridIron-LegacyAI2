@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AchievementProvider } from "@/components/achievements/achievement-provider";
 import { SideNav } from "@/components/layout/side-nav";
+import { PageContainer } from "@/components/layout/page-container";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import OnboardingPage from "@/pages/onboarding-page";

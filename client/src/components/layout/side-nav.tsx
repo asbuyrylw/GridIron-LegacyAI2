@@ -26,6 +26,7 @@ import {
 export function SideNav() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   
   const navItems = [
     {
@@ -118,7 +119,7 @@ export function SideNav() {
               {navItems.map((item) => (
                 <li key={item.href}>
                   <Link href={item.href}>
-                    <a 
+                    <button
                       className={cn(
                         "flex items-center px-3 py-2 text-sm rounded-md w-full",
                         item.active 
@@ -129,7 +130,7 @@ export function SideNav() {
                     >
                       <item.icon className="mr-3 h-5 w-5" />
                       {item.label}
-                    </a>
+                    </button>
                   </Link>
                 </li>
               ))}
@@ -142,8 +143,6 @@ export function SideNav() {
   
   // For desktop, use a sidebar
   const DesktopNav = () => {
-    const [isCollapsed, setIsCollapsed] = useState(false);
-    
     return (
       <div 
         className={cn(
@@ -167,9 +166,9 @@ export function SideNav() {
             {navItems.map((item) => (
               <li key={item.href}>
                 <Link href={item.href}>
-                  <a 
+                  <button
                     className={cn(
-                      "flex items-center px-3 py-2 text-sm rounded-md",
+                      "flex items-center px-3 py-2 text-sm rounded-md w-full",
                       item.active 
                         ? "bg-primary/10 text-primary font-medium" 
                         : "text-muted-foreground hover:bg-muted",
@@ -178,7 +177,7 @@ export function SideNav() {
                   >
                     <item.icon className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
                     {!isCollapsed && <span>{item.label}</span>}
-                  </a>
+                  </button>
                 </Link>
               </li>
             ))}
@@ -192,8 +191,11 @@ export function SideNav() {
     <>
       <MobileNav />
       <DesktopNav />
-      {/* Add padding to content area to account for fixed sidebar on desktop */}
-      <div className="md:pl-[240px]" />
+      {/* Create a wrapper div that adjusts based on sidebar state */}
+      <div className={cn(
+        "transition-all duration-300",
+        isCollapsed ? "md:ml-[70px]" : "md:ml-[240px]"
+      )} />
     </>
   );
 }
