@@ -170,8 +170,8 @@ export function ParentReportGenerator({ athleteId }: ParentReportGeneratorProps)
       toast({
         title: "Report sent successfully",
         description: scheduleRecurring 
-          ? `Recurring reports will be sent ${recurringFrequency}` 
-          : "The report has been sent to the selected parents",
+          ? `Recurring reports will be emailed to parents ${recurringFrequency}` 
+          : "The performance report has been sent to parents via email",
       });
     },
     onError: (error: Error) => {
@@ -191,7 +191,7 @@ export function ParentReportGenerator({ athleteId }: ParentReportGeneratorProps)
           Generate Parent Report
         </CardTitle>
         <CardDescription>
-          Create and send reports to keep parents updated on your progress
+          Create and email reports to keep parents updated on your progress
         </CardDescription>
       </CardHeader>
       
@@ -384,7 +384,7 @@ export function ParentReportGenerator({ athleteId }: ParentReportGeneratorProps)
           {!generateReportMutation.isPending && (
             <Send className="mr-2 h-4 w-4" />
           )}
-          {scheduleRecurring ? 'Schedule Reports' : 'Send Report'}
+          {scheduleRecurring ? 'Schedule Email Reports' : 'Email Report to Parents'}
         </Button>
       </CardFooter>
     </Card>
