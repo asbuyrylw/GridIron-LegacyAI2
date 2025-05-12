@@ -29,7 +29,7 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
   const [newlyUnlocked, setNewlyUnlocked] = useState<string[]>([]);
   
   // Fetch user's achievement progress from the server
-  const { data: achievements = [], isLoading, refetch } = useQuery<AchievementProgress[]>({
+  const { data: progressData = [], isLoading, refetch } = useQuery<AchievementProgress[]>({
     queryKey: ['/api/achievements'],
     enabled: !!user,
   });
@@ -38,7 +38,7 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
   const { ACHIEVEMENT_BADGES } = require('@/lib/achievement-badges');
 
   // Calculate total points
-  const totalPoints = achievements.reduce((total, achievement) => {
+  const totalPoints = progressData.reduce((total, achievement) => {
     if (achievement.completed) {
       // Find the achievement in the badges list to get the point value
       const achData = ACHIEVEMENT_BADGES.find(a => a.id === achievement.achievementId);
@@ -82,12 +82,12 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
   
   // Check if an achievement is completed
   const isCompleted = (achievementId: string): boolean => {
-    return achievements.some(a => a.achievementId === achievementId && a.completed);
+    return progressData.some(a => a.achievementId === achievementId && a.completed);
   };
   
   // Get progress for an achievement
   const getProgress = (achievementId: string): number => {
-    const achievement = achievements.find(a => a.achievementId === achievementId);
+    const achievement = progressData.find(a => a.achievementId === achievementId);
     return achievement ? achievement.progress : 0;
   };
   
@@ -103,7 +103,7 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
   
   // Value object for the context
   const contextValue: AchievementContextType = {
-    achievements,
+    progressData,
     updateProgress,
     isCompleted,
     getProgress,
