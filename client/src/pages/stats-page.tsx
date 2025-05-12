@@ -13,6 +13,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { format } from "date-fns";
 import { Redirect, Link } from "wouter";
 import { Loader2 } from "lucide-react";
+import { PerformanceDashboard } from "@/components/dashboard/performance-dashboard";
+import { AiPerformanceInsights } from "@/components/dashboard/ai-performance-insights";
+import { GrowthPredictions, GrowthPredictionsPlaceholder } from "@/components/dashboard/growth-predictions";
+import { PerformanceComparison } from "@/components/dashboard/performance-comparison";
 
 export default function StatsPage() {
   const { user, isLoading } = useAuth();
@@ -70,11 +74,7 @@ export default function StatsPage() {
           
           <TabsContent value="dashboard">
             <div className="space-y-6">
-              {/* Import the PerformanceDashboard component */}
-              {React.createElement(
-                require("@/components/dashboard/performance-dashboard").PerformanceDashboard,
-                { athleteId }
-              )}
+              <PerformanceDashboard athleteId={athleteId} />
             </div>
           </TabsContent>
           
@@ -91,37 +91,23 @@ export default function StatsPage() {
           
           <TabsContent value="insights">
             <div className="space-y-6">
-              {/* AI Performance Insights component */}
-              {React.createElement(
-                require("@/components/dashboard/ai-performance-insights").AiPerformanceInsights,
-                { athleteId }
-              )}
+              <AiPerformanceInsights athleteId={athleteId} />
             </div>
           </TabsContent>
           
           <TabsContent value="predictions">
             <div className="space-y-6">
-              {/* Growth Predictions component */}
               {metrics && metrics.length > 0 ? (
-                React.createElement(
-                  require("@/components/dashboard/growth-predictions").GrowthPredictions,
-                  { currentMetrics: metrics[0] }
-                )
+                <GrowthPredictions currentMetrics={metrics[0]} />
               ) : (
-                React.createElement(
-                  require("@/components/dashboard/growth-predictions").GrowthPredictionsPlaceholder
-                )
+                <GrowthPredictionsPlaceholder />
               )}
             </div>
           </TabsContent>
           
           <TabsContent value="compare">
             <div className="space-y-6">
-              {/* Performance Comparison component */}
-              {React.createElement(
-                require("@/components/dashboard/performance-comparison").PerformanceComparison,
-                { athleteId }
-              )}
+              <PerformanceComparison athleteId={athleteId} />
             </div>
           </TabsContent>
         </Tabs>
