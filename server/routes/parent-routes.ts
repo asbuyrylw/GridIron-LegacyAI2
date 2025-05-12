@@ -34,10 +34,10 @@ const shoppingListSchema = z.object({
 
 // Helper function to validate athlete access
 async function validateAthleteAccess(req: Request, athleteId: number): Promise<boolean> {
-  if (!req.session) return false;
+  if (!req.session || !req.session.userId) return false;
   
   try {
-    const user = await storage.getUser(req.session.userId as number);
+    const user = await storage.getUser(req.session.userId);
     if (!user) return false;
     
     // If admin, grant access
@@ -51,10 +51,10 @@ async function validateAthleteAccess(req: Request, athleteId: number): Promise<b
     
     // If coach, check if athlete is on their team
     if (user.userType === 'coach') {
-      const coach = await storage.getCoachByUserId(user.id);
+      const coach = await storage.getCoach(user.id);
       if (!coach) return false;
       
-      const teams = await storage.getTeamsByCoachId(coach.id);
+      const teams = await storage.getTeams({ coachId: coach.id });
       if (!teams.length) return false;
       
       // Check if athlete is on any of coach's teams
@@ -68,11 +68,11 @@ async function validateAthleteAccess(req: Request, athleteId: number): Promise<b
     
     // If parent, check if they have a relationship with the athlete
     if (user.userType === 'parent') {
-      const parent = await storage.getParentByUserId(user.id);
+      const parent = await storage.getParent(user.id);
       if (!parent) return false;
       
-      const relationships = await storage.getParentAthleteRelationshipsByParentId(parent.id);
-      return relationships.some(rel => rel.athleteId === athleteId);
+      const relationships = await storage.getParentAthleteRelationships(parent.id);
+      return relationships.some((relationship: any) => relationship.athleteId === athleteId);
     }
     
     return false;
@@ -154,6 +154,8 @@ router.post('/api/athlete/parent-invite', async (req: Request, res: Response) =>
       email, 
       name, 
       relationship,
+      receiveUpdates: true, // default to true for receiving updates
+      receiveNutritionInfo: true, // default to true for nutrition info
       athleteName: `${athlete.firstName} ${athlete.lastName}`,
     };
     
