@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Timer, Target, Weight, ArrowUp } from "lucide-react";
 import { CombineMetric } from "@shared/schema";
 
@@ -80,37 +79,64 @@ export function MilestoneTrackers({ metrics }: MilestoneTrackersProps) {
     }
   };
 
+  // Function to create the circular progress SVG
+  const CircularProgress = ({ percentage }: { percentage: number }) => {
+    const radius = 30;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+    
+    return (
+      <div className="relative flex items-center justify-center">
+        <svg width="70" height="70" viewBox="0 0 100 100" className="transform -rotate-90">
+          {/* Background circle */}
+          <circle 
+            cx="50" 
+            cy="50" 
+            r={radius} 
+            fill="none" 
+            stroke="#e5e7eb" 
+            strokeWidth="8"
+          />
+          {/* Progress circle */}
+          <circle 
+            cx="50" 
+            cy="50" 
+            r={radius} 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="8" 
+            strokeDasharray={circumference} 
+            strokeDashoffset={strokeDashoffset}
+            className="text-primary transition-all duration-500 ease-in-out"
+            strokeLinecap="round"
+          />
+        </svg>
+        {/* Percentage text in the middle */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-sm font-bold">{percentage}%</span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {milestones.map((milestone) => (
-        <Card key={milestone.id} className="p-3 flex flex-col">
+        <Card key={milestone.id} className="p-3 flex flex-col items-center">
           <div className="flex items-center gap-2 mb-2">
             {milestone.icon}
             <span className="font-semibold text-sm">{milestone.name}</span>
           </div>
           
-          <div className="flex justify-between text-xs mb-1">
+          {/* Circular Progress */}
+          <CircularProgress percentage={calculateProgress(milestone.current, milestone.target, milestone.isLowerBetter)} />
+          
+          <div className="flex justify-between w-full text-xs mt-2">
             <span>Current: {milestone.current || 'N/A'}{milestone.unit}</span>
             <span className="font-medium">Target: {milestone.target}{milestone.unit}</span>
           </div>
           
-          <div className="relative mb-2">
-            <Progress 
-              value={calculateProgress(milestone.current, milestone.target, milestone.isLowerBetter)} 
-              className="h-3 mb-2"
-            />
-            <div 
-              className="absolute -top-1 text-xs font-semibold bg-primary text-white rounded-full px-1.5 flex items-center justify-center transform -translate-y-full"
-              style={{ 
-                left: `${Math.min(Math.max(calculateProgress(milestone.current, milestone.target, milestone.isLowerBetter) - 5, 0), 95)}%`,
-                display: milestone.current ? 'flex' : 'none'
-              }}
-            >
-              {calculateProgress(milestone.current, milestone.target, milestone.isLowerBetter)}%
-            </div>
-          </div>
-          
-          <div className="text-xs text-muted-foreground mt-auto">
+          <div className="text-xs text-muted-foreground mt-2 text-center">
             {milestone.daysLeft} days to reach goal
           </div>
         </Card>
