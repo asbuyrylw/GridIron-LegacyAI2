@@ -67,8 +67,8 @@ export function ParentAccessList({ athleteId }: ParentAccessListProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/athlete", athleteId, "parent-access"] });
       toast({
-        title: "Settings updated",
-        description: "Parent access settings have been updated.",
+        title: "Email settings updated",
+        description: "Parent email notification settings have been updated.",
       });
     },
     onError: (error: Error) => {
@@ -182,12 +182,12 @@ export function ParentAccessList({ athleteId }: ParentAccessListProps) {
                     {access.active ? (
                       <Badge variant="outline" className="text-xs text-green-600 border-green-200 bg-green-50">
                         <Check className="h-3 w-3 mr-1" />
-                        Access Enabled
+                        Email Updates Enabled
                       </Badge>
                     ) : (
                       <Badge variant="destructive" className="text-xs">
                         <X className="h-3 w-3 mr-1" />
-                        Access Revoked
+                        Email Updates Paused
                       </Badge>
                     )}
                   </div>
