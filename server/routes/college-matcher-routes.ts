@@ -5,6 +5,7 @@
 
 import { Express, Request, Response } from "express";
 import { z } from "zod";
+import { storage } from "../storage"; 
 import { enhancedCollegeMatcher } from "../services/enhanced-college-matcher";
 
 /**
@@ -21,7 +22,7 @@ export function registerCollegeMatcherRoutes(app: Express) {
       }
 
       // Get athlete ID from the authenticated user
-      const athlete = await req.app.locals.storage.getAthleteByUserId(req.user.id);
+      const athlete = await storage.getAthleteByUserId(req.user.id);
       
       if (!athlete) {
         return res.status(404).json({ message: "Athlete profile not found" });
