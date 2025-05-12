@@ -34,28 +34,49 @@ const TIER_OPTIONS = [
 type AchievementGridProps = {
   className?: string;
   showFilters?: boolean;
+  categoryFilter?: AchievementCategory | null;
+  tierFilter?: TierType | null;
 };
 
-export function AchievementGrid({ className, showFilters = true }: AchievementGridProps) {
+export function AchievementGrid({ 
+  className, 
+  showFilters = true,
+  categoryFilter: externalCategoryFilter = null,
+  tierFilter: externalTierFilter = null
+}: AchievementGridProps) {
   const { progressData, isLoading, getProgress, isCompleted } = useAchievementProgress();
   const achievements = useMemo(() => getAllAchievements(), []);
   
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [tierFilter, setTierFilter] = useState<string>('all');
+  const [internalCategoryFilter, setInternalCategoryFilter] = useState<string>('all');
+  const [internalTierFilter, setInternalTierFilter] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<string>('all');
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   
+  // Use external filters if provided, otherwise use internal state
+  const categoryFilter = externalCategoryFilter || internalCategoryFilter;
+  const tierFilter = externalTierFilter || internalTierFilter;
+  
   const filteredAchievements = useMemo(() => {
     return achievements.filter(achievement => {
-      const matchesCategory = categoryFilter === 'all' || achievement.category === categoryFilter;
-      const matchesTier = tierFilter === 'all' || achievement.tier === tierFilter;
+      // Handle external category filter or internal filter
+      const matchesCategory = 
+        (externalCategoryFilter ? 
+          achievement.category === externalCategoryFilter : 
+          categoryFilter === 'all' || achievement.category === categoryFilter);
+      
+      // Handle external tier filter or internal filter
+      const matchesTier = 
+        (externalTierFilter ? 
+          achievement.tier === externalTierFilter : 
+          tierFilter === 'all' || achievement.tier === tierFilter);
+      
       const matchesActive = activeTab === 'all' || 
                            (activeTab === 'completed' && isCompleted(achievement.id)) || 
                            (activeTab === 'in-progress' && !isCompleted(achievement.id) && getProgress(achievement.id) > 0);
       
       return matchesCategory && matchesTier && matchesActive;
     });
-  }, [achievements, categoryFilter, tierFilter, activeTab, isCompleted, getProgress]);
+  }, [achievements, categoryFilter, tierFilter, externalCategoryFilter, externalTierFilter, activeTab, isCompleted, getProgress]);
   
   // Calculate total progress metrics
   const progressMetrics = useMemo(() => {
@@ -70,11 +91,15 @@ export function AchievementGrid({ className, showFilters = true }: AchievementGr
   }, [progressData, achievements]);
   
   const handleCategoryChange = (value: string) => {
-    setCategoryFilter(value);
+    if (externalCategoryFilter === null) {
+      setInternalCategoryFilter(value);
+    }
   };
   
   const handleTierChange = (value: string) => {
-    setTierFilter(value);
+    if (externalTierFilter === null) {
+      setInternalTierFilter(value);
+    }
   };
   
   const handleAchievementClick = (achievement: Achievement) => {
@@ -82,8 +107,12 @@ export function AchievementGrid({ className, showFilters = true }: AchievementGr
   };
   
   const resetFilters = () => {
-    setCategoryFilter('all');
-    setTierFilter('all');
+    if (externalCategoryFilter === null) {
+      setInternalCategoryFilter('all');
+    }
+    if (externalTierFilter === null) {
+      setInternalTierFilter('all');
+    }
     setActiveTab('all');
   };
 

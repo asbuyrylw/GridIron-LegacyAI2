@@ -142,9 +142,9 @@ export function AchievementsShowcase() {
         <div className="px-6">
           <TabsList className="w-full grid grid-cols-5 lg:grid-cols-7">
             <TabsTrigger value="all">All</TabsTrigger>
-            {Object.keys(achievementsByType).map(type => (
-              <TabsTrigger key={type} value={type} className="capitalize">
-                {type}
+            {Object.keys(achievementsByCategory).map(category => (
+              <TabsTrigger key={category} value={category} className="capitalize">
+                {category}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -156,8 +156,8 @@ export function AchievementsShowcase() {
               {achievementsWithProgress.map((achievement) => {
                 const progress = achievement.progress;
                 const isCompleted = achievement.isCompleted;
-                const TypeIcon = typeIcons[achievement.type as keyof typeof typeIcons] || Trophy;
-                const color = typeColors[achievement.type as keyof typeof typeColors] || "#6366f1";
+                const CategoryIcon = categoryIcons[achievement.category as keyof typeof categoryIcons] || Trophy;
+                const color = categoryColors[achievement.category as keyof typeof categoryColors] || "#6366f1";
                 
                 return (
                   <div 
@@ -172,15 +172,15 @@ export function AchievementsShowcase() {
                           className="p-2 rounded-full mr-3" 
                           style={{ background: `${color}15`, color }}
                         >
-                          <TypeIcon className="h-5 w-5" />
+                          <CategoryIcon className="h-5 w-5" />
                         </div>
                         <div>
                           <h3 className="font-medium">{achievement.name}</h3>
                           <p className="text-sm text-muted-foreground">{achievement.description}</p>
                           <div className="flex items-center mt-1 text-xs text-muted-foreground">
-                            <span className="capitalize mr-2">{achievement.type}</span>
+                            <span className="capitalize mr-2">{achievement.category}</span>
                             <span>•</span>
-                            <span className="ml-2">{achievement.points} points</span>
+                            <span className="ml-2">{achievement.pointValue} points</span>
                           </div>
                         </div>
                       </div>
@@ -204,15 +204,15 @@ export function AchievementsShowcase() {
             </div>
           </TabsContent>
           
-          {Object.keys(achievementsByType).map(type => (
-            <TabsContent key={type} value={type} className="m-0">
+          {Object.keys(achievementsByCategory).map(category => (
+            <TabsContent key={category} value={category} className="m-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {achievementsByType[type].map((achievement) => {
+                {achievementsByCategory[category].map((achievement) => {
                   const achievementWithProgress = achievementsWithProgress.find(a => a.id === achievement.id);
                   const progress = achievementWithProgress?.progress || 0;
                   const isCompleted = achievementWithProgress?.isCompleted || false;
-                  const TypeIcon = typeIcons[type as keyof typeof typeIcons] || Trophy;
-                  const color = typeColors[type as keyof typeof typeColors] || "#6366f1";
+                  const CategoryIcon = categoryIcons[category as keyof typeof categoryIcons] || Trophy;
+                  const color = categoryColors[category as keyof typeof categoryColors] || "#6366f1";
                   
                   return (
                     <div 
@@ -227,15 +227,15 @@ export function AchievementsShowcase() {
                             className="p-2 rounded-full mr-3" 
                             style={{ background: `${color}15`, color }}
                           >
-                            <TypeIcon className="h-5 w-5" />
+                            <CategoryIcon className="h-5 w-5" />
                           </div>
                           <div>
                             <h3 className="font-medium">{achievement.name}</h3>
                             <p className="text-sm text-muted-foreground">{achievement.description}</p>
                             <div className="flex items-center mt-1 text-xs text-muted-foreground">
-                              <span className="capitalize mr-2">{type}</span>
+                              <span className="capitalize mr-2">{category}</span>
                               <span>•</span>
-                              <span className="ml-2">{achievement.points} points</span>
+                              <span className="ml-2">{achievement.pointValue} points</span>
                             </div>
                           </div>
                         </div>
