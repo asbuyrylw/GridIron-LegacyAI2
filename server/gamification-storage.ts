@@ -13,9 +13,17 @@ export async function getAthleteAchievements(this: MemStorage, athleteId: number
 }
 
 export async function getAthleteAchievementByStringId(this: MemStorage, athleteId: number, achievementStringId: string): Promise<AthleteAchievement | undefined> {
-  // Find achievement by athlete ID and string ID
+  // First, try to find the achievement by its ID in the achievements table
+  const achievement = Array.from(this.achievementsMap.values())
+    .find(a => a.achievementId === achievementStringId);
+  
+  if (!achievement) {
+    return undefined;
+  }
+  
+  // Then find the athlete achievement using the numeric ID from the achievements table
   return Array.from(this.athleteAchievementsMap.values())
-    .find(aa => aa.athleteId === athleteId && aa.achievementId === achievementStringId);
+    .find(aa => aa.athleteId === athleteId && aa.achievementId === achievement.id);
 }
 
 export async function getAchievementProgressByUserId(this: MemStorage, userId: number): Promise<any[]> {
@@ -28,12 +36,20 @@ export async function getAchievementProgressByUserId(this: MemStorage, userId: n
   // Get the athlete's achievements
   const athleteAchievements = await this.getAthleteAchievements(athlete.id);
   
+  // Get all achievements to map numeric IDs to string IDs
+  const allAchievements = Array.from(this.achievementsMap.values());
+  
   // Map to the format expected by the frontend
-  return athleteAchievements.map(aa => ({
-    achievementId: aa.achievementId,
-    progress: aa.progress || 0,
-    completed: aa.completed || false,
-    completedAt: aa.earnedAt?.toISOString()
+  return Promise.all(athleteAchievements.map(async (aa) => {
+    // Find the corresponding achievement to get the string ID
+    const achievement = allAchievements.find(a => a.id === aa.achievementId);
+    
+    return {
+      achievementId: achievement?.achievementId || `achievement-${aa.achievementId}`,
+      progress: aa.progress || 0,
+      completed: aa.completed || false,
+      completedAt: aa.earnedAt?.toISOString()
+    };
   }));
 }
 
@@ -41,24 +57,40 @@ export async function getAchievementProgressByAthleteId(this: MemStorage, athlet
   // Get the athlete's achievements
   const athleteAchievements = await this.getAthleteAchievements(athleteId);
   
+  // Get all achievements to map numeric IDs to string IDs
+  const allAchievements = Array.from(this.achievementsMap.values());
+  
   // Map to the format expected by the frontend
-  return athleteAchievements.map(aa => ({
-    achievementId: aa.achievementId,
-    progress: aa.progress || 0,
-    completed: aa.completed || false,
-    completedAt: aa.earnedAt?.toISOString()
+  return Promise.all(athleteAchievements.map(async (aa) => {
+    // Find the corresponding achievement to get the string ID
+    const achievement = allAchievements.find(a => a.id === aa.achievementId);
+    
+    return {
+      achievementId: achievement?.achievementId || `achievement-${aa.achievementId}`,
+      progress: aa.progress || 0,
+      completed: aa.completed || false,
+      completedAt: aa.earnedAt?.toISOString()
+    };
   }));
 }
 
-export async function updateAchievementProgress(this: MemStorage, userId: number, achievementId: string, progress: number): Promise<any> {
+export async function updateAchievementProgress(this: MemStorage, userId: number, achievementStringId: string, progress: number): Promise<any> {
   // First, get the athlete's ID from the user ID
   const athlete = await this.getAthleteByUserId(userId);
   if (!athlete) {
     throw new Error('Athlete not found');
   }
   
+  // Find the achievement by its string ID
+  const achievement = Array.from(this.achievementsMap.values())
+    .find(a => a.achievementId === achievementStringId);
+  
+  if (!achievement) {
+    throw new Error(`Achievement with ID ${achievementStringId} not found`);
+  }
+  
   // Check if the achievement already exists for this athlete
-  let athleteAchievement = await this.getAthleteAchievementByStringId(athlete.id, achievementId);
+  let athleteAchievement = await this.getAthleteAchievementByStringId(athlete.id, achievementStringId);
   
   const previouslyCompleted = athleteAchievement?.completed || false;
   
@@ -89,17 +121,17 @@ export async function updateAchievementProgress(this: MemStorage, userId: number
     });
     
     return {
-      achievementId,
+      achievementId: achievementStringId,
       progress,
       completed: isCompleted,
       previouslyCompleted,
       completedAt: result?.earnedAt?.toISOString(),
     };
   } else {
-    // Create a new achievement record
+    // Create a new achievement record with the numeric achievement ID
     const newAchievement: InsertAthleteAchievement = {
       athleteId: athlete.id,
-      achievementId,
+      achievementId: achievement.id, // Use the numeric ID here
       progress,
       completed: isCompleted,
       earnedAt: isCompleted ? new Date() : null,
@@ -110,7 +142,7 @@ export async function updateAchievementProgress(this: MemStorage, userId: number
     const createdAchievement = await this.createAthleteAchievement(newAchievement);
     
     return {
-      achievementId,
+      achievementId: achievementStringId,
       progress,
       completed: isCompleted,
       previouslyCompleted: false,
