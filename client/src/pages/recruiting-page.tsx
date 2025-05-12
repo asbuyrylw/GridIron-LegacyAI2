@@ -92,8 +92,8 @@ export default function RecruitingPage() {
   const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null);
   const [currentMessage, setCurrentMessage] = useState<any>(null);
   
-  // Get the athlete ID (in production, this would come from the user object)
-  const athleteId = 1; // Hard-coded for demo, would use user?.id in production
+  // Get the athlete ID from the user object
+  const athleteId = user?.athlete?.id || 1; // Fallback to 1 for testing if user not logged in
   
   // Fetch recruiting data
   const { data: analytics, isLoading: isLoadingAnalytics } = useRecruitingAnalytics(athleteId);

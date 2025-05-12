@@ -64,14 +64,8 @@ export function useRecruitingAnalytics(athleteId: number) {
     }
   });
   
-  // Handle error separately
-  if (query.error) {
-    toast({
-      title: "Error loading recruiting analytics",
-      description: query.error.message,
-      variant: "destructive",
-    });
-  }
+  // Don't show toast notifications during rendering as it causes infinite loops
+  // The error will be available to the component to handle
   
   return query;
 }
@@ -94,14 +88,8 @@ export function useRecruitingMessages(athleteId: number) {
     }
   });
   
-  // Handle error separately
-  if (query.error) {
-    toast({
-      title: "Error loading recruiting messages",
-      description: query.error.message,
-      variant: "destructive",
-    });
-  }
+  // Don't show toast notifications during rendering as it causes infinite loops
+  // The error will be available to the component to handle
   
   return query;
 }
@@ -125,14 +113,8 @@ export function useRecruitingMessageDetails(messageId: number) {
     enabled: !!messageId // Only run if messageId is provided
   });
   
-  // Handle error separately
-  if (query.error) {
-    toast({
-      title: "Error loading message details",
-      description: query.error.message,
-      variant: "destructive",
-    });
-  }
+  // Don't show toast notifications during rendering as it causes infinite loops
+  // The error will be available to the component to handle
   
   return query;
 }

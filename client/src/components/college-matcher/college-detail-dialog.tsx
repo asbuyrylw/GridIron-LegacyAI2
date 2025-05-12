@@ -264,7 +264,8 @@ export function CollegeDetailDialog({
                             <h3 className="text-base font-medium mb-3">Location</h3>
                             <div className="h-32 rounded-md overflow-hidden border">
                               <SimpleMap 
-                                location={`${college.city}, ${college.state}`} 
+                                city={college.city}
+                                state={college.state}
                                 name={college.name} 
                               />
                             </div>
