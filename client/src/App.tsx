@@ -7,7 +7,7 @@ import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AchievementProvider } from "@/components/achievements/achievement-provider";
-import { BottomNav } from "@/components/layout/bottom-nav";
+import { SideNav } from "@/components/layout/side-nav";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import OnboardingPage from "@/pages/onboarding-page";
@@ -113,8 +113,8 @@ function Router() {
         <Route component={NotFound} />
       </Switch>
       
-      {/* Only show bottom nav when user is logged in and has completed onboarding */}
-      {!needsOnboarding && !location.startsWith("/landing") && location !== "/auth" && <BottomNav />}
+      {/* Only show side nav when user is logged in and has completed onboarding */}
+      {!needsOnboarding && !location.startsWith("/landing") && location !== "/auth" && <SideNav />}
     </>
   );
 }
