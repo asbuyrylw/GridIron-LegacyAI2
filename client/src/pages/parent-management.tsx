@@ -95,8 +95,8 @@ export default function ParentManagementPage() {
       </div>
       
       <p className="text-muted-foreground mb-6">
-        Give your parents read-only access to track your progress, get shopping lists for your nutrition plan, 
-        and receive updates about your achievements.
+        Keep your parents informed via email with performance reports, nutrition shopping lists, 
+        and updates about your achievements - no login required.
       </p>
       
       <Tabs defaultValue="existing">
@@ -122,10 +122,10 @@ export default function ParentManagementPage() {
                 Parents with access can:
               </p>
               <ul className="list-disc pl-5 space-y-2 text-sm">
-                <li>View your performance stats and progress through a secure link</li>
-                <li>Receive email updates about your achievements and improvements</li>
-                <li>Get shopping lists based on your nutrition plan</li>
-                <li>View academic and athletic progress reports</li>
+                <li>Receive email updates about your performance stats and progress</li>
+                <li>Get updates about your achievements and improvements</li>
+                <li>Receive shopping lists based on your nutrition plan</li>
+                <li>Get academic and athletic progress reports via email</li>
               </ul>
               <Separator className="my-4" />
               <p className="text-sm text-muted-foreground">
