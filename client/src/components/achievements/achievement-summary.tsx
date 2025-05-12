@@ -13,34 +13,33 @@ import { useAuth } from "@/hooks/use-auth";
  * recent achievements for display on the dashboard or profile
  */
 export function AchievementSummary() {
-  const { achievements } = useAchievementProgress();
+  const { progressData, totalPoints: cachedPoints } = useAchievementProgress();
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   
-  // Get the total points
-  const totalPoints = achievements
-    .filter(a => a.completed)
-    .reduce((sum, a) => {
-      const achievement = ACHIEVEMENT_BADGES.find(badge => badge.id === a.achievementId);
-      return sum + (achievement?.points || 0);
-    }, 0);
+  // Get the total points (fallback to cached points if available)
+  const totalPoints = cachedPoints || 0;
   
   // Calculate completion percentage
-  const completedCount = achievements.filter(a => a.completed).length;
+  const completedCount = progressData && progressData.length ? 
+    progressData.filter(a => a.completed).length : 0;
   const totalCount = ACHIEVEMENT_BADGES.length;
-  const completionPercentage = Math.round((completedCount / totalCount) * 100);
+  const completionPercentage = totalCount > 0 ? 
+    Math.round((completedCount / totalCount) * 100) : 0;
   
   // Get recently completed achievements (up to 3)
-  const recentAchievements = achievements
-    .filter(a => a.completed && a.completedAt)
-    .sort((a, b) => {
-      return new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime();
-    })
-    .slice(0, 3)
-    .map(a => {
-      return ACHIEVEMENT_BADGES.find(badge => badge.id === a.achievementId);
-    })
-    .filter(Boolean);
+  const recentAchievements = progressData && progressData.length ?
+    progressData
+      .filter(a => a.completed && a.completedAt)
+      .sort((a, b) => {
+        return new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime();
+      })
+      .slice(0, 3)
+      .map(a => {
+        return ACHIEVEMENT_BADGES.find(badge => badge.id === a.achievementId);
+      })
+      .filter(Boolean) 
+    : [];
   
   return (
     <Card>
@@ -52,7 +51,6 @@ export function AchievementSummary() {
               title={`${user?.firstName || 'Player'}'s Football Achievements`}
               text={`I've unlocked ${completedCount} achievements and earned ${totalPoints} points on GridIron LegacyAI! 🏈`}
               size="icon"
-              variant="ghost"
             />
           </div>
           <span className="text-amber-600 font-bold">{totalPoints} pts</span>
@@ -85,7 +83,7 @@ export function AchievementSummary() {
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium">{achievement.name}</div>
-                        <div className="text-xs text-muted-foreground">{achievement.points} pts</div>
+                        <div className="text-xs text-muted-foreground">{achievement.pointValue} pts</div>
                       </div>
                     </div>
                   )
