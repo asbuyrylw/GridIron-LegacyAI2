@@ -261,7 +261,7 @@ export function Leaderboards({
             <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg text-sm">
               <span className="font-medium">Your Rank:</span>
               <span className="font-bold">{userRank}</span>
-              {userRank <= 3 && (
+              {typeof userRank === 'number' && userRank <= 3 && (
                 <div className="p-3 bg-primary/20 rounded-full">
                   <Award className="h-6 w-6 text-primary" />
                 </div>

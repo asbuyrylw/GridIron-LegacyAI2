@@ -1,3 +1,4 @@
+import React, { lazy, Suspense } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -88,6 +89,7 @@ function Router() {
         <ProtectedRoute path="/settings" component={SettingsPage} />
         <ProtectedRoute path="/social-achievements" component={SocialAchievementsPage} />
         <ProtectedRoute path="/achievements" component={AchievementsPage} />
+        <ProtectedRoute path="/gamification" component={lazy(() => import("@/pages/gamification-page"))} />
         <ProtectedRoute path="/social-feed" component={SocialFeedPage} />
         <ProtectedRoute path="/social-settings" component={SocialSettingsPage} />
         <ProtectedRoute path="/teams" component={TeamsPage} />
