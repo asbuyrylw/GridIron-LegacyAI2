@@ -2,6 +2,49 @@ import { pgTable, text, serial, integer, boolean, timestamp, json, real, date, j
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Type for college match results from the College Matcher tool
+export interface MatchedCollege {
+  id: number;
+  name: string;
+  division: string;
+  conference?: string;
+  region: string;
+  state: string;
+  city: string;
+  isPublic: boolean;
+  enrollment: number;
+  admissionRate?: number;
+  averageGPA?: number;
+  athleticRanking?: number;
+  programs: string[];
+  tuition?: {
+    inState: number;
+    outOfState: number;
+  };
+  athleticScholarships?: boolean;
+  sportOfferings?: string[];
+  academicMatch: number;
+  athleticMatch: number;
+  overallMatch: number;
+  financialFit?: number;
+  locationFit?: number;
+  scholarshipPotential?: string;
+  admissionChance?: string;
+  campusSize?: string;
+  matchingReasons?: string[];
+  athleticFacilities?: string[];
+  academicSupport?: string[];
+  recruitingProfile?: {
+    activelyRecruiting: string[];
+    offensiveStyle?: string;
+    defensiveStyle?: string;
+    recentSuccess?: string;
+  };
+  website?: string;
+  imageUrl?: string;
+  notes?: string;
+}
+
 // Achievement types and levels
 export const achievementTypeEnum = pgEnum('achievement_type', [
   'performance',

@@ -2002,6 +2002,9 @@ export class MemStorage implements IStorage {
 // Import parent and coach methods
 import * as parentCoachMethods from './parent-coach-storage';
 
+// Import saved colleges methods
+import * as savedCollegesMethods from './saved-colleges-storage';
+
 // Add parent/coach methods to MemStorage prototype
 MemStorage.prototype.getParent = parentCoachMethods.getParent;
 MemStorage.prototype.getParentByUserId = parentCoachMethods.getParentByUserId;
@@ -2024,6 +2027,12 @@ MemStorage.prototype.updateCoach = parentCoachMethods.updateCoach;
 MemStorage.prototype.getCoachesByTeam = parentCoachMethods.getCoachesByTeam;
 MemStorage.prototype.getAllCoaches = parentCoachMethods.getAllCoaches;
 MemStorage.prototype.deleteCoach = parentCoachMethods.deleteCoach;
+
+// Add saved colleges methods to MemStorage prototype
+MemStorage.prototype.getSavedColleges = savedCollegesMethods.getSavedColleges;
+MemStorage.prototype.saveCollege = savedCollegesMethods.saveCollege;
+MemStorage.prototype.unsaveCollege = savedCollegesMethods.unsaveCollege;
+MemStorage.prototype.isCollegeSaved = savedCollegesMethods.isCollegeSaved;
 
 // Add a method to add team members (not defined elsewhere)
 MemStorage.prototype.addTeamMember = async function(teamMember: InsertTeamMember): Promise<TeamMember> {
