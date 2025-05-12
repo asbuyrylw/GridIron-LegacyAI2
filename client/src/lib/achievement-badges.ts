@@ -23,48 +23,92 @@ export interface Achievement {
     targetValue?: string; // Optional target value for achievement
   }[];
   points: number;
+  isCoachOnly?: boolean; // Coach can award these special badges
 }
 
+// List of all available achievements
 export const ACHIEVEMENT_BADGES: Achievement[] = [
-  // Performance Achievements
+  // Speed Achievements
   {
-    id: 'speed_demon_bronze',
-    name: 'Speed Demon (Bronze)',
-    description: 'Run a 40-yard dash in 5.0 seconds or less',
+    id: 'speedster_bronze',
+    name: 'Speedster (Bronze)',
+    description: 'Run the 40-yard dash in 5.0 seconds or less',
     type: 'performance',
     level: 'bronze',
     icon: '🏃',
-    requirements: [{ description: '40-yard dash time ≤ 5.0 seconds', threshold: 5.0 }],
+    requirements: [{ description: '40-yard dash ≤ 5.0 seconds', threshold: 5.0 }],
     points: 50
   },
   {
-    id: 'speed_demon_silver',
-    name: 'Speed Demon (Silver)',
-    description: 'Run a 40-yard dash in 4.8 seconds or less',
+    id: 'speedster_silver',
+    name: 'Speedster (Silver)',
+    description: 'Run the 40-yard dash in 4.8 seconds or less',
     type: 'performance',
     level: 'silver',
     icon: '🏃',
-    requirements: [{ description: '40-yard dash time ≤ 4.8 seconds', threshold: 4.8 }],
+    requirements: [{ description: '40-yard dash ≤ 4.8 seconds', threshold: 4.8 }],
     points: 100
   },
   {
-    id: 'speed_demon_gold',
-    name: 'Speed Demon (Gold)',
-    description: 'Run a 40-yard dash in 4.6 seconds or less',
+    id: 'speedster_gold',
+    name: 'Speedster (Gold)',
+    description: 'Run the 40-yard dash in 4.6 seconds or less',
     type: 'performance',
     level: 'gold',
     icon: '🏃',
-    requirements: [{ description: '40-yard dash time ≤ 4.6 seconds', threshold: 4.6 }],
+    requirements: [{ description: '40-yard dash ≤ 4.6 seconds', threshold: 4.6 }],
     points: 200
   },
   {
-    id: 'speed_demon_platinum',
-    name: 'Speed Demon (Platinum)',
-    description: 'Run a 40-yard dash in 4.4 seconds or less',
+    id: 'speedster_platinum',
+    name: 'Speedster (Platinum)',
+    description: 'Run the 40-yard dash in 4.4 seconds or less',
     type: 'performance',
     level: 'platinum',
     icon: '🏃',
-    requirements: [{ description: '40-yard dash time ≤ 4.4 seconds', threshold: 4.4 }],
+    requirements: [{ description: '40-yard dash ≤ 4.4 seconds', threshold: 4.4 }],
+    points: 500
+  },
+  
+  // Agility Achievements
+  {
+    id: 'agility_master_bronze',
+    name: 'Agility Master (Bronze)',
+    description: 'Complete the shuttle run in 4.5 seconds or less',
+    type: 'performance',
+    level: 'bronze',
+    icon: '⚡',
+    requirements: [{ description: 'Shuttle run ≤ 4.5 seconds', threshold: 4.5 }],
+    points: 50
+  },
+  {
+    id: 'agility_master_silver',
+    name: 'Agility Master (Silver)',
+    description: 'Complete the shuttle run in 4.3 seconds or less',
+    type: 'performance',
+    level: 'silver',
+    icon: '⚡',
+    requirements: [{ description: 'Shuttle run ≤ 4.3 seconds', threshold: 4.3 }],
+    points: 100
+  },
+  {
+    id: 'agility_master_gold',
+    name: 'Agility Master (Gold)',
+    description: 'Complete the shuttle run in 4.1 seconds or less',
+    type: 'performance',
+    level: 'gold',
+    icon: '⚡',
+    requirements: [{ description: 'Shuttle run ≤ 4.1 seconds', threshold: 4.1 }],
+    points: 200
+  },
+  {
+    id: 'agility_master_platinum',
+    name: 'Agility Master (Platinum)',
+    description: 'Complete the shuttle run in 3.9 seconds or less',
+    type: 'performance',
+    level: 'platinum',
+    icon: '⚡',
+    requirements: [{ description: 'Shuttle run ≤ 3.9 seconds', threshold: 3.9 }],
     points: 500
   },
   
@@ -180,57 +224,109 @@ export const ACHIEVEMENT_BADGES: Achievement[] = [
     type: 'profile',
     level: 'bronze',
     icon: '🎬',
-    requirements: [{ description: 'Add highlight film to profile' }],
+    requirements: [{ description: 'Upload a highlight film to your profile' }],
     points: 50
   },
   
   // Training Achievements
   {
-    id: 'training_starter',
-    name: 'Training Starter',
-    description: 'Complete your first weekly training plan',
+    id: 'workout_warrior_bronze',
+    name: 'Workout Warrior (Bronze)',
+    description: 'Complete 5 training sessions',
     type: 'training',
     level: 'bronze',
-    icon: '📅',
-    requirements: [{ description: 'Complete 1 weekly training plan', threshold: 1 }],
+    icon: '💪',
+    requirements: [{ description: 'Complete 5 training sessions', threshold: 5 }],
     points: 25
   },
   {
-    id: 'training_consistent',
-    name: 'Training Consistent',
-    description: 'Complete 4 weekly training plans',
+    id: 'workout_warrior_silver',
+    name: 'Workout Warrior (Silver)',
+    description: 'Complete 25 training sessions',
     type: 'training',
     level: 'silver',
-    icon: '📅',
-    requirements: [{ description: 'Complete 4 weekly training plans', threshold: 4 }],
+    icon: '💪',
+    requirements: [{ description: 'Complete 25 training sessions', threshold: 25 }],
     points: 100
   },
   {
-    id: 'training_dedicated',
-    name: 'Training Dedicated',
-    description: 'Complete 12 weekly training plans',
+    id: 'workout_warrior_gold',
+    name: 'Workout Warrior (Gold)',
+    description: 'Complete 50 training sessions',
     type: 'training',
     level: 'gold',
-    icon: '📅',
-    requirements: [{ description: 'Complete 12 weekly training plans', threshold: 12 }],
-    points: 300
+    icon: '💪',
+    requirements: [{ description: 'Complete 50 training sessions', threshold: 50 }],
+    points: 200
+  },
+  {
+    id: 'workout_warrior_platinum',
+    name: 'Workout Warrior (Platinum)',
+    description: 'Complete 100 training sessions',
+    type: 'training',
+    level: 'platinum',
+    icon: '💪',
+    requirements: [{ description: 'Complete 100 training sessions', threshold: 100 }],
+    points: 500
+  },
+  {
+    id: 'training_streak',
+    name: 'Training Streak',
+    description: 'Complete training sessions for 7 consecutive days',
+    type: 'training',
+    level: 'silver',
+    icon: '🔥',
+    requirements: [{ description: 'Train for 7 consecutive days', threshold: 7 }],
+    points: 150
+  },
+  
+  // Social Achievements
+  {
+    id: 'team_player',
+    name: 'Team Player',
+    description: 'Join your first team',
+    type: 'social',
+    level: 'bronze',
+    icon: '👥',
+    requirements: [{ description: 'Join a team' }],
+    points: 25
+  },
+  {
+    id: 'social_networker',
+    name: 'Social Networker',
+    description: 'Connect with 5 other athletes',
+    type: 'social',
+    level: 'silver',
+    icon: '🔗',
+    requirements: [{ description: 'Connect with 5 athletes', threshold: 5 }],
+    points: 75
   },
   
   // Nutrition Achievements
   {
-    id: 'nutrition_tracker',
-    name: 'Nutrition Tracker',
-    description: 'Log your first week of meals',
+    id: 'nutrition_novice',
+    name: 'Nutrition Novice',
+    description: 'Log your first meal plan',
     type: 'nutrition',
     level: 'bronze',
     icon: '🥗',
-    requirements: [{ description: 'Log all meals for 7 consecutive days', threshold: 7 }],
-    points: 50
+    requirements: [{ description: 'Log your first meal plan' }],
+    points: 25
+  },
+  {
+    id: 'nutrition_expert',
+    name: 'Nutrition Expert',
+    description: 'Log meals for 7 consecutive days',
+    type: 'nutrition',
+    level: 'silver',
+    icon: '🥗',
+    requirements: [{ description: 'Log meals for 7 consecutive days', threshold: 7 }],
+    points: 100
   },
   {
     id: 'nutrition_master',
     name: 'Nutrition Master',
-    description: 'Log a month of meals following your nutrition plan',
+    description: 'Complete 30 days of following your nutrition plan',
     type: 'nutrition',
     level: 'gold',
     icon: '🥗',
@@ -287,32 +383,53 @@ export const ACHIEVEMENT_BADGES: Achievement[] = [
     description: 'Receive your first scholarship offer',
     type: 'recruiting',
     level: 'gold',
+    icon: '🎓',
+    requirements: [{ description: 'Receive a scholarship offer' }],
+    points: 300
+  },
+  
+  // Coach-Only Badges
+  {
+    id: 'team_mvp',
+    name: 'Team MVP',
+    description: 'Awarded by your coach for outstanding team contributions',
+    type: 'social',
+    level: 'gold',
     icon: '🏆',
-    requirements: [{ description: 'Record a scholarship offer' }],
-    points: 500
+    requirements: [{ description: 'Be recognized as MVP by your coach' }],
+    points: 300,
+    isCoachOnly: true
+  },
+  {
+    id: 'leadership_excellence',
+    name: 'Leadership Excellence',
+    description: 'Recognized for exceptional leadership qualities',
+    type: 'social',
+    level: 'gold',
+    icon: '👑',
+    requirements: [{ description: 'Display outstanding leadership abilities' }],
+    points: 250,
+    isCoachOnly: true
+  },
+  {
+    id: 'position_master',
+    name: 'Position Master',
+    description: 'Recognized for exceptional position-specific skills',
+    type: 'performance',
+    level: 'platinum',
+    icon: '⭐',
+    requirements: [{ description: 'Master the technical aspects of your position' }],
+    points: 400,
+    isCoachOnly: true
   }
 ];
 
-// Utility functions to work with achievements
+// Helper function to get achievements by type
 export function getAchievementsByType(type: AchievementType): Achievement[] {
-  return ACHIEVEMENT_BADGES.filter(achievement => achievement.type === type);
+  return ACHIEVEMENT_BADGES.filter(badge => badge.type === type);
 }
 
+// Helper function to get achievement by ID
 export function getAchievementById(id: string): Achievement | undefined {
-  return ACHIEVEMENT_BADGES.find(achievement => achievement.id === id);
-}
-
-export function getLevelColorClass(level: AchievementLevel): string {
-  switch (level) {
-    case 'bronze':
-      return 'bg-amber-700 text-white';
-    case 'silver':
-      return 'bg-slate-400 text-white';
-    case 'gold':
-      return 'bg-amber-400 text-black';
-    case 'platinum':
-      return 'bg-gradient-to-r from-teal-400 to-blue-500 text-white';
-    default:
-      return 'bg-gray-400 text-white';
-  }
+  return ACHIEVEMENT_BADGES.find(badge => badge.id === id);
 }
