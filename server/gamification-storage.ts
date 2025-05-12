@@ -1,23 +1,21 @@
 import { MemStorage } from "./storage";
 import { 
-  achievements, 
-  atletheAchievements, 
-  leaderboards, 
-  leaderboardEntries 
-} from "@shared/schema";
-import { 
+  Achievement,
   AthleteAchievement, 
-  InsertAthleteAchievement, 
-  LeaderboardEntry 
+  InsertAthleteAchievement
 } from "@shared/schema";
 
 // Implementation of athlete achievement methods
 export async function getAthleteAchievements(this: MemStorage, athleteId: number): Promise<AthleteAchievement[]> {
-  return this.athleteAchievements.filter(aa => aa.athleteId === athleteId);
+  // Use the athleteAchievementsMap from the MemStorage instance
+  return Array.from(this.athleteAchievementsMap.values())
+    .filter(aa => aa.athleteId === athleteId);
 }
 
 export async function getAthleteAchievementByStringId(this: MemStorage, athleteId: number, achievementStringId: string): Promise<AthleteAchievement | undefined> {
-  return this.athleteAchievements.find(aa => aa.athleteId === athleteId && aa.achievementStringId === achievementStringId);
+  // Find achievement by athlete ID and string ID
+  return Array.from(this.athleteAchievementsMap.values())
+    .find(aa => aa.athleteId === athleteId && aa.achievementId === achievementStringId);
 }
 
 export async function getAchievementProgressByUserId(this: MemStorage, userId: number): Promise<any[]> {

@@ -82,14 +82,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const athleteId = parseInt(req.params.id);
       
       // Make sure the user has access to this athlete's data
-      if (req.user.id !== athleteId && 
-          req.user.userType !== 'coach' && 
-          req.user.userType !== 'parent') {
+      if (req.user?.id !== athleteId && 
+          req.user?.userType !== 'coach' && 
+          req.user?.userType !== 'parent') {
         return res.status(403).json({ message: "Not authorized to access this athlete's achievements" });
       }
       
-      // For now, return empty array - will be implemented in storage
-      const achievements = []; // await storage.getAthleteAchievements(athleteId);
+      // Get achievement progress from storage
+      const achievements = await storage.getAchievementProgressByAthleteId(athleteId);
       res.json(achievements);
     } catch (error) {
       next(error);
@@ -100,21 +100,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const athleteId = parseInt(req.params.id);
       const achievementId = req.params.achievementId;
-      const { progress, completed } = req.body;
+      const { progress } = req.body;
       
       // Make sure the user has access to update this athlete's achievements
-      if (req.user.id !== athleteId && req.user.userType !== 'coach') {
+      if (req.user?.id !== athleteId && req.user?.userType !== 'coach') {
         return res.status(403).json({ message: "Not authorized to update this athlete's achievements" });
       }
       
-      // For now just echo back the data - will be implemented in storage
-      const updatedAchievement = {
-        athleteId,
+      // First, get the user ID for the athlete
+      const athlete = await storage.getAthlete(athleteId);
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+      }
+      
+      // Update the achievement using the user ID associated with the athlete
+      const updatedAchievement = await storage.updateAchievementProgress(
+        athlete.userId,
         achievementId,
-        progress: progress || 0,
-        completed: completed || false,
-        updatedAt: new Date().toISOString()
-      };
+        progress || 0
+      );
+      
+      res.json(updatedAchievement);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // User Achievement routes
+  app.get("/api/user/achievements", async (req, res, next) => {
+    try {
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Get the user's achievement progress
+      const achievements = await storage.getAchievementProgressByUserId(req.user.id);
+      res.json(achievements);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.post("/api/user/achievements/:achievementId", async (req, res, next) => {
+    try {
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const achievementId = req.params.achievementId;
+      const { progress } = req.body;
+      
+      // Update the achievement progress
+      const updatedAchievement = await storage.updateAchievementProgress(
+        req.user.id,
+        achievementId,
+        progress || 0
+      );
       
       res.json(updatedAchievement);
     } catch (error) {
@@ -123,17 +164,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Leaderboard routes
+  app.get("/api/leaderboards", async (req, res, next) => {
+    try {
+      const timeframe = req.query.timeframe as string || 'weekly';
+      const scope = req.query.scope as string || 'global';
+      
+      const entries = await storage.getLeaderboard(timeframe, scope);
+      res.json(entries);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   app.get("/api/leaderboards/:id", async (req, res, next) => {
     try {
       const leaderboardId = req.params.id;
       
-      // Mock data for now - will be implemented in storage
+      if (leaderboardId === 'points') {
+        // For points leaderboard, use the getLeaderboard method
+        const timeframe = req.query.timeframe as string || 'weekly';
+        const scope = req.query.scope as string || 'global';
+        
+        const entries = await storage.getLeaderboard(timeframe, scope);
+        return res.json(entries);
+      }
+      
+      // For specific performance-based leaderboards, use a placeholder for now
+      // This would be replaced with specific leaderboard logic eventually
       const entries = [
         {
           id: 1,
           athleteId: 1,
-          value: leaderboardId.includes('points') ? 850 : 
-                 leaderboardId === 'forty-yard-dash' ? 4.5 :
+          value: leaderboardId === 'forty-yard-dash' ? 4.5 :
                  leaderboardId === 'vertical-jump' ? 34 :
                  leaderboardId === 'bench-press' ? 18 :
                  leaderboardId === 'workouts-completed' ? 25 : 3.8,
