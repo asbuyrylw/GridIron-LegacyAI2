@@ -72,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerRecruitingProfileRoutes(app);
   
   // Parent Dashboard API endpoints
-  registerParentRoutes(app);
+  await registerParentRoutes(app);
   
   // Coach Dashboard API endpoints
   registerCoachRoutes(app);
@@ -4709,9 +4709,9 @@ function registerSocialRoutes(app: Express): void {
 }
 
 // Parent Dashboard API routes
-function registerParentRoutes(app: Express): void {
+async function registerParentRoutes(app: Express): Promise<void> {
   try {
-    const parentRoutes = require('./routes/parent-routes');
+    const parentRoutes = await import('./routes/parent-routes');
     app.use(parentRoutes.router);
     console.log("Parent routes loaded successfully");
   } catch (error) {
