@@ -76,6 +76,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Coach Dashboard API endpoints
   registerCoachRoutes(app);
   
+  // Achievement and Gamification routes
+  app.get("/api/athlete/:id/achievements", async (req, res, next) => {
+    try {
+      const athleteId = parseInt(req.params.id);
+      
+      // Make sure the user has access to this athlete's data
+      if (req.user.id !== athleteId && 
+          req.user.userType !== 'coach' && 
+          req.user.userType !== 'parent') {
+        return res.status(403).json({ message: "Not authorized to access this athlete's achievements" });
+      }
+      
+      // For now, return empty array - will be implemented in storage
+      const achievements = []; // await storage.getAthleteAchievements(athleteId);
+      res.json(achievements);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.post("/api/athlete/:id/achievements/:achievementId", async (req, res, next) => {
+    try {
+      const athleteId = parseInt(req.params.id);
+      const achievementId = req.params.achievementId;
+      const { progress, completed } = req.body;
+      
+      // Make sure the user has access to update this athlete's achievements
+      if (req.user.id !== athleteId && req.user.userType !== 'coach') {
+        return res.status(403).json({ message: "Not authorized to update this athlete's achievements" });
+      }
+      
+      // For now just echo back the data - will be implemented in storage
+      const updatedAchievement = {
+        athleteId,
+        achievementId,
+        progress: progress || 0,
+        completed: completed || false,
+        updatedAt: new Date().toISOString()
+      };
+      
+      res.json(updatedAchievement);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Leaderboard routes
+  app.get("/api/leaderboards/:id", async (req, res, next) => {
+    try {
+      const leaderboardId = req.params.id;
+      
+      // Mock data for now - will be implemented in storage
+      const entries = [
+        {
+          id: 1,
+          athleteId: 1,
+          value: leaderboardId.includes('points') ? 850 : 
+                 leaderboardId === 'forty-yard-dash' ? 4.5 :
+                 leaderboardId === 'vertical-jump' ? 34 :
+                 leaderboardId === 'bench-press' ? 18 :
+                 leaderboardId === 'workouts-completed' ? 25 : 3.8,
+          rank: 1,
+          updatedAt: new Date().toISOString(),
+          athlete: {
+            userId: 1,
+            firstName: "Test",
+            lastName: "User",
+            position: "Quarterback (QB)",
+            school: "Central High"
+          }
+        }
+      ];
+      
+      res.json(entries);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   // Get current athlete (for logged-in user)
   app.get("/api/athlete/me", async (req, res, next) => {
     try {

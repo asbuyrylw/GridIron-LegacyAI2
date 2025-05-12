@@ -433,3 +433,19 @@ export function getAchievementsByType(type: AchievementType): Achievement[] {
 export function getAchievementById(id: string): Achievement | undefined {
   return ACHIEVEMENT_BADGES.find(badge => badge.id === id);
 }
+
+// Helper function to get CSS color class based on achievement level
+export function getLevelColorClass(level: AchievementLevel): string {
+  switch (level) {
+    case 'bronze':
+      return 'bg-amber-700 text-amber-100';
+    case 'silver':
+      return 'bg-slate-400 text-slate-50';
+    case 'gold':
+      return 'bg-amber-400 text-amber-950';
+    case 'platinum':
+      return 'bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 text-white';
+    default:
+      return 'bg-gray-500 text-gray-100';
+  }
+}

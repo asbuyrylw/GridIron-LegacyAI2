@@ -15,97 +15,77 @@ import { InfoIcon } from "lucide-react";
 
 interface AchievementBadgeProps {
   achievement: Achievement;
-  showProgress?: boolean;
-  size?: "sm" | "md" | "lg";
+  progress?: number;
+  isCompleted?: boolean;
+  earnedDate?: string;
   onClick?: () => void;
 }
 
 export function AchievementBadge({ 
   achievement, 
-  showProgress = true,
-  size = "md",
+  progress = 0, 
+  isCompleted = false, 
+  earnedDate, 
   onClick 
 }: AchievementBadgeProps) {
-  const { isCompleted, getProgress } = useAchievementProgress();
-  const [showInfo, setShowInfo] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   
-  const completed = isCompleted(achievement.id);
-  const progress = getProgress(achievement.id);
+  // Get the appropriate color class based on level
+  const colorClass = getLevelColorClass(achievement.level);
   
-  const sizeClasses = {
-    sm: "w-16 h-16 text-2xl",
-    md: "w-24 h-24 text-3xl",
-    lg: "w-32 h-32 text-5xl"
-  };
+  // Determine opacity based on completion status
+  const opacityClass = isCompleted ? 'opacity-100' : 'opacity-60';
   
-  const backgroundClass = completed 
-    ? getLevelColorClass(achievement.level)
-    : "bg-gray-200 dark:bg-gray-800 text-gray-400";
-    
+  // Format date if available
+  const formattedDate = earnedDate 
+    ? new Date(earnedDate).toLocaleDateString() 
+    : null;
+  
   return (
-    <div className="flex flex-col items-center">
-      <div className="relative mb-2">
+    <div 
+      className={`rounded-lg cursor-pointer transform transition-all duration-200 
+        ${isHovered ? 'scale-105' : 'scale-100'} hover:shadow-md`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
+    >
+      <div className="flex flex-col items-center">
+        {/* Badge Icon */}
         <div 
-          className={`rounded-full flex items-center justify-center cursor-pointer ${sizeClasses[size]} ${backgroundClass} transition-all duration-300 ${onClick ? 'hover:scale-105' : ''}`}
-          onClick={onClick}
+          className={`h-16 w-16 flex items-center justify-center rounded-full mb-2 ${colorClass} ${opacityClass}`}
         >
-          <div className={`text-center ${completed ? '' : 'opacity-50'}`}>
-            {achievement.icon}
-          </div>
+          <span className="text-2xl">{achievement.icon}</span>
         </div>
         
-        {/* Info Button */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button 
-                className="absolute -top-1 -right-1 bg-gray-100 dark:bg-gray-700 rounded-full p-1 border border-gray-300 dark:border-gray-600"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowInfo(!showInfo);
-                }}
-              >
-                <InfoIcon className="h-3 w-3" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="max-w-xs">
-                <h4 className="font-bold text-sm">{achievement.name}</h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{achievement.description}</p>
-                <div className="mt-2">
-                  <h5 className="text-xs font-semibold">Requirements:</h5>
-                  <ul className="text-xs list-disc pl-4">
-                    {achievement.requirements.map((req, i) => (
-                      <li key={i}>{req.description}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="mt-2 text-xs font-semibold text-amber-600">
-                  +{achievement.points} Points
-                </div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-      
-      {/* Achievement Name */}
-      <h3 className="text-sm font-medium text-center">
-        {achievement.name}
-      </h3>
-      
-      {/* Progress bar */}
-      {showProgress && (
-        <div className="w-full mt-1 px-1">
-          <Progress 
-            value={progress} 
-            className="h-2"
-          />
-          <div className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
-            {progress}%
+        {/* Badge Name */}
+        <div className="text-center">
+          <div className="font-medium text-sm truncate max-w-full">
+            {achievement.name}
           </div>
+          
+          {/* Level indicator */}
+          <div className="text-xs text-muted-foreground">
+            {achievement.level.charAt(0).toUpperCase() + achievement.level.slice(1)}
+          </div>
+          
+          {/* Progress indicator */}
+          {!isCompleted && (
+            <div className="w-full mt-1">
+              <Progress 
+                value={progress} 
+                className="h-1.5" 
+              />
+            </div>
+          )}
+          
+          {/* Completed indicator */}
+          {isCompleted && (
+            <div className="text-xs text-green-600 font-medium mt-1">
+              Completed {formattedDate ? `• ${formattedDate}` : ''}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
