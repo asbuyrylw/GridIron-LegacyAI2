@@ -45,6 +45,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getAllUsers(): Promise<User[]>;
   
   // Parent Access (read-only)
   createParentAccess(parentAccess: InsertParentAccess): Promise<ParentAccess>;
@@ -276,6 +277,23 @@ export interface IStorage {
   saveCollege(userId: number, collegeId: number): Promise<SavedCollege>;
   unsaveCollege(userId: number, collegeId: number): Promise<boolean>;
   isCollegeSaved(userId: number, collegeId: number): Promise<boolean>;
+  
+  // Achievement Methods
+  getAchievements(category?: string): Promise<Achievement[]>;
+  getAchievement(id: number): Promise<Achievement | undefined>;
+  createAchievement(achievement: InsertAchievement): Promise<Achievement>;
+  getAthleteAchievements(athleteId: number): Promise<AthleteAchievement[]>;
+  getAthleteAchievement(athleteId: number, achievementId: number): Promise<AthleteAchievement | undefined>;
+  getAthleteAchievementByStringId(athleteId: number, achievementStringId: string): Promise<AthleteAchievement | undefined>;
+  createAthleteAchievement(achievement: InsertAthleteAchievement): Promise<AthleteAchievement>;
+  updateAthleteAchievement(id: number, updates: Partial<InsertAthleteAchievement>): Promise<AthleteAchievement | undefined>;
+  getAchievementProgressByUserId(userId: number): Promise<any[]>;
+  getAchievementProgressByAthleteId(athleteId: number): Promise<any[]>;
+  updateAchievementProgress(userId: number, achievementStringId: string, progress: number): Promise<any>;
+  
+  // Leaderboard Methods
+  getLeaderboards(active?: boolean): Promise<Leaderboard[]>;
+  getLeaderboard(timeframe: string, scope: string): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {
