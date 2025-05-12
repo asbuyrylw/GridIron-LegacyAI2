@@ -109,7 +109,7 @@ export function InviteParentForm() {
                 <Input type="email" placeholder="parent@example.com" {...field} />
               </FormControl>
               <FormDescription>
-                We'll send an invitation with access instructions to this email.
+                We'll send performance updates and reports directly to this email. No account or login required.
               </FormDescription>
               <FormMessage />
             </FormItem>

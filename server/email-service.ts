@@ -140,7 +140,7 @@ class EmailService {
           <h4 style="color: #4A90E2; margin-top: 0;">Performance Insights:</h4>
           <ul>
             ${Array.isArray(stats.insights) 
-              ? stats.insights.map(insight => `<li>${insight}</li>`).join('') 
+              ? stats.insights.map((insight: string) => `<li>${insight}</li>`).join('') 
               : `<li>${stats.insights}</li>`}
           </ul>
         </div>
@@ -154,7 +154,7 @@ class EmailService {
           <h4 style="color: #4A90E2; margin-top: 0;">Coach Recommendations:</h4>
           <ul>
             ${Array.isArray(stats.recommendations) 
-              ? stats.recommendations.map(rec => `<li>${rec}</li>`).join('') 
+              ? stats.recommendations.map((rec: string) => `<li>${rec}</li>`).join('') 
               : `<li>${stats.recommendations}</li>`}
           </ul>
         </div>

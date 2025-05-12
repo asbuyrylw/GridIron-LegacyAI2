@@ -75,7 +75,7 @@ export function NutritionShoppingListGenerator({ athleteId }: NutritionShoppingL
   React.useEffect(() => {
     if (recommendations && shoppingItems.length === 0 && recommendations.items && recommendations.items.length > 0) {
       setShoppingItems(
-        recommendations.items.map((item, index) => ({
+        recommendations.items.map((item: any, index: number) => ({
           id: `rec-${index}`,
           name: item.name,
           category: item.category,
@@ -220,10 +220,15 @@ export function NutritionShoppingListGenerator({ athleteId }: NutritionShoppingL
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              No parents configured to receive nutrition information. 
-              Update parent settings to enable nutrition updates.
-            </p>
+            <div>
+              <p className="text-sm text-muted-foreground">
+                No parents configured to receive nutrition information. 
+                Update parent settings to enable nutrition updates.
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Shopping lists are delivered directly to parents via email - no login required.
+              </p>
+            </div>
           )}
         </div>
         

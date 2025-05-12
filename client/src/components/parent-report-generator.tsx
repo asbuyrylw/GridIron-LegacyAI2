@@ -334,6 +334,7 @@ export function ParentReportGenerator({ athleteId }: ParentReportGeneratorProps)
             <div className="py-4 text-center text-muted-foreground">
               <AlertTriangle className="h-5 w-5 mx-auto mb-2" />
               <p>No parents have access yet. Invite a parent first.</p>
+              <p className="text-xs text-muted-foreground mt-2">Parents will receive reports via email - no login required.</p>
             </div>
           )}
         </div>
