@@ -1,21 +1,45 @@
-import { Card } from "@/components/ui/card";
-import { Dumbbell, BarChart2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { 
+  Dumbbell, 
+  BarChart2, 
+  Ruler, 
+  PenSquare, 
+  User
+} from "lucide-react";
 import { Link } from "wouter";
 
 export function QuickActions() {
   return (
-    <div className="grid grid-cols-2 gap-4 mb-6">
-      <Link href="/training">
-        <Card className="flex flex-col items-center py-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
-          <Dumbbell className="text-primary dark:text-accent h-8 w-8 mb-2" />
-          <span className="font-montserrat font-semibold">Today's Workout</span>
-        </Card>
+    <div className="flex flex-wrap gap-2">
+      <Link href="/stats/update">
+        <Button variant="outline" size="sm" className="flex items-center gap-1.5">
+          <Ruler className="h-4 w-4" />
+          <span>Update Combine Stats</span>
+        </Button>
+      </Link>
+      <Link href="/training/log">
+        <Button variant="outline" size="sm" className="flex items-center gap-1.5">
+          <PenSquare className="h-4 w-4" />
+          <span>Log Training</span>
+        </Button>
+      </Link>
+      <Link href="/profile">
+        <Button variant="outline" size="sm" className="flex items-center gap-1.5">
+          <User className="h-4 w-4" />
+          <span>Update Profile</span>
+        </Button>
       </Link>
       <Link href="/stats">
-        <Card className="flex flex-col items-center py-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
-          <BarChart2 className="text-primary dark:text-accent h-8 w-8 mb-2" />
-          <span className="font-montserrat font-semibold">Track Progress</span>
-        </Card>
+        <Button variant="outline" size="sm" className="flex items-center gap-1.5">
+          <BarChart2 className="h-4 w-4" />
+          <span>Track Performance</span>
+        </Button>
+      </Link>
+      <Link href="/training">
+        <Button variant="outline" size="sm" className="flex items-center gap-1.5">
+          <Dumbbell className="h-4 w-4" />
+          <span>Add Workout</span>
+        </Button>
       </Link>
     </div>
   );

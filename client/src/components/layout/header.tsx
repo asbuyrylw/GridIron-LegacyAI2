@@ -1,8 +1,13 @@
 import { Bell } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { ReactNode } from "react";
 
-export function Header() {
+interface HeaderProps {
+  children?: ReactNode;
+}
+
+export function Header({ children }: HeaderProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -15,7 +20,7 @@ export function Header() {
   
   return (
     <header className="bg-primary sticky top-0 z-10 shadow-md">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div className="container mx-auto px-4 py-3 flex items-center">
         <div className="flex items-center">
           <svg className="text-white mr-2 h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <ellipse cx="12" cy="12" rx="8" ry="10" />
@@ -24,7 +29,12 @@ export function Header() {
           </svg>
           <h1 className="text-white font-montserrat font-bold text-xl">GridIron LegacyAI</h1>
         </div>
-        <button className="text-white" onClick={handleNotificationClick}>
+        
+        {/* Center content (children) */}
+        {children}
+        
+        {/* Right side */}
+        <button className="text-white ml-auto" onClick={handleNotificationClick}>
           <Bell className="h-5 w-5" />
         </button>
       </div>
