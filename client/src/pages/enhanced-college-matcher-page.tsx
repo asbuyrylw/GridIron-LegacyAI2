@@ -234,6 +234,35 @@ export default function EnhancedCollegeMatcherPage() {
     );
   }
   
+  // Check for authentication error
+  if (!user) {
+    return (
+      <div className="container py-8">
+        <Helmet>
+          <title>College Matcher | GridIron LegacyAI</title>
+        </Helmet>
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-4 text-center max-w-md">
+            <GraduationCap className="h-12 w-12 text-primary" />
+            <h2 className="text-xl font-semibold">Sign In Required</h2>
+            <p className="text-muted-foreground">
+              Please sign in to access your personalized college matches. Our College Matcher helps you find the perfect fit based on your athletic and academic profile.
+            </p>
+            <div className="flex flex-col gap-2 w-full max-w-xs mt-2">
+              <Button asChild className="w-full">
+                <a href="/auth">Sign In</a>
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="/auth?tab=register">Create Account</a>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check for other errors
   if (error) {
     return (
       <div className="container py-8">
