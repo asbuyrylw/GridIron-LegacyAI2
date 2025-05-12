@@ -40,16 +40,22 @@ export function BottomNav() {
       active: location === "/stats"
     },
     {
-      label: "Nutrition",
-      href: "/nutrition",
-      icon: CandlestickChart,
-      active: location === "/nutrition"
+      label: "Recruiting",
+      href: "/recruiting",
+      icon: ClipboardCopy,
+      active: location.includes("/recruiting")
     },
     {
       label: "Profile",
       href: "/profile",
       icon: User,
       active: location === "/profile"
+    },
+    {
+      label: "Nutrition",
+      href: "/nutrition",
+      icon: CandlestickChart,
+      active: location === "/nutrition"
     },
     {
       label: "Social",
@@ -68,12 +74,6 @@ export function BottomNav() {
       href: "/teams",
       icon: Users,
       active: location.includes("/teams")
-    },
-    {
-      label: "Recruiting",
-      href: "/recruiting",
-      icon: ClipboardCopy,
-      active: location.includes("/recruiting")
     },
     {
       label: "College",
