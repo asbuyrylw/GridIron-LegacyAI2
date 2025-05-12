@@ -95,10 +95,16 @@ export function NutritionShoppingListGenerator({ athleteId }: NutritionShoppingL
         throw new Error("Please select at least one item to include in the shopping list.");
       }
       
+      // Get all eligible parent IDs who can receive nutrition info
+      const parentIds = eligibleParents.map(parent => parent.id);
+      
       const response = await apiRequest(
         "POST", 
         `/api/athlete/${athleteId}/nutrition/shopping-list`,
-        { items: selectedItems }
+        { 
+          items: selectedItems,
+          parentIds: parentIds
+        }
       );
       return response.json();
     },

@@ -437,12 +437,21 @@ router.post('/api/athlete/:athleteId/nutrition/shopping-list', async (req: Reque
       });
     }
     
-    const { items, parentIds } = validationResult.data;
+    // Get items and parent IDs from request
+    let { items, parentIds } = validationResult.data;
     
     // Filter only selected items
     const selectedItems = items.filter(item => item.selected);
     if (selectedItems.length === 0) {
       return res.status(400).json({ message: 'No items selected for the shopping list' });
+    }
+    
+    // If no parent IDs were provided, get all eligible parents with nutrition access
+    if (!parentIds || parentIds.length === 0) {
+      const parentAccesses = await parentAccessService.getParentAccessesByAthleteId(athleteId);
+      parentIds = parentAccesses
+        .filter(access => access.active && access.receiveNutritionInfo)
+        .map(access => access.id);
     }
     
     // Fetch athlete data
