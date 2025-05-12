@@ -2,6 +2,9 @@ import { pgTable, text, serial, integer, boolean, timestamp, json, real, date, j
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Leaderboard types
+export type LeaderboardPeriod = 'all-time' | 'yearly' | 'monthly' | 'weekly' | 'daily' | 'event';
+
 // Type for college match results from the College Matcher tool
 export interface MatchedCollege {
   id: number;
@@ -516,11 +519,15 @@ export const leaderboards = pgTable("leaderboards", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull(),
-  metric: text("metric").notNull(), // fortyYard, benchPress, totalWorkouts, etc.
-  period: text("period").notNull(), // weekly, monthly, allTime
+  metric: text("metric").notNull(), // Points, seconds, reps, inches, etc.
+  period: text("period").notNull(), // all-time, yearly, monthly, weekly, daily, event
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
   active: boolean("active").default(true),
+  lowerIsBetter: boolean("lower_is_better").default(false), // For metrics like time where lower is better
+  rules: text("rules"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const leaderboardEntries = pgTable("leaderboard_entries", {
@@ -528,7 +535,8 @@ export const leaderboardEntries = pgTable("leaderboard_entries", {
   leaderboardId: integer("leaderboard_id").references(() => leaderboards.id).notNull(),
   athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
   value: real("value").notNull(),
-  rank: integer("rank"),
+  rank: integer("rank"), // Calculated rank, can be null until processed
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 

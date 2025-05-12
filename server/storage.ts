@@ -43,6 +43,20 @@ import {
   getLeaderboard
 } from "./gamification-storage";
 
+import {
+  getLeaderboards,
+  getLeaderboardById,
+  createLeaderboard,
+  updateLeaderboard,
+  deleteLeaderboard,
+  getLeaderboardEntries,
+  getLeaderboardEntry,
+  getLeaderboardEntryByAthlete,
+  createOrUpdateLeaderboardEntry,
+  deleteLeaderboardEntry,
+  seedLeaderboards
+} from "./leaderboard-storage";
+
 const MemoryStore = createMemoryStore(session);
 
 export interface IStorage {
@@ -220,14 +234,19 @@ export interface IStorage {
   // These duplicate methods are already defined earlier in the interface
 
   // Leaderboard Methods
-  getLeaderboards(active?: boolean): Promise<Leaderboard[]>;
+  getLeaderboards(activeOnly?: boolean): Promise<Leaderboard[]>;
   getLeaderboardById(id: number): Promise<Leaderboard | undefined>;
   createLeaderboard(leaderboard: InsertLeaderboard): Promise<Leaderboard>;
-  updateLeaderboard(id: number, active: boolean): Promise<Leaderboard | undefined>;
-  getLeaderboard(timeframe: string, scope: string): Promise<any[]>;
-
+  updateLeaderboard(id: number, updates: Partial<InsertLeaderboard>): Promise<Leaderboard | undefined>;
+  deleteLeaderboard(id: number): Promise<boolean>;
+  
   // Leaderboard Entry Methods
-  getLeaderboardEntries(leaderboardId: number): Promise<LeaderboardEntry[]>;
+  getLeaderboardEntries(leaderboardId: number): Promise<any[]>;
+  getLeaderboardEntry(id: number): Promise<LeaderboardEntry | undefined>;
+  getLeaderboardEntryByAthlete(leaderboardId: number, athleteId: number): Promise<LeaderboardEntry | undefined>;
+  createOrUpdateLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry>;
+  deleteLeaderboardEntry(id: number): Promise<boolean>;
+  getLeaderboard(timeframe: string, scope: string): Promise<any[]>;
   getAthleteLeaderboardEntry(leaderboardId: number, athleteId: number): Promise<LeaderboardEntry | undefined>;
   createLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry>;
   updateLeaderboardEntry(id: number, value: number, rank?: number): Promise<LeaderboardEntry | undefined>;
@@ -2096,6 +2115,18 @@ MemStorage.prototype.getAthleteAchievementByStringId = gamificationMethods.getAt
 MemStorage.prototype.getAchievementProgressByUserId = gamificationMethods.getAchievementProgressByUserId;
 MemStorage.prototype.getAchievementProgressByAthleteId = gamificationMethods.getAchievementProgressByAthleteId;
 MemStorage.prototype.updateAchievementProgress = gamificationMethods.updateAchievementProgress;
+
+// Add leaderboard methods to MemStorage prototype
+MemStorage.prototype.getLeaderboards = getLeaderboards;
+MemStorage.prototype.getLeaderboardById = getLeaderboardById;
+MemStorage.prototype.createLeaderboard = createLeaderboard;
+MemStorage.prototype.updateLeaderboard = updateLeaderboard;
+MemStorage.prototype.deleteLeaderboard = deleteLeaderboard;
+MemStorage.prototype.getLeaderboardEntries = getLeaderboardEntries;
+MemStorage.prototype.getLeaderboardEntry = getLeaderboardEntry;
+MemStorage.prototype.getLeaderboardEntryByAthlete = getLeaderboardEntryByAthlete;
+MemStorage.prototype.createOrUpdateLeaderboardEntry = createOrUpdateLeaderboardEntry;
+MemStorage.prototype.deleteLeaderboardEntry = deleteLeaderboardEntry;
 MemStorage.prototype.getLeaderboard = gamificationMethods.getLeaderboard;
 
 // Add a method to add team members (not defined elsewhere)
