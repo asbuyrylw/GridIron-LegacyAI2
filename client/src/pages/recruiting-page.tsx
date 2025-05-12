@@ -176,10 +176,16 @@ export default function RecruitingPage() {
             <ClipboardCopy className="h-4 w-4 mr-2" />
             Edit Profile
           </Button>
-          <Button variant="outline" onClick={() => window.location.href = "/college-matcher"}>
-            <School className="h-4 w-4 mr-2" />
-            College Matcher
-          </Button>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={() => window.location.href = "/college-matcher"}>
+              <School className="h-4 w-4 mr-2" />
+              College Matcher
+            </Button>
+            <Button variant="outline" onClick={() => window.location.href = "/college-matcher?tab=saved"}>
+              <Bookmark className="h-4 w-4 mr-2" />
+              Saved Colleges
+            </Button>
+          </div>
         </div>
       </div>
       
@@ -924,23 +930,61 @@ export default function RecruitingPage() {
         
         {/* College Matcher Tab */}
         <TabsContent value="college-matcher" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>College Matcher Tool</CardTitle>
-                <CardDescription>
-                  Find the right college fit based on your athletic and academic profile
-                </CardDescription>
-              </div>
-              <Button onClick={() => window.location.href = "/college-matcher"} className="flex items-center">
-                <School className="mr-2 h-4 w-4" />
-                Open College Matcher
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 bg-muted rounded-md">
-                <h3 className="text-lg font-semibold mb-2 flex items-center">
-                  <School className="h-5 w-5 mr-2 text-primary" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>College Matcher Tool</CardTitle>
+                  <CardDescription>
+                    Find the right college fit based on your athletic and academic profile
+                  </CardDescription>
+                </div>
+                <Button onClick={() => window.location.href = "/college-matcher"} className="flex items-center">
+                  <School className="mr-2 h-4 w-4" />
+                  Open College Matcher
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-muted rounded-md">
+                  <h3 className="text-lg font-semibold mb-2 flex items-center">
+                    <School className="h-5 w-5 mr-2 text-primary" />
+                    Find Your Perfect College Match
+                  </h3>
+                  <p className="text-sm mb-4">
+                    Our College Matcher tool analyzes your athletic metrics, academic performance, and 
+                    preferences to suggest colleges that are the right fit for your football career.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Saved Colleges</CardTitle>
+                  <CardDescription>
+                    Access and manage your saved college prospects
+                  </CardDescription>
+                </div>
+                <Button onClick={() => window.location.href = "/college-matcher?tab=saved"} className="flex items-center">
+                  <Bookmark className="mr-2 h-4 w-4" />
+                  View Saved Colleges
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-muted rounded-md">
+                  <h3 className="text-lg font-semibold mb-2 flex items-center">
+                    <Bookmark className="h-5 w-5 mr-2 text-primary" />
+                    Track Your College Prospects
+                  </h3>
+                  <p className="text-sm mb-4">
+                    Keep track of colleges you're interested in by saving them to your personalized list. 
+                    Compare schools, review details, and build your recruiting strategy.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
                   Find Your Perfect College Match
                 </h3>
                 <p className="text-sm mb-4">
