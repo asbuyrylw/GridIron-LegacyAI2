@@ -84,6 +84,12 @@ export function SideNav() {
       active: location.includes("/teams")
     },
     {
+      label: "Parent Reports",
+      href: "/parent-reports",
+      icon: FileText,
+      active: location === "/parent-reports"
+    },
+    {
       label: "Profile",
       href: "/profile",
       icon: User,

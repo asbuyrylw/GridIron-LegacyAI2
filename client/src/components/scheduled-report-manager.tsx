@@ -117,11 +117,11 @@ export function ScheduledReportManager() {
 
   // Query to fetch scheduled reports
   const { 
-    data: reports,
+    data: reports = [],
     isLoading,
     isError,
     error
-  } = useQuery({
+  } = useQuery<ScheduledReport[]>({
     queryKey: [`/api/athlete/${athlete?.id}/scheduled-reports`],
     enabled: !!athlete?.id,
   });

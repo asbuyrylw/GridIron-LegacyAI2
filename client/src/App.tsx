@@ -103,10 +103,10 @@ function Router() {
         <ProtectedRoute path="/college-matcher" component={EnhancedCollegeMatcherPage} />
         {/* Removed parent-dashboard as we're using email-only approach */}
         <ProtectedRoute path="/coach-dashboard" component={CoachDashboard} />
+        <ProtectedRoute path="/parent-reports" component={ParentReportsPage} />
         <ProtectedRoute path="/parent-management" component={ParentManagementPage} />
         <ProtectedRoute path="/parent-access-tester" component={ParentAccessTester} />
         <ProtectedRoute path="/parent-notification-tester" component={ParentNotificationTester} />
-        <ProtectedRoute path="/parent-reports" component={ParentReportsPage} />
         
         {/* Public Routes */}
         <Route path="/auth" component={AuthPage} />
