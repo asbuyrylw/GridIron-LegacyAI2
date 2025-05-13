@@ -40,9 +40,9 @@ interface ScheduledReport {
 let scheduledReports: ScheduledReport[] = [];
 let nextReportId = 1;
 
-// Helper to validate athlete access - simplified for now
+// Helper to validate athlete access - updated to work with passport auth
 async function validateAthleteAccess(req: Request, athleteId: number): Promise<boolean> {
-  if (!req.session.userId) {
+  if (!req.user || !req.user.id) {
     return false;
   }
   
@@ -50,12 +50,15 @@ async function validateAthleteAccess(req: Request, athleteId: number): Promise<b
   const athlete = await storage.getAthlete(athleteId);
   
   // Check if the user is the athlete
-  if (athlete && athlete.userId === req.session.userId) {
+  if (athlete && athlete.userId === req.user.id) {
     return true;
   }
   
-  // For coaches, we'd need to implement team membership checks,
-  // but we're simplifying for now
+  // For coaches, we'd check team membership
+  if (req.user.userType === 'coach') {
+    // TODO: Implement team membership checks
+    return true;
+  }
   
   return false;
 }
@@ -108,10 +111,14 @@ router.get('/api/athlete/:athleteId/scheduled-reports', async (req: Request, res
   try {
     const athleteId = parseInt(req.params.athleteId);
     
-    // For now, we'll use a simplified authentication check since we don't have 
-    // the storage methods for validation
-    if (!req.session.userId) {
+    // Check for user authentication
+    if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Verify athlete access permission
+    if (!(await validateAthleteAccess(req, athleteId))) {
+      return res.status(403).json({ message: 'Not authorized to view these reports' });
     }
     
     // Just return the reports for the athlete
