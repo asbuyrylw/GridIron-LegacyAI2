@@ -77,6 +77,9 @@ const reportFormSchema = z.object({
   dayOfWeek: z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'], {
     required_error: "Please select a day of the week",
   }),
+  templateType: z.enum(['weekly_summary', 'performance_update', 'training_progress', 'academic_update', 'achievement_notification'], {
+    required_error: "Please select a template type",
+  }),
   sections: z.array(z.string()).min(1, {
     message: "Please select at least one section to include in the report",
   }),
@@ -91,8 +94,10 @@ const availableSections = [
   { id: 'achievements', label: 'Achievements & Progress' },
   { id: 'training', label: 'Training Activity' },
   { id: 'nutrition', label: 'Nutrition Plan' },
+  { id: 'academics', label: 'Academic Progress' },
   { id: 'attendance', label: 'Team Attendance' },
-  { id: 'social', label: 'Social Activity' }
+  { id: 'social', label: 'Social Activity' },
+  { id: 'recruiting', label: 'Recruiting Updates' }
 ];
 
 export function ScheduledReportManager() {

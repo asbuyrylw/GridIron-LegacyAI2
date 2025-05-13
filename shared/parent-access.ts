@@ -40,5 +40,8 @@ export enum EmailNotificationType {
   PERFORMANCE_UPDATE = 'performance_update',
   NUTRITION_SHOPPING_LIST = 'nutrition_shopping_list',
   ACHIEVEMENT_NOTIFICATION = 'achievement_notification',
-  EVENT_REMINDER = 'event_reminder'
+  EVENT_REMINDER = 'event_reminder',
+  WEEKLY_SUMMARY = 'weekly_summary',
+  TRAINING_PROGRESS = 'training_progress',
+  ACADEMIC_UPDATE = 'academic_update'
 }
