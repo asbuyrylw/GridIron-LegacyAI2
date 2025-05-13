@@ -62,6 +62,7 @@ export interface ScheduledReport {
   athleteId: number;
   frequency: string;
   dayOfWeek: string;
+  templateType: string;
   sections: string[];
   includeInsights: boolean;
   active: boolean;
@@ -114,6 +115,7 @@ export function ScheduledReportManager() {
     defaultValues: {
       frequency: 'weekly',
       dayOfWeek: 'monday',
+      templateType: 'weekly_summary',
       sections: ['performance', 'achievements'],
       includeInsights: true,
       active: true,
@@ -229,6 +231,7 @@ export function ScheduledReportManager() {
       form.reset({
         frequency: editingReport.frequency as any,
         dayOfWeek: editingReport.dayOfWeek as any,
+        templateType: (editingReport.templateType || 'weekly_summary') as any,
         sections: editingReport.sections,
         includeInsights: editingReport.includeInsights,
         active: editingReport.active
@@ -324,62 +327,92 @@ export function ScheduledReportManager() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <FormField
                     control={form.control}
-                    name="frequency"
+                    name="templateType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Frequency</FormLabel>
+                        <FormLabel>Report Template</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select frequency" />
+                              <SelectValue placeholder="Select template type" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="weekly">Weekly</SelectItem>
-                            <SelectItem value="biweekly">Every two weeks</SelectItem>
-                            <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="weekly_summary">Weekly Summary</SelectItem>
+                            <SelectItem value="performance_update">Performance Update</SelectItem>
+                            <SelectItem value="training_progress">Training Progress</SelectItem>
+                            <SelectItem value="academic_update">Academic Update</SelectItem>
+                            <SelectItem value="achievement_notification">Achievement Notification</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormDescription>
-                          How often reports will be sent
+                          The type of report template to use
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
-                  <FormField
-                    control={form.control}
-                    name="dayOfWeek"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Day of Week</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select day" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="monday">Monday</SelectItem>
-                            <SelectItem value="tuesday">Tuesday</SelectItem>
-                            <SelectItem value="wednesday">Wednesday</SelectItem>
-                            <SelectItem value="thursday">Thursday</SelectItem>
-                            <SelectItem value="friday">Friday</SelectItem>
-                            <SelectItem value="saturday">Saturday</SelectItem>
-                            <SelectItem value="sunday">Sunday</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Which day to send the report
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="frequency"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Frequency</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select frequency" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="biweekly">Every two weeks</SelectItem>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            How often reports will be sent
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="dayOfWeek"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Day of Week</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select day" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="monday">Monday</SelectItem>
+                              <SelectItem value="tuesday">Tuesday</SelectItem>
+                              <SelectItem value="wednesday">Wednesday</SelectItem>
+                              <SelectItem value="thursday">Thursday</SelectItem>
+                              <SelectItem value="friday">Friday</SelectItem>
+                              <SelectItem value="saturday">Saturday</SelectItem>
+                              <SelectItem value="sunday">Sunday</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            Which day to send the report
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
                 
                 <FormField
@@ -507,6 +540,7 @@ export function ScheduledReportManager() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Frequency</TableHead>
+                      <TableHead>Template</TableHead>
                       <TableHead>Sections</TableHead>
                       <TableHead>Last Sent</TableHead>
                       <TableHead>Next Scheduled</TableHead>
