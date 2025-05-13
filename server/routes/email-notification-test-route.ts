@@ -30,36 +30,36 @@ emailNotificationTestRouter.post('/notification-test', async (req: Request, res:
     switch (notificationType) {
       case EmailNotificationType.INVITE:
         success = await emailService.sendParentInvite(
-          athleteName,
-          parentEmail,
-          parentName,
-          sampleData.accessToken
+          athleteName || "",
+          parentEmail || "",
+          parentName || "",
+          sampleData.accessToken || "sample-token"
         );
         break;
 
       case EmailNotificationType.PERFORMANCE_UPDATE:
         success = await emailService.sendPerformanceUpdate(
-          parentEmail,
-          parentName,
-          athleteName,
-          sampleData.stats
+          parentEmail || "",
+          parentName || "",
+          athleteName || "",
+          sampleData.stats || {}
         );
         break;
 
       case EmailNotificationType.NUTRITION_SHOPPING_LIST:
         success = await emailService.sendNutritionShoppingList(
-          parentEmail,
-          parentName,
-          athleteName,
+          parentEmail || "",
+          parentName || "",
+          athleteName || "",
           data?.items || sampleData.items || []
         );
         break;
 
       case EmailNotificationType.ACHIEVEMENT_NOTIFICATION:
         success = await emailService.sendAchievementNotification(
-          parentEmail,
-          parentName,
-          athleteName,
+          parentEmail || "",
+          parentName || "",
+          athleteName || "",
           data?.achievements || sampleData.achievements || []
         );
         break;
@@ -68,37 +68,37 @@ emailNotificationTestRouter.post('/notification-test', async (req: Request, res:
         // Use the custom event notification method with data provided or sample data
         success = await emailService.sendNotification(
           EmailNotificationType.EVENT_REMINDER,
-          parentEmail,
-          parentName,
-          athleteName,
-          data?.eventDetails || sampleData.eventDetails
+          parentEmail || "",
+          parentName || "",
+          athleteName || "",
+          data?.eventDetails || sampleData.eventDetails || {}
         );
         break;
 
       case EmailNotificationType.WEEKLY_SUMMARY:
         success = await emailService.sendWeeklySummary(
-          parentEmail,
-          parentName,
-          athleteName,
-          data?.summaryData || sampleData.summaryData
+          parentEmail || "",
+          parentName || "",
+          athleteName || "",
+          data?.summaryData || sampleData.summaryData || {}
         );
         break;
 
       case EmailNotificationType.TRAINING_PROGRESS:
         success = await emailService.sendTrainingProgress(
-          parentEmail,
-          parentName,
-          athleteName,
-          data?.trainingData || sampleData.trainingData
+          parentEmail || "",
+          parentName || "",
+          athleteName || "",
+          data?.trainingData || sampleData.trainingData || {}
         );
         break;
 
       case EmailNotificationType.ACADEMIC_UPDATE:
         success = await emailService.sendAcademicUpdate(
-          parentEmail,
-          parentName,
-          athleteName,
-          data?.academicData || sampleData.academicData
+          parentEmail || "",
+          parentName || "",
+          athleteName || "",
+          data?.academicData || sampleData.academicData || {}
         );
         break;
 
