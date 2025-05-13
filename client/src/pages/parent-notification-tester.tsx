@@ -14,15 +14,26 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
-import { EmailNotificationType } from '../../shared/parent-access';
-
-// Using the correct enum values from parent-access.ts
-const EMAIL_TYPES = EmailNotificationType;
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Send, Info, Award, Utensils, BookOpen, Dumbbell, Sparkles } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+// Import EmailNotificationType directly based on the values in shared/parent-access.ts
+enum EmailNotificationType {
+  INVITE = 'invite',
+  PERFORMANCE_UPDATE = 'performance_update',
+  NUTRITION_SHOPPING_LIST = 'nutrition_shopping_list',
+  ACHIEVEMENT_NOTIFICATION = 'achievement_notification',
+  EVENT_REMINDER = 'event_reminder',
+  WEEKLY_SUMMARY = 'weekly_summary',
+  TRAINING_PROGRESS = 'training_progress',
+  ACADEMIC_UPDATE = 'academic_update'
+}
+
+// Using the correct enum values from parent-access.ts
+const EMAIL_TYPES = EmailNotificationType;
 
 // Create a schema for parent notification form
 const parentNotificationSchema = z.object({
@@ -54,7 +65,7 @@ export default function ParentNotificationTester() {
     setResult(null);
     
     try {
-      const response = await apiRequest('/api/email/notification-test', {
+      const response = await apiRequest('/api/notification-test', {
         method: 'POST',
         body: JSON.stringify({
           ...data,
@@ -62,7 +73,8 @@ export default function ParentNotificationTester() {
         }),
       });
       
-      setResult({ success: true, message: response.message || 'Notification sent successfully' });
+      const responseData = typeof response.json === 'function' ? await response.json() : response;
+      setResult({ success: true, message: responseData.message || 'Notification sent successfully' });
       toast({
         title: 'Notification Sent',
         description: `Successfully sent ${getNotificationTypeName(activeTab)} to ${data.parentEmail}`,
