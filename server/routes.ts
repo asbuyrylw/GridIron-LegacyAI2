@@ -11,7 +11,7 @@ import { registerSavedCollegesRoutes } from "./routes/saved-colleges-routes";
 import { setupLoginStreakRoutes } from "./routes/login-streak-routes";
 import { router as scheduledReportsRoutes } from "./routes/scheduled-reports-routes";
 import { emailTestRouter } from "./routes/email-test-route";
-import { growthPredictionRoutes } from "./routes/growth-prediction-routes";
+import { growthPredictionRouter } from "./routes/growth-prediction-routes";
 import { Router } from "express";
 
 // Extend the Express Session type to include our onboarding progress
@@ -91,7 +91,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/email', emailTestRouter);
   
   // Growth prediction routes
-  app.use('/api/athlete', growthPredictionRoutes);
+  app.use('/api/athlete', growthPredictionRouter);
   
   // Achievement and Gamification routes
   app.get("/api/athlete/:id/achievements", async (req, res, next) => {
