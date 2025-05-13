@@ -1,266 +1,305 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import { sendAchievementNotifications } from '@/lib/parent-notification-service';
+import React, { useState } from 'react';
+import { Helmet } from 'react-helmet';
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription, 
+  CardContent, 
+  CardFooter
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { useQuery } from '@tanstack/react-query';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { toast } from '@/hooks/use-toast';
+import { EmailNotificationType } from '../../shared/parent-access';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Send, Info, Award, Utensils, BookOpen, Dumbbell, Sparkles } from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-// Define types
-interface Achievement {
-  achievementId: string;
-  name: string;
-  description: string;
-  category: string;
-  level: 'bronze' | 'silver' | 'gold' | 'platinum';
-  points: number;
-}
+// Create a schema for parent notification form
+const parentNotificationSchema = z.object({
+  parentEmail: z.string().email({ message: 'Please enter a valid email address' }),
+  parentName: z.string().min(1, { message: 'Parent name is required' }),
+  athleteName: z.string().min(1, { message: 'Athlete name is required' }),
+});
 
-interface ParentAccess {
-  id: number;
-  name: string;
-  email: string;
-  relationship: string;
-  active: boolean;
-}
+type ParentNotificationFormValues = z.infer<typeof parentNotificationSchema>;
 
-// Page component
 export default function ParentNotificationTester() {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const athleteId = user?.athlete?.id;
-  
-  const [selectedAchievements, setSelectedAchievements] = useState<string[]>([]);
-  const [selectedParents, setSelectedParents] = useState<number[]>([]);
-  const [sendToAll, setSendToAll] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Get available achievements
-  const { data: achievements = [] } = useQuery<Achievement[]>({
-    queryKey: ['/api/achievements'],
-    enabled: !!athleteId,
+  const [activeTab, setActiveTab] = useState<EmailNotificationType>(EmailNotificationType.PARENT_INVITE);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{success: boolean, message: string} | null>(null);
+
+  // Setup form with validation
+  const form = useForm<ParentNotificationFormValues>({
+    resolver: zodResolver(parentNotificationSchema),
+    defaultValues: {
+      parentEmail: '',
+      parentName: 'Parent Test',
+      athleteName: 'Athlete Test',
+    },
   });
-  
-  // Get parent access records
-  const { data: parentAccess = [], isLoading: parentsLoading } = useQuery<ParentAccess[]>({
-    queryKey: [`/api/athlete/${athleteId}/parent-access`],
-    enabled: !!athleteId,
-  });
-  
-  // Toggle achievement selection
-  const toggleAchievement = (achievementId: string) => {
-    setSelectedAchievements(prev => 
-      prev.includes(achievementId) 
-        ? prev.filter(id => id !== achievementId)
-        : [...prev, achievementId]
-    );
-  };
-  
-  // Toggle parent selection
-  const toggleParent = (parentId: number) => {
-    setSelectedParents(prev => 
-      prev.includes(parentId) 
-        ? prev.filter(id => id !== parentId)
-        : [...prev, parentId]
-    );
-  };
-  
-  // Handle send notification
-  const handleSendNotification = async () => {
-    if (!athleteId) {
-      toast({
-        title: "Error",
-        description: "No athlete profile found",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (selectedAchievements.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one achievement",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!sendToAll && selectedParents.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one parent or enable 'Send to all'",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsLoading(true);
+
+  // Handle form submission
+  const onSubmit = async (data: ParentNotificationFormValues) => {
+    setLoading(true);
+    setResult(null);
     
     try {
-      const result = await sendAchievementNotifications(
-        athleteId,
-        selectedAchievements,
-        {
-          parentIds: sendToAll ? undefined : selectedParents,
-          sendToAll
-        }
-      );
-      
-      toast({
-        title: "Notifications Sent",
-        description: `Successfully sent notifications to ${result.successfulSends?.length || 0} parents`,
-        variant: "default",
+      const response = await apiRequest('/api/email/notification-test', {
+        method: 'POST',
+        body: JSON.stringify({
+          ...data,
+          notificationType: activeTab,
+        }),
       });
       
-      // Log detailed results
-      console.log('Notification results:', result);
-      
-    } catch (error: any) {
+      setResult({ success: true, message: response.message || 'Notification sent successfully' });
       toast({
-        title: "Error Sending Notifications",
-        description: error.message || "An unknown error occurred",
-        variant: "destructive",
+        title: 'Notification Sent',
+        description: `Successfully sent ${getNotificationTypeName(activeTab)} to ${data.parentEmail}`,
+      });
+    } catch (error: any) {
+      setResult({ 
+        success: false, 
+        message: error.message || 'Failed to send notification'
+      });
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to send notification',
+        variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-  
-  // Group achievements by category
-  const groupedAchievements = achievements.reduce((groups, achievement) => {
-    const category = achievement.category || 'Other';
-    if (!groups[category]) {
-      groups[category] = [];
+
+  // Get a user-friendly name for notification type
+  const getNotificationTypeName = (type: EmailNotificationType): string => {
+    const notificationNames: Record<EmailNotificationType, string> = {
+      [EmailNotificationType.PARENT_INVITE]: 'Parent Invitation',
+      [EmailNotificationType.PERFORMANCE_UPDATE]: 'Performance Update',
+      [EmailNotificationType.NUTRITION_SHOPPING_LIST]: 'Nutrition Shopping List',
+      [EmailNotificationType.ACHIEVEMENT_NOTIFICATION]: 'Achievement Notification',
+      [EmailNotificationType.WEEKLY_SUMMARY]: 'Weekly Summary',
+      [EmailNotificationType.TRAINING_PROGRESS]: 'Training Progress',
+      [EmailNotificationType.ACADEMIC_UPDATE]: 'Academic Update',
+    };
+    
+    return notificationNames[type] || 'Notification';
+  };
+
+  // Get icon for each notification type
+  const getNotificationIcon = (type: EmailNotificationType) => {
+    switch (type) {
+      case EmailNotificationType.PARENT_INVITE:
+        return <Info className="h-5 w-5" />;
+      case EmailNotificationType.PERFORMANCE_UPDATE:
+        return <Sparkles className="h-5 w-5" />;
+      case EmailNotificationType.NUTRITION_SHOPPING_LIST:
+        return <Utensils className="h-5 w-5" />;
+      case EmailNotificationType.ACHIEVEMENT_NOTIFICATION:
+        return <Award className="h-5 w-5" />;
+      case EmailNotificationType.WEEKLY_SUMMARY:
+        return <BookOpen className="h-5 w-5" />;
+      case EmailNotificationType.TRAINING_PROGRESS:
+        return <Dumbbell className="h-5 w-5" />;
+      case EmailNotificationType.ACADEMIC_UPDATE:
+        return <BookOpen className="h-5 w-5" />;
+      default:
+        return <Send className="h-5 w-5" />;
     }
-    groups[category].push(achievement);
-    return groups;
-  }, {} as Record<string, Achievement[]>);
-  
-  if (!athleteId) {
-    return (
-      <div className="container mx-auto py-8">
-        <h1 className="text-2xl font-bold mb-4">Parent Notification Tester</h1>
-        <p>You need to be logged in as an athlete to use this feature.</p>
-      </div>
-    );
-  }
-  
+  };
+
+  // Generate example data for each notification type
+  const getNotificationDescription = (type: EmailNotificationType): string => {
+    switch (type) {
+      case EmailNotificationType.PARENT_INVITE:
+        return 'Invitation email sent to parents to receive updates about their athlete';
+      case EmailNotificationType.PERFORMANCE_UPDATE:
+        return 'Performance metrics and insights for the athlete';
+      case EmailNotificationType.NUTRITION_SHOPPING_LIST:
+        return 'Shopping list based on the athlete\'s nutrition plan';
+      case EmailNotificationType.ACHIEVEMENT_NOTIFICATION:
+        return 'Notification about new achievements the athlete has unlocked';
+      case EmailNotificationType.WEEKLY_SUMMARY:
+        return 'Weekly summary of the athlete\'s activities and progress';
+      case EmailNotificationType.TRAINING_PROGRESS:
+        return 'Updates about the athlete\'s training progress and programs';
+      case EmailNotificationType.ACADEMIC_UPDATE:
+        return 'Updates about the athlete\'s academic performance';
+      default:
+        return 'Email notification';
+    }
+  };
+
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-4">Parent Notification Tester</h1>
-      <p className="mb-6">
-        Use this page to test sending achievement notifications to parents. 
-        Select achievements and parents to notify.
-      </p>
+      <Helmet>
+        <title>Parent Notification Testing | GridIron LegacyAI</title>
+      </Helmet>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Achievement selection */}
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold">Parent Notification Testing</h1>
+        <p className="text-muted-foreground mt-2">
+          Test all types of parent email notifications
+        </p>
+      </div>
+      
+      <div className="max-w-3xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>Select Achievements</CardTitle>
+            <CardTitle>Send Test Notifications</CardTitle>
             <CardDescription>
-              Choose which achievements to include in the notification
+              Select a notification type and send a test email to any recipient
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6 max-h-[400px] overflow-y-auto">
-            {Object.entries(groupedAchievements).map(([category, categoryAchievements]) => (
-              <div key={category} className="space-y-2">
-                <h3 className="font-medium">{category}</h3>
-                <div className="space-y-1">
-                  {categoryAchievements.map(achievement => (
-                    <div key={achievement.achievementId} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={achievement.achievementId}
-                        checked={selectedAchievements.includes(achievement.achievementId)}
-                        onCheckedChange={() => toggleAchievement(achievement.achievementId)}
-                      />
-                      <label 
-                        htmlFor={achievement.achievementId}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                      >
-                        {achievement.name} 
-                        <span className="text-xs ml-1 text-muted-foreground">
-                          ({achievement.level.toUpperCase()}) - {achievement.points} pts
-                        </span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                <Separator className="my-2" />
-              </div>
-            ))}
-          </CardContent>
-          <CardFooter>
-            <div className="text-sm text-muted-foreground">
-              {selectedAchievements.length} achievements selected
-            </div>
-          </CardFooter>
-        </Card>
-        
-        {/* Parent selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Select Parents</CardTitle>
-            <CardDescription>
-              Choose which parents should receive the notification
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-2 mb-4">
-              <Checkbox 
-                id="send-to-all"
-                checked={sendToAll}
-                onCheckedChange={(checked) => {
-                  setSendToAll(!!checked);
-                  if (checked) {
-                    setSelectedParents([]);
-                  }
-                }}
-              />
-              <label 
-                htmlFor="send-to-all"
-                className="font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-              >
-                Send to all parents
-              </label>
-            </div>
-            
-            <div className={`space-y-2 ${sendToAll ? 'opacity-50' : ''}`}>
-              {parentsLoading ? (
-                <p>Loading parents...</p>
-              ) : parentAccess.length === 0 ? (
-                <p>No parents have been granted access yet.</p>
-              ) : (
-                parentAccess.map(parent => (
-                  <div key={parent.id} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`parent-${parent.id}`}
-                      checked={selectedParents.includes(parent.id)}
-                      onCheckedChange={() => toggleParent(parent.id)}
-                      disabled={sendToAll || !parent.active}
-                    />
-                    <label 
-                      htmlFor={`parent-${parent.id}`}
-                      className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer ${!parent.active ? 'line-through text-muted-foreground' : ''}`}
-                    >
-                      {parent.name} ({parent.relationship}) 
-                      <div className="text-xs text-muted-foreground">{parent.email}</div>
-                    </label>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button 
-              onClick={handleSendNotification} 
-              disabled={isLoading || selectedAchievements.length === 0 || (!sendToAll && selectedParents.length === 0)}
+          
+          <CardContent>
+            <Tabs 
+              value={activeTab} 
+              onValueChange={(value) => setActiveTab(value as EmailNotificationType)}
+              className="w-full"
             >
-              {isLoading ? 'Sending...' : 'Send Notification'}
-            </Button>
+              <TabsList className="grid grid-cols-4 md:grid-cols-7 mb-4">
+                <TabsTrigger value={EmailNotificationType.PARENT_INVITE}>
+                  <span className="hidden md:inline mr-2">Invite</span>
+                  <Info className="h-4 w-4 md:hidden" />
+                </TabsTrigger>
+                <TabsTrigger value={EmailNotificationType.PERFORMANCE_UPDATE}>
+                  <span className="hidden md:inline mr-2">Performance</span>
+                  <Sparkles className="h-4 w-4 md:hidden" />
+                </TabsTrigger>
+                <TabsTrigger value={EmailNotificationType.NUTRITION_SHOPPING_LIST}>
+                  <span className="hidden md:inline mr-2">Nutrition</span>
+                  <Utensils className="h-4 w-4 md:hidden" />
+                </TabsTrigger>
+                <TabsTrigger value={EmailNotificationType.ACHIEVEMENT_NOTIFICATION}>
+                  <span className="hidden md:inline mr-2">Achievements</span>
+                  <Award className="h-4 w-4 md:hidden" />
+                </TabsTrigger>
+                <TabsTrigger value={EmailNotificationType.WEEKLY_SUMMARY}>
+                  <span className="hidden md:inline mr-2">Summary</span>
+                  <BookOpen className="h-4 w-4 md:hidden" />
+                </TabsTrigger>
+                <TabsTrigger value={EmailNotificationType.TRAINING_PROGRESS}>
+                  <span className="hidden md:inline mr-2">Training</span>
+                  <Dumbbell className="h-4 w-4 md:hidden" />
+                </TabsTrigger>
+                <TabsTrigger value={EmailNotificationType.ACADEMIC_UPDATE}>
+                  <span className="hidden md:inline mr-2">Academic</span>
+                  <BookOpen className="h-4 w-4 md:hidden" />
+                </TabsTrigger>
+              </TabsList>
+              
+              <div className="p-4 border rounded-md bg-muted/50 mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  {getNotificationIcon(activeTab)}
+                  <h3 className="text-lg font-medium">{getNotificationTypeName(activeTab)}</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {getNotificationDescription(activeTab)}
+                </p>
+              </div>
+              
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="parentEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Parent Email</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="parent@example.com" 
+                            type="email" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="parentName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Parent Name</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="John Smith" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="athleteName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Athlete Name</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Michael Smith" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  {result && (
+                    <Alert variant={result.success ? "default" : "destructive"}>
+                      <AlertTitle>{result.success ? "Success" : "Error"}</AlertTitle>
+                      <AlertDescription>{result.message}</AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  <Button type="submit" disabled={loading} className="w-full">
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Sending...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Send className="h-4 w-4" />
+                        Send {getNotificationTypeName(activeTab)}
+                      </span>
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            </Tabs>
+          </CardContent>
+          
+          <CardFooter className="flex flex-col items-start">
+            <div className="text-sm text-muted-foreground">
+              <p className="mb-2">
+                <strong>Note:</strong> This tool sends actual emails through SendGrid. Make sure you have the SENDGRID_API_KEY environment variable set.
+              </p>
+              <p>
+                If no API key is set, emails will be simulated in the console logs for development purposes.
+              </p>
+            </div>
           </CardFooter>
         </Card>
       </div>
