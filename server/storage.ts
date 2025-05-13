@@ -32,6 +32,14 @@ import {
   teamAnnouncements, type TeamAnnouncement, type InsertTeamAnnouncement
 } from "@shared/schema";
 import { savedColleges, type SavedCollege, type InsertSavedCollege } from "@shared/saved-colleges-schema";
+
+// Import external integrations
+import {
+  externalServiceTokens, type ExternalServiceToken, type InsertExternalServiceToken,
+  hudlVideos, type HudlVideo, type InsertHudlVideo,
+  maxPrepsStats, type MaxPrepsStats, type InsertMaxPrepsStats,
+  twitterPosts, type TwitterPost, type InsertTwitterPost
+} from "@shared/external-integrations";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import { 
@@ -239,6 +247,38 @@ export interface IStorage {
   createLeaderboard(leaderboard: InsertLeaderboard): Promise<Leaderboard>;
   updateLeaderboard(id: number, updates: Partial<InsertLeaderboard>): Promise<Leaderboard | undefined>;
   deleteLeaderboard(id: number): Promise<boolean>;
+  
+  // External Service Tokens Methods
+  getExternalServiceTokens(userId: number): Promise<ExternalServiceToken[]>;
+  getExternalServiceTokenById(id: number): Promise<ExternalServiceToken | undefined>;
+  getExternalServiceTokenByUserAndService(userId: number, service: string): Promise<ExternalServiceToken | undefined>;
+  createExternalServiceToken(token: InsertExternalServiceToken): Promise<ExternalServiceToken>;
+  updateExternalServiceToken(id: number, updates: Partial<InsertExternalServiceToken>): Promise<ExternalServiceToken | undefined>;
+  deleteExternalServiceToken(id: number): Promise<boolean>;
+  
+  // Hudl Video Methods
+  getHudlVideosByAthlete(athleteId: number, highlightsOnly?: boolean): Promise<HudlVideo[]>;
+  getHudlVideoById(id: number): Promise<HudlVideo | undefined>;
+  getHudlVideoByHudlId(hudlId: string): Promise<HudlVideo | undefined>;
+  createHudlVideo(video: InsertHudlVideo): Promise<HudlVideo>;
+  updateHudlVideo(id: number, updates: Partial<InsertHudlVideo>): Promise<HudlVideo | undefined>;
+  deleteHudlVideo(id: number): Promise<boolean>;
+  
+  // MaxPreps Stats Methods
+  getMaxPrepsStatsByAthlete(athleteId: number): Promise<MaxPrepsStats[]>;
+  getMaxPrepsStatsById(id: number): Promise<MaxPrepsStats | undefined>;
+  getMaxPrepsStatsByAthleteSeason(athleteId: number, season: string): Promise<MaxPrepsStats | undefined>;
+  createMaxPrepsStats(stats: InsertMaxPrepsStats): Promise<MaxPrepsStats>;
+  updateMaxPrepsStats(id: number, updates: Partial<InsertMaxPrepsStats>): Promise<MaxPrepsStats | undefined>;
+  deleteMaxPrepsStats(id: number): Promise<boolean>;
+  
+  // Twitter Posts Methods
+  getTwitterPostsByUser(userId: number): Promise<TwitterPost[]>;
+  getTwitterPostById(id: number): Promise<TwitterPost | undefined>;
+  createTwitterPost(post: InsertTwitterPost): Promise<TwitterPost>;
+  updateTwitterPost(id: number, updates: Partial<InsertTwitterPost>): Promise<TwitterPost | undefined>;
+  deleteTwitterPost(id: number): Promise<boolean>;
+  getCombineMetricsById(id: number): Promise<CombineMetric | undefined>;
   
   // Leaderboard Entry Methods
   getLeaderboardEntries(leaderboardId: number): Promise<any[]>;
