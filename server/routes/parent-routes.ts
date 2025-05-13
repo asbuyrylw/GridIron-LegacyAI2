@@ -714,8 +714,8 @@ router.post('/api/athlete/:athleteId/achievement-notification', async (req: Requ
         // Map the data we need for the response - making sure to handle potentially missing fields
         return {
           id: a.achievementId,
-          // Use the string achievement ID if available, otherwise use the numeric ID
-          achievementId: a.achievementStringId || `achievement-${a.achievementId}`,
+          // Use a string ID for the achievement - either the string ID from the achievement data or convert numeric ID to string
+          achievementStringId: typeof a.achievementId === 'string' ? a.achievementId : `achievement-${a.achievementId}`,
           progress: a.progress,
           completed: a.completed
         };

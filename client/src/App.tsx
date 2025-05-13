@@ -32,6 +32,7 @@ import CoachDashboard from "@/pages/coach-dashboard";
 import ParentManagementPage from "@/pages/parent-management";
 // Removing ParentViewPage import as we're using email-only approach 
 import ParentAccessTester from "@/pages/parent-access-tester";
+import ParentNotificationTester from "@/pages/parent-notification-tester";
 import WebSocketTester from "@/pages/websocket-tester";
 // Import GameificationPage component directly to fix lazy loading issue
 import GameificationPage from "@/pages/gamification-page";
@@ -103,6 +104,7 @@ function Router() {
         <ProtectedRoute path="/coach-dashboard" component={CoachDashboard} />
         <ProtectedRoute path="/parent-management" component={ParentManagementPage} />
         <ProtectedRoute path="/parent-access-tester" component={ParentAccessTester} />
+        <ProtectedRoute path="/parent-notification-tester" component={ParentNotificationTester} />
         
         {/* Public Routes */}
         <Route path="/auth" component={AuthPage} />
