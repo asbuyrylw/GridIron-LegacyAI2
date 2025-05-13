@@ -5,6 +5,18 @@ import { z } from "zod";
 // Leaderboard types
 export type LeaderboardPeriod = 'all-time' | 'yearly' | 'monthly' | 'weekly' | 'daily' | 'event';
 
+// Growth prediction types
+export interface GrowthPrediction {
+  predictedHeight: string;
+  predictedHeightCm: number;
+  percentComplete: number;
+  growthRemaining: number;
+  predictedRange: string;
+  recommendedPositions: string[];
+  calculatedAt: string;
+  updatedAt: string;
+}
+
 // Type for college match results from the College Matcher tool
 export interface MatchedCollege {
   id: number;
@@ -117,6 +129,7 @@ export const athletes = pgTable("athletes", {
   bodyFat: real("body_fat"),
   fatherHeight: integer("father_height"),
   motherHeight: integer("mother_height"),
+  growthPrediction: json("growth_prediction"),
   
   // Academic Info
   gpa: real("gpa"),
@@ -980,6 +993,23 @@ export const recruitingGoalsSchema = z.object({
   footballSeasonStart: z.date().optional(),
   footballSeasonEnd: z.date().optional(),
   preferredTrainingDays: z.array(z.string()).optional(),
+});
+
+// Height prediction schema
+export const heightPredictionSchema = z.object({
+  gender: z.enum(["male", "female"]),
+  age: z.number().min(5).max(18),
+  currentHeight: z.number().min(36).max(84), // Height in inches
+  currentHeightUnit: z.enum(["in", "cm"]).default("in"),
+  currentWeight: z.number().min(40).max(350), // Weight in pounds
+  currentWeightUnit: z.enum(["lb", "kg"]).default("lb"),
+  motherHeight: z.number().min(48).max(78), // Height in inches
+  motherHeightUnit: z.enum(["in", "cm"]).default("in"),
+  fatherHeight: z.number().min(60).max(84), // Height in inches
+  fatherHeightUnit: z.enum(["in", "cm"]).default("in"),
+  birthMonth: z.number().min(1).max(12),
+  birthDay: z.number().min(1).max(31),
+  birthYear: z.number().min(2000).max(new Date().getFullYear() - 5),
 });
 
 // Complete onboarding schema
