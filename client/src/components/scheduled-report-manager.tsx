@@ -129,10 +129,7 @@ export function ScheduledReportManager() {
   // Mutation to create report
   const createReport = useMutation({
     mutationFn: (newReport: ScheduledReport) => {
-      return apiRequest(`/api/athlete/${athlete?.id}/scheduled-reports`, {
-        method: 'POST',
-        data: newReport
-      });
+      return apiRequest('POST', `/api/athlete/${athlete?.id}/scheduled-reports`, newReport);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -157,10 +154,7 @@ export function ScheduledReportManager() {
   // Mutation to update report
   const updateReport = useMutation({
     mutationFn: ({ id, data }: { id: number, data: Partial<ScheduledReport> }) => {
-      return apiRequest(`/api/athlete/${athlete?.id}/scheduled-reports/${id}`, {
-        method: 'PATCH',
-        data
-      });
+      return apiRequest('PATCH', `/api/athlete/${athlete?.id}/scheduled-reports/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

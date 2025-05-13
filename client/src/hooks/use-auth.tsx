@@ -8,8 +8,9 @@ import { LoginData, AthleteRegistration, User } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-type AuthContextType = {
+export type AuthContextType = {
   user: User | null;
+  athlete: any | null; // The athlete property from the user object
   isLoading: boolean;
   error: Error | null;
   loginMutation: UseMutationResult<any, Error, LoginData>;
@@ -96,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user: user || null,
+        athlete: user?.athlete || null,
         isLoading,
         error,
         loginMutation,
