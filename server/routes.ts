@@ -8,6 +8,7 @@ import { setupAuth } from "./auth";
 import session from "express-session";
 import { registerCollegeMatcherRoutes } from "./routes/college-matcher-routes";
 import { registerSavedCollegesRoutes } from "./routes/saved-colleges-routes";
+import { setupLoginStreakRoutes } from "./routes/login-streak-routes";
 import { Router } from "express";
 
 // Extend the Express Session type to include our onboarding progress
@@ -76,6 +77,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Coach Dashboard API endpoints
   registerCoachRoutes(app);
+  
+  // Login Streak API endpoints
+  setupLoginStreakRoutes(app);
   
   // Achievement and Gamification routes
   app.get("/api/athlete/:id/achievements", async (req, res, next) => {

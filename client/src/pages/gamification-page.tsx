@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAchievementProgress } from '@/hooks/use-achievement-progress';
 import { AchievementCategory, TierType } from '@/lib/achievement-badges';
 import LeaderboardSection from '@/components/gamification/leaderboard-section';
+import { LoginStreakCard } from '@/components/gamification/login-streak-card';
 import { useAchievements } from '@/components/achievements/achievement-provider';
 
 const categories: { id: AchievementCategory; label: string; icon: React.ReactNode }[] = [
@@ -88,15 +89,22 @@ export default function GamificationPage() {
         icon={<Award className="h-6 w-6" />}
       />
       
-      {/* Points summary */}
-      <div className="flex items-center mb-4">
-        <div className="flex items-center bg-gradient-to-r from-amber-500 to-amber-300 text-white px-4 py-2 rounded-full">
-          <Trophy className="h-5 w-5 mr-2" />
-          <span className="font-bold">{totalPoints} Points</span>
+      {/* Points and Streak summary */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex-1">
+          <div className="flex items-center">
+            <div className="flex items-center bg-gradient-to-r from-amber-500 to-amber-300 text-white px-4 py-2 rounded-full">
+              <Trophy className="h-5 w-5 mr-2" />
+              <span className="font-bold">{totalPoints} Points</span>
+            </div>
+            <Button variant="ghost" size="sm" className="ml-auto">
+              View Rewards <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
         </div>
-        <Button variant="ghost" size="sm" className="ml-auto">
-          View Rewards <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
+        <div className="md:w-1/3">
+          <LoginStreakCard />
+        </div>
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

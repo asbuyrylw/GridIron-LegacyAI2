@@ -1,58 +1,157 @@
-import { Express, Request, Response } from 'express';
-import { loginStreakService } from '../login-streak-service';
+import { Express } from "express";
+import { loginStreakService } from "../login-streak-service";
+import { storage } from "../storage";
+import session from "express-session";
 
-declare module 'express-session' {
+declare module "express-session" {
   interface SessionData {
     userId?: number;
   }
 }
 
 export function setupLoginStreakRoutes(app: Express) {
-  // Get user's login streak
-  app.get('/api/user/login-streak', async (req, res) => {
-    try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: 'Not authenticated' });
-      }
+  // Middleware to check if user is authenticated
+  const isAuthenticated = (req: any, res: any, next: any) => {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    res.status(401).json({ message: "Not authenticated" });
+  };
 
-      const userId = req.session.userId;
+  // Get current user's login streak
+  app.get("/api/login-streak", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID not found" });
+      }
+      
+      // Get or create login streak for this user
       let streak = await loginStreakService.getLoginStreak(userId);
-
+      
       if (!streak) {
-        // Create a new streak for first-time users
-        streak = await loginStreakService.createLoginStreak({
-          userId,
-          currentStreak: 0,
-          longestStreak: 0,
-          lastLoginDate: null,
-          streakHistory: []
-        });
+        streak = await loginStreakService.createLoginStreak({ userId });
       }
-
-      return res.status(200).json(streak);
+      
+      res.json(streak);
     } catch (error) {
-      console.error('Error getting login streak:', error);
-      return res.status(500).json({ message: 'Failed to get login streak' });
+      console.error("Error getting login streak:", error);
+      res.status(500).json({ message: "Failed to get login streak" });
     }
   });
 
-  // Update login streak (process daily login)
-  app.post('/api/user/login-streak', async (req, res) => {
+  // Update login streak (processes a login)
+  app.post("/api/login-streak/update", isAuthenticated, async (req, res) => {
     try {
-      if (!req.session.userId) {
-        return res.status(401).json({ message: 'Not authenticated' });
+      const userId = req.user.id;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID not found" });
       }
-
-      const userId = req.session.userId;
-      const streak = await loginStreakService.processLogin(userId);
-
-      // Send back updated streak data
-      return res.status(200).json(streak);
+      
+      // Process the login and update streak
+      const updatedStreak = await loginStreakService.processLogin(userId);
+      
+      // Check if any streak achievements should be unlocked
+      await updateStreakAchievements(userId, updatedStreak.currentStreak);
+      
+      res.json(updatedStreak);
     } catch (error) {
-      console.error('Error updating login streak:', error);
-      return res.status(500).json({ message: 'Failed to update login streak' });
+      console.error("Error updating login streak:", error);
+      res.status(500).json({ message: "Failed to update login streak" });
     }
   });
 
-  console.log('Login streak routes loaded successfully');
+  // Get login streak leaderboard
+  app.get("/api/login-streak/leaderboard", isAuthenticated, async (req, res) => {
+    try {
+      // Fetch all streaks
+      const allStreaks = Array.from(loginStreakService.getAllStreaks());
+      
+      // Sort by current streak (descending)
+      const leaderboard = allStreaks
+        .sort((a, b) => b.currentStreak - a.currentStreak)
+        .slice(0, 10); // Get top 10
+      
+      // Get user info for display
+      const leaderboardWithUserInfo = await Promise.all(
+        leaderboard.map(async (streak) => {
+          try {
+            const user = await storage.getUser(streak.userId);
+            const athlete = user.userType === 'athlete' 
+              ? await storage.getAthlete(streak.userId) 
+              : null;
+              
+            return {
+              ...streak,
+              username: user?.username || 'Unknown',
+              userType: user?.userType || 'unknown',
+              fullName: athlete 
+                ? `${athlete.firstName} ${athlete.lastName}` 
+                : user.username
+            };
+          } catch (error) {
+            console.error("Error getting user info for streak leaderboard:", error);
+            return {
+              ...streak,
+              username: 'Unknown',
+              userType: 'unknown',
+              fullName: 'Unknown User'
+            };
+          }
+        })
+      );
+      
+      res.json(leaderboardWithUserInfo);
+    } catch (error) {
+      console.error("Error getting login streak leaderboard:", error);
+      res.status(500).json({ message: "Failed to get login streak leaderboard" });
+    }
+  });
+}
+
+// Helper function to update achievements based on login streak
+async function updateStreakAchievements(userId: number, streakCount: number) {
+  try {
+    // Get the athlete ID for this user
+    const athlete = await storage.getAthleteByUserId(userId);
+    
+    if (!athlete) {
+      console.log("No athlete found for streak achievements");
+      return;
+    }
+    
+    // Get achievements for streak milestones
+    const achievementMapping: { [milestone: number]: string } = {
+      3: 'streak-three-days',
+      7: 'streak-one-week',
+      14: 'streak-two-weeks',
+      30: 'streak-one-month',
+      60: 'streak-two-months',
+      90: 'streak-three-months',
+      180: 'streak-six-months',
+      365: 'streak-one-year'
+    };
+    
+    // Find the highest milestone achieved
+    const milestones = Object.keys(achievementMapping)
+      .map(key => parseInt(key))
+      .sort((a, b) => a - b);
+    
+    for (const milestone of milestones) {
+      if (streakCount >= milestone) {
+        const achievementId = achievementMapping[milestone];
+        
+        // Update this achievement progress to 100%
+        await storage.updateAchievementProgress(
+          userId,
+          achievementId,
+          100
+        );
+      }
+    }
+  } catch (error) {
+    console.error("Error updating streak achievements:", error);
+  }
 }
