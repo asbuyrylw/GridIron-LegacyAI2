@@ -44,53 +44,49 @@ export async function seedAchievements(storage: MemStorage) {
       achievementId: 'login-streak-bronze',
       name: 'Consistency Rookie',
       description: 'Maintain a 5-day login streak',
-      category: 'engagement' as any,
+      type: 'engagement' as any,
       level: 'bronze' as any,
-      pointValue: 25,
+      points: 25,
       icon: 'flame',
-      criteria: JSON.stringify({
+      requirements: JSON.stringify({
         streakDays: 5
-      }),
-      active: true
+      })
     },
     {
       achievementId: 'login-streak-silver',
       name: 'Consistency Pro',
       description: 'Maintain a 10-day login streak',
-      category: 'engagement' as any,
+      type: 'engagement' as any,
       level: 'silver' as any,
-      pointValue: 50,
+      points: 50,
       icon: 'flame',
-      criteria: JSON.stringify({
+      requirements: JSON.stringify({
         streakDays: 10
-      }),
-      active: true
+      })
     },
     {
       achievementId: 'login-streak-gold',
       name: 'Consistency All-Star',
       description: 'Maintain a 25-day login streak',
-      category: 'engagement' as any,
+      type: 'engagement' as any,
       level: 'gold' as any,
-      pointValue: 100,
+      points: 100,
       icon: 'flame',
-      criteria: JSON.stringify({
+      requirements: JSON.stringify({
         streakDays: 25
-      }),
-      active: true
+      })
     },
     {
       achievementId: 'login-streak-platinum',
       name: 'Consistency Hall of Famer',
       description: 'Maintain a 50-day login streak',
-      category: 'engagement' as any,
+      type: 'engagement' as any,
       level: 'platinum' as any,
-      pointValue: 250,
+      points: 250,
       icon: 'flame',
-      criteria: JSON.stringify({
+      requirements: JSON.stringify({
         streakDays: 50
-      }),
-      active: true
+      })
     },
     
     // Performance achievements
