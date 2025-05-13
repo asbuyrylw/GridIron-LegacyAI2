@@ -1,18 +1,38 @@
 import { MemStorage } from '../storage';
-import { InsertTwitterPost, TwitterPost, ExternalServiceToken } from '../../shared/external-integrations';
+import { 
+  ExternalServiceToken, 
+  InsertExternalServiceToken,
+  TwitterPost,
+  InsertTwitterPost
+} from '../../shared/external-integrations';
 
+/**
+ * Service for Twitter API integration
+ */
 class TwitterService {
+  private readonly clientId: string;
+  private readonly clientSecret: string;
+  private readonly redirectUri: string;
   private readonly enabled: boolean;
 
   constructor() {
-    // Only enable if we have Twitter API credentials
-    this.enabled = !!process.env.TWITTER_API_KEY && 
-                   !!process.env.TWITTER_API_SECRET && 
-                   !!process.env.TWITTER_CALLBACK_URL;
+    // Initialize with environment variables
+    this.clientId = process.env.TWITTER_CLIENT_ID || '';
+    this.clientSecret = process.env.TWITTER_CLIENT_SECRET || '';
+    this.redirectUri = process.env.TWITTER_REDIRECT_URI || 'http://localhost:5000/api/twitter/callback';
+    
+    // Check if the service is enabled (has valid credentials)
+    this.enabled = Boolean(this.clientId && this.clientSecret);
+    
+    if (this.enabled) {
+      console.log('Twitter service initialized successfully');
+    } else {
+      console.log('Twitter service disabled: Missing API credentials');
+    }
   }
 
   /**
-   * Check if the service is enabled
+   * Check if the Twitter integration is enabled
    */
   isEnabled(): boolean {
     return this.enabled;
@@ -23,41 +43,45 @@ class TwitterService {
    */
   getAuthorizationUrl(): string {
     if (!this.enabled) {
-      throw new Error('Twitter service is not enabled. Twitter API credentials are missing.');
+      throw new Error('Twitter integration is not enabled');
     }
     
-    // Implementation would use Twitter OAuth 2.0
-    // This is a placeholder - actual implementation would require the Twitter API
-    const callbackUrl = process.env.TWITTER_CALLBACK_URL || '';
-    const authUrl = `https://twitter.com/i/oauth2/authorize?client_id=${process.env.TWITTER_API_KEY}&redirect_uri=${callbackUrl}&response_type=code&scope=tweet.read%20tweet.write%20users.read%20offline.access&state=state&code_challenge=challenge&code_challenge_method=plain`;
+    // In a real implementation, this would generate an OAuth URL with the proper scopes
+    // For now, we'll return a placeholder URL
+    const scopes = ['tweet.read', 'tweet.write', 'users.read'];
+    const scopeString = encodeURIComponent(scopes.join(' '));
     
-    return authUrl;
+    return `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${this.clientId}&redirect_uri=${encodeURIComponent(this.redirectUri)}&scope=${scopeString}&state=state&code_challenge=challenge&code_challenge_method=plain`;
   }
 
   /**
    * Process the OAuth callback
    */
-  async processOAuthCallback(code: string, userId: number, storage: MemStorage): Promise<ExternalServiceToken | null> {
+  async processOAuthCallback(
+    code: string, 
+    userId: number,
+    storage: MemStorage
+  ): Promise<ExternalServiceToken | null> {
     if (!this.enabled) {
-      throw new Error('Twitter service is not enabled. Twitter API credentials are missing.');
+      throw new Error('Twitter integration is not enabled');
     }
-
+    
     try {
-      // In a real implementation, we would exchange the code for tokens
-      // For now, we'll create a dummy token record
-      const tokenData = {
+      // In a real implementation, this would exchange the code for an access token
+      // For demonstration purposes, we'll create a token record directly
+      
+      const tokenData: InsertExternalServiceToken = {
         userId,
         service: 'twitter',
-        accessToken: 'dummy_access_token', // Would be replaced with actual token
-        refreshToken: 'dummy_refresh_token', // Would be replaced with actual token
-        tokenExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
-        scope: 'tweet.read tweet.write users.read',
+        accessToken: `twitter_mock_token_${Date.now()}`,
+        refreshToken: `twitter_mock_refresh_${Date.now()}`,
+        tokenType: 'bearer',
+        expiresAt: new Date(Date.now() + 3600 * 1000), // 1 hour from now
         isActive: true,
+        lastSyncDate: new Date()
       };
-
-      // Store the tokens
-      const token = await storage.createExternalServiceToken(tokenData);
       
+      const token = await storage.createExternalServiceToken(tokenData);
       return token;
     } catch (error) {
       console.error('Error processing Twitter OAuth callback:', error);
@@ -69,53 +93,45 @@ class TwitterService {
    * Post a tweet
    */
   async postTweet(
-    userId: number,
-    content: string,
+    userId: number, 
+    content: string, 
     mediaUrls: string[] = [],
     storage: MemStorage
   ): Promise<TwitterPost | null> {
     if (!this.enabled) {
-      throw new Error('Twitter service is not enabled. Twitter API credentials are missing.');
+      throw new Error('Twitter integration is not enabled');
     }
-
+    
     try {
-      // Find the user's Twitter token
+      // Check if user has an active Twitter token
       const token = await storage.getExternalServiceTokenByUserAndService(userId, 'twitter');
       
       if (!token || !token.isActive) {
-        throw new Error('No active Twitter token found for this user');
+        throw new Error('User does not have an active Twitter connection');
       }
-
-      // In a real implementation, we would use the Twitter API to post the tweet
-      // For now, we'll create a record in our database
+      
+      // In a real implementation, this would use the Twitter API to post a tweet
+      // For demonstration purposes, we'll create a record of the tweet directly
+      
       const tweetData: InsertTwitterPost = {
         userId,
         content,
-        mediaUrls,
+        mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
         isPosted: true,
         postedAt: new Date(),
-        tweetId: `dummy_${Date.now()}`, // Would be replaced with actual tweet ID
-        engagementStats: { likes: 0, retweets: 0, replies: 0 },
+        tweetId: `twitter_mock_id_${Date.now()}`,
+        engagementStats: {
+          likes: 0,
+          retweets: 0,
+          replies: 0,
+          impressions: 0
+        }
       };
-
-      // Save to database
-      const tweet = await storage.createTwitterPost(tweetData);
       
+      const tweet = await storage.createTwitterPost(tweetData);
       return tweet;
     } catch (error) {
       console.error('Error posting tweet:', error);
-      
-      // Save the error in our database
-      const errorTweetData: InsertTwitterPost = {
-        userId,
-        content,
-        mediaUrls,
-        isPosted: false,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      };
-      
-      await storage.createTwitterPost(errorTweetData);
-      
       return null;
     }
   }
@@ -131,30 +147,30 @@ class TwitterService {
     storage: MemStorage
   ): Promise<TwitterPost | null> {
     if (!this.enabled) {
-      throw new Error('Twitter service is not enabled. Twitter API credentials are missing.');
+      throw new Error('Twitter integration is not enabled');
     }
-
+    
     try {
-      // Find the user's Twitter token
+      // Check if user has an active Twitter token
       const token = await storage.getExternalServiceTokenByUserAndService(userId, 'twitter');
       
       if (!token || !token.isActive) {
-        throw new Error('No active Twitter token found for this user');
+        throw new Error('User does not have an active Twitter connection');
       }
-
-      // In a real implementation, we might use a scheduled tweet API
-      // For now, we'll create a record in our database
+      
+      // In a real implementation, this would use the Twitter API to schedule a tweet
+      // For demonstration purposes, we'll create a record of the scheduled tweet directly
+      
       const tweetData: InsertTwitterPost = {
         userId,
         content,
-        mediaUrls,
+        mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
         isScheduled: true,
         scheduledFor,
+        isPosted: false
       };
-
-      // Save to database
-      const tweet = await storage.createTwitterPost(tweetData);
       
+      const tweet = await storage.createTwitterPost(tweetData);
       return tweet;
     } catch (error) {
       console.error('Error scheduling tweet:', error);
@@ -163,12 +179,11 @@ class TwitterService {
   }
 
   /**
-   * Get tweets for a user
+   * Get user's tweets
    */
   async getUserTweets(userId: number, storage: MemStorage): Promise<TwitterPost[]> {
     try {
-      const tweets = await storage.getTwitterPostsByUser(userId);
-      return tweets;
+      return await storage.getTwitterPostsByUser(userId);
     } catch (error) {
       console.error('Error getting user tweets:', error);
       return [];
@@ -179,7 +194,7 @@ class TwitterService {
    * Share an achievement on Twitter
    */
   async shareAchievement(
-    userId: number,
+    userId: number, 
     achievementId: number,
     storage: MemStorage
   ): Promise<TwitterPost | null> {
@@ -191,16 +206,8 @@ class TwitterService {
         throw new Error('Achievement not found');
       }
       
-      // Get athlete details
-      const athlete = await storage.getAthleteByUserId(userId);
-      
-      if (!achievement || !athlete) {
-        throw new Error('Achievement or athlete not found');
-      }
-      
-      // Create tweet content
-      const achievementName = achievement.name || 'Unknown Achievement';
-      const content = `I just earned the "${achievementName}" achievement on GridIron LegacyAI! 🏈 #FootballAchievement #GridIronLegacy`;
+      // Prepare the tweet text based on the achievement
+      const content = `🏆 I just unlocked the "${achievement.name}" achievement on GridIron LegacyAI! #FootballProgress #GridIronLegacy`;
       
       // Post the tweet
       return await this.postTweet(userId, content, [], storage);
@@ -211,10 +218,10 @@ class TwitterService {
   }
 
   /**
-   * Share stats on Twitter
+   * Share combine metrics on Twitter
    */
   async shareStats(
-    userId: number,
+    userId: number, 
     metricsId: number,
     storage: MemStorage
   ): Promise<TwitterPost | null> {
@@ -226,21 +233,14 @@ class TwitterService {
         throw new Error('Metrics not found');
       }
       
-      // Get athlete details
-      const athlete = await storage.getAthleteByUserId(userId);
+      // Prepare the tweet text based on the metrics
+      let content = '💪 My latest football stats:\n';
       
-      if (!athlete) {
-        throw new Error('Athlete not found');
-      }
+      if (metrics.fortyYard) content += `40-yard dash: ${metrics.fortyYard}s\n`;
+      if (metrics.verticalJump) content += `Vertical jump: ${metrics.verticalJump}"\n`;
+      if (metrics.benchPress) content += `Bench press: ${metrics.benchPress} lbs\n`;
       
-      // Create tweet content with key metrics
-      let content = `Just updated my combine metrics! 🏈\n`;
-      
-      if (metrics.fortyYard) content += `40-yard: ${metrics.fortyYard}s ⚡️\n`;
-      if (metrics.verticalJump) content += `Vertical: ${metrics.verticalJump}″ 🦘\n`;
-      if (metrics.benchPressReps) content += `Bench: ${metrics.benchPressReps} reps 💪\n`;
-      
-      content += `#GridIronLegacy #FootballRecruitment`;
+      content += '#FootballStats #GridIronLegacy';
       
       // Post the tweet
       return await this.postTweet(userId, content, [], storage);
@@ -251,53 +251,23 @@ class TwitterService {
   }
 
   /**
-   * Check and refresh token if needed
-   */
-  async checkAndRefreshToken(userId: number, storage: MemStorage): Promise<boolean> {
-    try {
-      const token = await storage.getExternalServiceTokenByUserAndService(userId, 'twitter');
-      
-      if (!token) {
-        return false;
-      }
-      
-      // Check if token is expired or about to expire
-      const now = new Date();
-      const tokenExpiry = token.tokenExpiry ? new Date(token.tokenExpiry) : null;
-      
-      if (tokenExpiry && tokenExpiry <= now) {
-        // Token is expired, refresh it
-        // In a real implementation, we would use the refresh token to get a new access token
-        
-        const updatedToken = await storage.updateExternalServiceToken(token.id, {
-          accessToken: 'new_dummy_access_token',
-          tokenExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
-        });
-        
-        return !!updatedToken;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error checking/refreshing Twitter token:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Disconnect Twitter for a user
+   * Disconnect Twitter account
    */
   async disconnectTwitter(userId: number, storage: MemStorage): Promise<boolean> {
     try {
+      // Find the user's Twitter token
       const token = await storage.getExternalServiceTokenByUserAndService(userId, 'twitter');
       
       if (!token) {
-        return false;
+        // No token found to disconnect
+        return true;
       }
       
-      // Set token as inactive
+      // In a real implementation, this might revoke the token on Twitter's side
+      
+      // Update the token to be inactive
       const updatedToken = await storage.updateExternalServiceToken(token.id, {
-        isActive: false,
+        isActive: false
       });
       
       return !!updatedToken;

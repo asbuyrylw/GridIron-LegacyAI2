@@ -62,6 +62,18 @@ app.use((req, res, next) => {
     console.error('Error seeding leaderboards:', err);
   });
   
+  // Initialize external integration services
+  try {
+    // Import the services to trigger their initialization
+    await Promise.all([
+      import('./services/twitter-service'),
+      import('./services/hudl-service'),
+      import('./services/maxpreps-service')
+    ]);
+  } catch (error) {
+    console.error('Error initializing external integration services:', error);
+  }
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

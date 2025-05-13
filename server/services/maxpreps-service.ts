@@ -1,12 +1,30 @@
 import { MemStorage } from '../storage';
-import { InsertMaxPrepsStats, MaxPrepsStats, ExternalServiceToken } from '../../shared/external-integrations';
+import { 
+  ExternalServiceToken, 
+  InsertExternalServiceToken,
+  MaxPrepsStats,
+  InsertMaxPrepsStats
+} from '../../shared/external-integrations';
 
+/**
+ * Service for MaxPreps API integration
+ */
 class MaxPrepsService {
+  private readonly apiKey: string;
   private readonly enabled: boolean;
 
   constructor() {
-    // Only enable if we have MaxPreps API credentials
-    this.enabled = !!process.env.MAXPREPS_API_KEY;
+    // Initialize with environment variables
+    this.apiKey = process.env.MAXPREPS_API_KEY || '';
+    
+    // Check if the service is enabled (has valid credentials)
+    this.enabled = Boolean(this.apiKey);
+    
+    if (this.enabled) {
+      console.log('MaxPreps service initialized successfully');
+    } else {
+      console.log('MaxPreps service disabled: Missing API credentials');
+    }
   }
 
   /**
@@ -25,31 +43,22 @@ class MaxPrepsService {
     storage: MemStorage
   ): Promise<ExternalServiceToken | null> {
     if (!this.enabled) {
-      throw new Error('MaxPreps service is not enabled. MaxPreps API credentials are missing.');
+      throw new Error('MaxPreps integration is not enabled');
     }
-
+    
     try {
-      // In a real implementation, we would validate the MaxPreps ID
-      // For now, we'll create a dummy token record
-      const tokenData = {
+      // In a real implementation, this might validate the MaxPreps ID
+      // For demonstration purposes, we'll create a token record directly
+      
+      const tokenData: InsertExternalServiceToken = {
         userId,
         service: 'maxpreps',
-        accessToken: maxPrepsId, // Store the MaxPreps ID as the token
+        accessToken: `maxpreps_token_${maxPrepsId}`,
         isActive: true,
+        lastSyncDate: new Date()
       };
-
-      // Store the tokens
+      
       const token = await storage.createExternalServiceToken(tokenData);
-      
-      // Also update the athlete's MaxPreps link
-      const athlete = await storage.getAthleteByUserId(userId);
-      
-      if (athlete) {
-        await storage.updateAthlete(athlete.id, {
-          maxPrepsLink: maxPrepsId
-        });
-      }
-      
       return token;
     } catch (error) {
       console.error('Error authorizing MaxPreps:', error);
@@ -62,137 +71,110 @@ class MaxPrepsService {
    */
   async syncStats(userId: number, storage: MemStorage): Promise<MaxPrepsStats[]> {
     if (!this.enabled) {
-      throw new Error('MaxPreps service is not enabled. MaxPreps API credentials are missing.');
+      throw new Error('MaxPreps integration is not enabled');
     }
-
+    
     try {
-      // Find the user's MaxPreps token
+      // Check if user has an active MaxPreps token
       const token = await storage.getExternalServiceTokenByUserAndService(userId, 'maxpreps');
       
       if (!token || !token.isActive) {
-        throw new Error('No active MaxPreps token found for this user');
+        throw new Error('User does not have an active MaxPreps connection');
       }
-
-      // Get the athlete ID for this user
+      
+      // Get the athlete associated with this user
       const athlete = await storage.getAthleteByUserId(userId);
       
       if (!athlete) {
-        throw new Error('Athlete not found for this user');
+        throw new Error('Athlete not found for user');
       }
-
-      // In a real implementation, we would call the MaxPreps API to get stats
-      // For now, we'll create sample stats
-      const sampleSeasons = ['Fall 2024', 'Fall 2023'];
+      
+      // In a real implementation, this would fetch stats from the MaxPreps API
+      // For demonstration purposes, we'll create some sample stats
+      
+      const currentYear = new Date().getFullYear();
+      const mockStats = [
+        {
+          athleteId: athlete.id,
+          season: `Fall ${currentYear - 1}`,
+          jerseyNumber: '12',
+          position: athlete.position || 'Quarterback (QB)',
+          gameCount: 10,
+          teamName: 'Central High School',
+          teamRecord: '8-2',
+          verified: true,
+          statsData: {
+            passing: {
+              attempts: 250,
+              completions: 165,
+              yards: 2200,
+              touchdowns: 22,
+              interceptions: 7,
+              longPass: 75,
+              qbRating: 94.2
+            },
+            rushing: {
+              attempts: 45,
+              yards: 320,
+              touchdowns: 5,
+              fumbles: 2,
+              longRush: 32
+            }
+          }
+        },
+        {
+          athleteId: athlete.id,
+          season: `Fall ${currentYear - 2}`,
+          jerseyNumber: '12',
+          position: athlete.position || 'Quarterback (QB)',
+          gameCount: 8,
+          teamName: 'Central High School JV',
+          teamRecord: '6-2',
+          verified: true,
+          statsData: {
+            passing: {
+              attempts: 180,
+              completions: 112,
+              yards: 1500,
+              touchdowns: 14,
+              interceptions: 8,
+              longPass: 62,
+              qbRating: 87.5
+            },
+            rushing: {
+              attempts: 38,
+              yards: 220,
+              touchdowns: 3,
+              fumbles: 3,
+              longRush: 28
+            }
+          }
+        }
+      ];
+      
       const savedStats: MaxPrepsStats[] = [];
       
-      for (const season of sampleSeasons) {
-        // Generate position-specific stats based on athlete's position
-        const position = athlete.position?.toLowerCase() || '';
-        let statsData: any = {
-          gamesPlayed: 10,
-          teamRecord: '8-2',
-        };
-        
-        if (position.includes('quarterback') || position.includes('qb')) {
-          statsData = {
-            ...statsData,
-            passingYards: 2450,
-            passingTouchdowns: 22,
-            passingCompletions: 165,
-            passingAttempts: 280,
-            passingInterceptions: 8,
-            rushingYards: 350,
-            rushingAttempts: 45,
-            rushingTouchdowns: 3,
-          };
-        } else if (position.includes('running back') || position.includes('rb')) {
-          statsData = {
-            ...statsData,
-            rushingYards: 1200,
-            rushingAttempts: 220,
-            rushingTouchdowns: 14,
-            receivingYards: 250,
-            receivingReceptions: 18,
-            receivingTouchdowns: 2,
-          };
-        } else if (position.includes('wide receiver') || position.includes('wr')) {
-          statsData = {
-            ...statsData,
-            receivingYards: 950,
-            receivingReceptions: 65,
-            receivingTouchdowns: 11,
-            receivingTargets: 90,
-          };
-        } else if (position.includes('linebacker') || position.includes('lb')) {
-          statsData = {
-            ...statsData,
-            tackles: 85,
-            soloTackles: 52,
-            assistedTackles: 33,
-            tacklesForLoss: 12,
-            sacks: 4.5,
-            interceptions: 1,
-            passesDefended: 3,
-            forcedFumbles: 2,
-          };
-        } else if (position.includes('defensive') || position.includes('safety') || 
-                  position.includes('cornerback') || position.includes('cb')) {
-          statsData = {
-            ...statsData,
-            tackles: 45,
-            soloTackles: 32,
-            assistedTackles: 13,
-            interceptions: 3,
-            passesDefended: 12,
-            forcedFumbles: 1,
-          };
-        } else {
-          // Generic stats for other positions
-          statsData = {
-            ...statsData,
-            tackles: 35,
-            soloTackles: 22,
-            assistedTackles: 13,
-          };
-        }
-
-        const statsEntry: InsertMaxPrepsStats = {
-          athleteId: athlete.id,
-          season,
-          statsData,
-          gameCount: 10,
-          teamRecord: '8-2',
-          position: athlete.position || 'Unknown',
-          jerseyNumber: Math.floor(Math.random() * 99 + 1).toString(), // Random jersey number
-          teamName: 'Central High School',
-          verified: true,
-        };
-
-        // Check if stats for this season already exist
-        const existingStats = await storage.getMaxPrepsStatsByAthleteSeason(
+      // Save each stat to storage
+      for (const statData of mockStats) {
+        const existingStat = await storage.getMaxPrepsStatsByAthleteSeason(
           athlete.id, 
-          season
+          statData.season
         );
         
-        if (existingStats) {
-          // Update existing stats
-          const updatedStats = await storage.updateMaxPrepsStats(existingStats.id, {
-            ...statsEntry,
-          });
-          
-          if (updatedStats) {
-            savedStats.push(updatedStats);
-          }
+        if (existingStat) {
+          // Update existing stat
+          const updatedStat = await storage.updateMaxPrepsStats(existingStat.id, statData);
+          if (updatedStat) savedStats.push(updatedStat);
         } else {
-          // Create new stats
-          const newStats = await storage.createMaxPrepsStats(statsEntry);
-          savedStats.push(newStats);
+          // Create new stat
+          const newStat = await storage.createMaxPrepsStats(statData as InsertMaxPrepsStats);
+          savedStats.push(newStat);
         }
       }
-
-      // Update token with last sync date
+      
+      // Update the token's lastSyncDate
       await storage.updateExternalServiceToken(token.id, {
-        lastSyncDate: new Date(),
+        lastSyncDate: new Date()
       });
       
       return savedStats;
@@ -207,10 +189,9 @@ class MaxPrepsService {
    */
   async getAthleteStats(athleteId: number, storage: MemStorage): Promise<MaxPrepsStats[]> {
     try {
-      const stats = await storage.getMaxPrepsStatsByAthlete(athleteId);
-      return stats;
+      return await storage.getMaxPrepsStatsByAthlete(athleteId);
     } catch (error) {
-      console.error('Error getting MaxPreps stats:', error);
+      console.error('Error getting athlete MaxPreps stats:', error);
       return [];
     }
   }
@@ -221,9 +202,9 @@ class MaxPrepsService {
   async getAthleteStatsBySeason(athleteId: number, season: string, storage: MemStorage): Promise<MaxPrepsStats | null> {
     try {
       const stats = await storage.getMaxPrepsStatsByAthleteSeason(athleteId, season);
-      return stats;
+      return stats || null;
     } catch (error) {
-      console.error('Error getting MaxPreps stats for season:', error);
+      console.error('Error getting athlete MaxPreps stats for season:', error);
       return null;
     }
   }
@@ -233,15 +214,17 @@ class MaxPrepsService {
    */
   async disconnectMaxPreps(userId: number, storage: MemStorage): Promise<boolean> {
     try {
+      // Find the user's MaxPreps token
       const token = await storage.getExternalServiceTokenByUserAndService(userId, 'maxpreps');
       
       if (!token) {
-        return false;
+        // No token found to disconnect
+        return true;
       }
       
-      // Set token as inactive
+      // Update the token to be inactive
       const updatedToken = await storage.updateExternalServiceToken(token.id, {
-        isActive: false,
+        isActive: false
       });
       
       return !!updatedToken;
@@ -259,11 +242,14 @@ class MaxPrepsService {
       const athlete = await storage.getAthlete(athleteId);
       
       if (!athlete) {
-        return false;
+        throw new Error('Athlete not found');
       }
       
-      await storage.updateAthlete(athleteId, { maxPrepsLink });
-      return true;
+      const updatedAthlete = await storage.updateAthlete(athleteId, {
+        maxPrepsLink
+      });
+      
+      return !!updatedAthlete;
     } catch (error) {
       console.error('Error updating MaxPreps link:', error);
       return false;
@@ -274,17 +260,20 @@ class MaxPrepsService {
    * Get the MaxPreps profile URL for an athlete
    */
   getProfileUrl(maxPrepsLink: string | null): string | null {
-    if (!maxPrepsLink) {
-      return null;
-    }
+    if (!maxPrepsLink) return null;
     
-    // If it's already a full URL, return it
-    if (maxPrepsLink.startsWith('http')) {
+    // Check if the link already has the correct format
+    if (maxPrepsLink.startsWith('https://www.maxpreps.com/athlete/')) {
       return maxPrepsLink;
     }
     
-    // Otherwise, assume it's a MaxPreps ID and construct URL
-    return `https://www.maxpreps.com/athlete/${maxPrepsLink}`;
+    // If it's just a profile ID, format it correctly
+    if (/^[a-zA-Z0-9-]+$/.test(maxPrepsLink.trim())) {
+      const profileId = maxPrepsLink.trim();
+      return `https://www.maxpreps.com/athlete/${profileId}/stats`;
+    }
+    
+    return maxPrepsLink;
   }
 }
 
