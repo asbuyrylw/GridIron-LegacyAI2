@@ -10,6 +10,7 @@ import { registerCollegeMatcherRoutes } from "./routes/college-matcher-routes";
 import { registerSavedCollegesRoutes } from "./routes/saved-colleges-routes";
 import { setupLoginStreakRoutes } from "./routes/login-streak-routes";
 import { router as scheduledReportsRoutes } from "./routes/scheduled-reports-routes";
+import { emailTestRouter } from "./routes/email-test-route";
 import { Router } from "express";
 
 // Extend the Express Session type to include our onboarding progress
