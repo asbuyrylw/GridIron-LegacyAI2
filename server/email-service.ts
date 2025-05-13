@@ -270,6 +270,80 @@ class EmailService {
     return this.sendEmail(emailData);
   }
 
+  // Send achievement notification email
+  async sendAchievementNotification(parentEmail: string, parentName: string, athleteName: string, achievements: any[]): Promise<boolean> {
+    if (!achievements || achievements.length === 0) {
+      console.error('No achievements provided for email notification');
+      return false;
+    }
+    
+    // Generate HTML for each achievement
+    const achievementsHtml = achievements.map(achievement => {
+      // Determine tier color for styling
+      let tierColor = '#6B7280'; // Default gray
+      switch (achievement.level || achievement.tier) {
+        case 'bronze': tierColor = '#CD7F32'; break;
+        case 'silver': tierColor = '#C0C0C0'; break;
+        case 'gold': tierColor = '#FFD700'; break;
+        case 'platinum': tierColor = '#E5E4E2'; break;
+      }
+      
+      return `
+        <div style="margin-bottom: 15px; border-left: 4px solid ${tierColor}; padding-left: 15px;">
+          <h4 style="margin: 0 0 5px 0; color: #333;">${achievement.name}</h4>
+          <p style="margin: 0; color: #666; font-size: 14px;">${achievement.description}</p>
+          <div style="display: flex; margin-top: 8px; font-size: 12px;">
+            <span style="color: ${tierColor}; font-weight: bold; margin-right: 10px;">
+              ${(achievement.level || achievement.tier).toUpperCase()}
+            </span>
+            <span style="color: #6B7280;">
+              ${achievement.pointValue || achievement.points || 0} points
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    const emailData: EmailData = {
+      to: parentEmail,
+      from: this.fromEmail,
+      subject: `${athleteName} has unlocked new achievements!`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #4A90E2; padding: 20px; color: white; text-align: center; border-radius: 4px 4px 0 0;">
+            <h2 style="margin: 0;">Achievement Update</h2>
+            <p style="margin: 5px 0 0 0; font-size: 14px;">${new Date().toLocaleDateString()}</p>
+          </div>
+          
+          <div style="border: 1px solid #e0e0e0; border-top: none; padding: 20px; border-radius: 0 0 4px 4px;">
+            <p>Hello ${parentName},</p>
+            <p>${athleteName} has recently unlocked ${achievements.length > 1 ? 'some new achievements' : 'a new achievement'}!</p>
+            
+            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; margin: 20px 0;">
+              ${achievementsHtml}
+            </div>
+            
+            <div style="background-color: #f5f7fa; padding: 15px; border-radius: 4px; margin-top: 20px;">
+              <h4 style="color: #4A90E2; margin-top: 0;">What This Means:</h4>
+              <p style="margin-bottom: 0;">
+                ${athleteName} is making great progress in their training journey. These achievements 
+                reflect their dedication and improvement in key football skills and overall development.
+              </p>
+            </div>
+            
+            <p style="margin-top: 20px;">
+              Achievements are awarded for significant milestones in athletic performance, consistent 
+              training, academic progress, and overall engagement with the GridIron LegacyAI platform.
+            </p>
+            <p style="margin-bottom: 0;">Best regards,<br>The GridIron LegacyAI Team</p>
+          </div>
+        </div>
+      `
+    };
+
+    return this.sendEmail(emailData);
+  }
+
   // Send an email notification based on type
   async sendNotification(type: EmailNotificationType, parentEmail: string, parentName: string, athleteName: string, data: any): Promise<boolean> {
     switch (type) {
@@ -280,8 +354,7 @@ class EmailService {
       case EmailNotificationType.NUTRITION_SHOPPING_LIST:
         return this.sendNutritionShoppingList(parentEmail, parentName, athleteName, data.items);
       case EmailNotificationType.ACHIEVEMENT_NOTIFICATION:
-        // Implementation would go here
-        return false;
+        return this.sendAchievementNotification(parentEmail, parentName, athleteName, data.achievements);
       case EmailNotificationType.EVENT_REMINDER:
         // Implementation would go here
         return false;
