@@ -51,29 +51,18 @@ class EmailService {
         emailData.from = this.fromEmail;
       }
 
-      // Send email via SendGrid
-      const response = await sgMail.send(emailData);
+      // Send email via SendGrid using our updated service
+      const success = await sendGridEmail(emailData);
       
-      // Log success with message ID if available
-      if (response && response[0] && response[0].headers) {
-        console.log(`Email sent successfully to ${emailData.to}. Status: ${response[0].statusCode}`);
-      } else {
+      if (success) {
         console.log(`Email sent successfully to ${emailData.to}`);
       }
       
-      return true;
+      return success;
     } catch (error: any) {
-      // Enhanced error logging with SendGrid response details if available
+      // Enhanced error logging 
       console.error('SendGrid error sending email to', emailData.to);
-      
-      if (error.response) {
-        console.error(`Status code: ${error.response.statusCode}`);
-        console.error(`Body: ${JSON.stringify(error.response.body)}`);
-        console.error(`Headers: ${JSON.stringify(error.response.headers)}`);
-      } else {
-        console.error(error);
-      }
-      
+      console.error(error);
       return false;
     }
   }

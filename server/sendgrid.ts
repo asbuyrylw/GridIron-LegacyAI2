@@ -7,6 +7,8 @@ if (!process.env.SENDGRID_API_KEY) {
 const mailService = new MailService();
 if (process.env.SENDGRID_API_KEY) {
   mailService.setApiKey(process.env.SENDGRID_API_KEY);
+} else {
+  console.warn("Using fallback mode for SendGrid (no API key)");
 }
 
 interface EmailParams {
@@ -30,7 +32,7 @@ export async function sendEmail(
       to: params.to,
       from: params.from,
       subject: params.subject,
-      text: params.text,
+      text: params.text || '',
       html: params.html,
     });
     console.log(`Email sent successfully to ${params.to}`);
