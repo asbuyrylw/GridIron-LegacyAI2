@@ -28,17 +28,49 @@ export async function sendEmail(
   }
   
   try {
+    // Verify all required fields are present
+    if (!params.to || !params.from || !params.subject) {
+      console.error('Missing required email parameters:', { 
+        to: !!params.to, 
+        from: !!params.from, 
+        subject: !!params.subject 
+      });
+      return false;
+    }
+    
+    // Make sure text is provided if html is not
+    const textContent = params.text || '';
+    
+    // Log the email being sent for debugging (excluding content for privacy)
+    console.log('Sending email via SendGrid:', {
+      to: params.to,
+      from: params.from,
+      subject: params.subject,
+      hasText: !!textContent,
+      hasHtml: !!params.html
+    });
+    
     await mailService.send({
       to: params.to,
       from: params.from,
       subject: params.subject,
-      text: params.text || '',
+      text: textContent,
       html: params.html,
     });
+    
     console.log(`Email sent successfully to ${params.to}`);
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error('SendGrid email error:', error);
+    
+    // Log more detailed error information if available
+    if (error.response) {
+      console.error('Error details:', {
+        statusCode: error.code,
+        body: error.response.body
+      });
+    }
+    
     return false;
   }
 }

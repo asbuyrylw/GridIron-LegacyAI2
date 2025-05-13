@@ -24,38 +24,51 @@ class EmailService {
 
   // Send an email
   async sendEmail(emailData: EmailData): Promise<boolean> {
+    // Always ensure we have a from address
+    if (!emailData.from) {
+      emailData.from = this.fromEmail;
+    }
+    
+    // Set default text content if only HTML is provided
+    if (!emailData.text && emailData.html) {
+      // Simple HTML to text conversion (not perfect but helps with plain text fallback)
+      const textContent = emailData.html
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/\s+/g, ' ')    // Normalize whitespace
+        .trim();                 // Trim unnecessary whitespace
+      
+      emailData.text = textContent;
+    }
+
+    // If SendGrid is not enabled, log the email that would be sent but return true
     if (!this.enabled) {
       console.log('Email would be sent (SENDGRID_API_KEY not set):', {
         to: emailData.to,
+        from: emailData.from,
         subject: emailData.subject,
         textPreview: emailData.text?.substring(0, 100) || 'No text preview available'
       });
+      
+      // Create a mock preview of the email content in console
+      console.log('------- EMAIL PREVIEW -------');
+      console.log(`To: ${emailData.to}`);
+      console.log(`From: ${emailData.from}`);
+      console.log(`Subject: ${emailData.subject}`);
+      console.log(`Body: ${emailData.text?.substring(0, 500) || 'No text content'}`);
+      console.log('----------------------------');
+      
       // For development/testing, we'll return true even though email wasn't actually sent
       return true; 
     }
 
     try {
-      // Set default text content if only HTML is provided
-      if (!emailData.text && emailData.html) {
-        // Simple HTML to text conversion (not perfect but helps with plain text fallback)
-        const textContent = emailData.html
-          .replace(/<[^>]*>/g, '') // Remove HTML tags
-          .replace(/\s+/g, ' ')    // Normalize whitespace
-          .trim();                 // Trim unnecessary whitespace
-        
-        emailData.text = textContent;
-      }
-
-      // Always ensure we have a from address
-      if (!emailData.from) {
-        emailData.from = this.fromEmail;
-      }
-
       // Send email via SendGrid using our updated service
       const success = await sendGridEmail(emailData);
       
       if (success) {
         console.log(`Email sent successfully to ${emailData.to}`);
+      } else {
+        console.error(`Failed to send email to ${emailData.to} - SendGrid API call returned false`);
       }
       
       return success;
@@ -63,6 +76,13 @@ class EmailService {
       // Enhanced error logging 
       console.error('SendGrid error sending email to', emailData.to);
       console.error(error);
+      
+      // If we get a 403 Forbidden error, we need a better explanation
+      if (error.code === 403) {
+        console.error('SendGrid API key error (403 Forbidden): This typically means your API key is invalid or has insufficient permissions, or your sender domain is not verified.');
+        console.error('See https://docs.sendgrid.com/ui/account-and-settings/how-to-set-up-domain-authentication for domain authentication instructions.');
+      }
+      
       return false;
     }
   }
