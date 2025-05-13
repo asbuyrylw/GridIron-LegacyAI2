@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Icon } from '@/components/ui/icon';
+import { useAuth } from '@/hooks/use-auth';
 
 const CATEGORY_OPTIONS = [
   { value: 'all', label: 'All Categories' },
@@ -21,6 +22,7 @@ const CATEGORY_OPTIONS = [
   { value: 'social', label: 'Social' },
   { value: 'recruiting', label: 'Recruiting' },
   { value: 'academic', label: 'Academic' },
+  { value: 'coach', label: 'Coach' },
 ];
 
 const TIER_OPTIONS = [
@@ -45,6 +47,9 @@ export function AchievementGrid({
   tierFilter: externalTierFilter = null
 }: AchievementGridProps) {
   const { progressData, isLoading, getProgress, isCompleted } = useAchievementProgress();
+  const { user } = useAuth();
+  const isCoach = user?.userType === 'coach';
+  
   const achievements = useMemo(() => getAllAchievements(), []);
   
   const [internalCategoryFilter, setInternalCategoryFilter] = useState<string>('all');
@@ -58,6 +63,11 @@ export function AchievementGrid({
   
   const filteredAchievements = useMemo(() => {
     return achievements.filter(achievement => {
+      // Filter out coach-only achievements for non-coaches
+      if (achievement.coachOnly && !isCoach) {
+        return false;
+      }
+      
       // Handle external category filter or internal filter
       const matchesCategory = 
         (externalCategoryFilter ? 
@@ -76,7 +86,7 @@ export function AchievementGrid({
       
       return matchesCategory && matchesTier && matchesActive;
     });
-  }, [achievements, categoryFilter, tierFilter, externalCategoryFilter, externalTierFilter, activeTab, isCompleted, getProgress]);
+  }, [achievements, categoryFilter, tierFilter, externalCategoryFilter, externalTierFilter, activeTab, isCompleted, getProgress, isCoach]);
   
   // Calculate total progress metrics
   const progressMetrics = useMemo(() => {

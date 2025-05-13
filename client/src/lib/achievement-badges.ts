@@ -48,6 +48,17 @@ const achievementData: Achievement[] = [
     progressMax: 1,
     pointValue: 100
   },
+  {
+    id: 'performance-improvement-platinum',
+    name: 'Speed Demon Elite',
+    description: 'Improve your 40-yard dash time by 0.4 seconds or more',
+    category: 'performance',
+    tier: 'platinum',
+    icon: 'Zap',
+    progressMax: 1,
+    pointValue: 200,
+    unlockMessage: 'Congratulations on your incredible speed improvement! Check out this special training video from Coach Legacy.'
+  },
   
   // Training Achievements
   {
@@ -80,6 +91,17 @@ const achievementData: Achievement[] = [
     progressMax: 30,
     pointValue: 100
   },
+  {
+    id: 'training-streak-platinum',
+    name: 'Iron Discipline Master',
+    description: 'Complete 60 training sessions in a row',
+    category: 'training',
+    tier: 'platinum',
+    icon: 'Dumbbell',
+    progressMax: 60,
+    pointValue: 200,
+    unlockMessage: 'Your dedication to training is remarkable! Access this exclusive workout routine from Coach Legacy.'
+  },
   
   // Nutrition Achievements
   {
@@ -101,6 +123,27 @@ const achievementData: Achievement[] = [
     icon: 'Apple',
     progressMax: 30,
     pointValue: 50
+  },
+  {
+    id: 'nutrition-tracking-gold',
+    name: 'Nutrition Conscious III',
+    description: 'Log your meals for 60 consecutive days',
+    category: 'nutrition',
+    tier: 'gold',
+    icon: 'Apple',
+    progressMax: 60,
+    pointValue: 100
+  },
+  {
+    id: 'nutrition-tracking-platinum',
+    name: 'Nutrition Expert',
+    description: 'Log your meals for 100 consecutive days',
+    category: 'nutrition',
+    tier: 'platinum',
+    icon: 'Apple',
+    progressMax: 100,
+    pointValue: 200,
+    unlockMessage: 'Your commitment to nutrition has unlocked a special meal planning guide from Coach Legacy.'
   },
   
   // Profile Achievements
@@ -227,5 +270,57 @@ export function getTierValue(tier: TierType): number {
   }
 }
 
+// Add coach-only achievements
+const coachAchievements: Achievement[] = [
+  {
+    id: 'coach-team-management-bronze',
+    name: 'Team Builder',
+    description: 'Create your first team',
+    category: 'coach',
+    tier: 'bronze',
+    icon: 'Users',
+    progressMax: 1,
+    pointValue: 25,
+    coachOnly: true
+  },
+  {
+    id: 'coach-athlete-development-silver',
+    name: 'Player Developer',
+    description: 'Have 5 athletes improve a performance metric',
+    category: 'coach',
+    tier: 'silver',
+    icon: 'TrendingUp',
+    progressMax: 5,
+    pointValue: 50,
+    coachOnly: true
+  },
+  {
+    id: 'coach-team-events-gold',
+    name: 'Event Organizer',
+    description: 'Host 10 team events with at least 80% attendance',
+    category: 'coach',
+    tier: 'gold',
+    icon: 'Calendar',
+    progressMax: 10,
+    pointValue: 100,
+    coachOnly: true
+  },
+  {
+    id: 'coach-team-success-platinum',
+    name: 'Championship Leader',
+    description: 'Lead your team to a championship or major achievement',
+    category: 'coach',
+    tier: 'platinum',
+    icon: 'Trophy',
+    progressMax: 1,
+    pointValue: 200,
+    coachOnly: true,
+    unlockMessage: 'Your leadership has taken your team to new heights! Access exclusive coaching resources and leadership videos.'
+  }
+];
+
+// Combine all achievements
+const allAchievements = [...achievementData, ...coachAchievements];
+
 // Export the achievements array with the name ACHIEVEMENT_BADGES for consistency across components
-export const ACHIEVEMENT_BADGES = achievementData;
+export const ACHIEVEMENT_BADGES = allAchievements;
