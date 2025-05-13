@@ -11,6 +11,7 @@ import { registerSavedCollegesRoutes } from "./routes/saved-colleges-routes";
 import { setupLoginStreakRoutes } from "./routes/login-streak-routes";
 import { router as scheduledReportsRoutes } from "./routes/scheduled-reports-routes";
 import { emailTestRouter } from "./routes/email-test-route";
+import { emailNotificationTestRouter } from "./routes/email-notification-test-route";
 import { growthPredictionRouter } from "./routes/growth-prediction-routes";
 import { registerExternalIntegrationsRoutes } from "./routes/external-integrations-routes";
 import { Router } from "express";
