@@ -1,5 +1,5 @@
 // Types
-export type AchievementCategory = 'performance' | 'training' | 'nutrition' | 'profile' | 'social' | 'recruiting' | 'academic' | 'coach';
+export type AchievementCategory = 'performance' | 'training' | 'nutrition' | 'profile' | 'social' | 'recruiting' | 'academic' | 'coach' | 'engagement';
 export type TierType = 'bronze' | 'silver' | 'gold' | 'platinum';
 
 export interface Achievement {
@@ -17,6 +17,48 @@ export interface Achievement {
 
 // Achievement data
 const achievementData: Achievement[] = [
+  // Engagement Achievements - Login Streaks
+  {
+    id: 'login-streak-bronze',
+    name: 'Consistency Rookie',
+    description: 'Maintain a 5-day login streak',
+    category: 'engagement',
+    tier: 'bronze',
+    icon: 'Flame',
+    progressMax: 5,
+    pointValue: 25
+  },
+  {
+    id: 'login-streak-silver',
+    name: 'Consistency Pro',
+    description: 'Maintain a 10-day login streak',
+    category: 'engagement',
+    tier: 'silver',
+    icon: 'Flame',
+    progressMax: 10,
+    pointValue: 50
+  },
+  {
+    id: 'login-streak-gold',
+    name: 'Consistency All-Star',
+    description: 'Maintain a 25-day login streak',
+    category: 'engagement',
+    tier: 'gold',
+    icon: 'Flame',
+    progressMax: 25,
+    pointValue: 100
+  },
+  {
+    id: 'login-streak-platinum',
+    name: 'Consistency Hall of Famer',
+    description: 'Maintain a 50-day login streak',
+    category: 'engagement',
+    tier: 'platinum',
+    icon: 'Flame',
+    progressMax: 50,
+    pointValue: 250
+  },
+  
   // Performance Achievements
   {
     id: 'performance-improvement-bronze',

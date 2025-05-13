@@ -152,43 +152,91 @@ export function setupLoginStreakRoutes(app: Express) {
 // Helper function to update achievements based on login streak
 async function updateStreakAchievements(userId: number, streakCount: number) {
   try {
+    // Get the user data
+    const user = await storage.getUser(userId);
+    
+    if (!user || user.userType !== 'athlete') {
+      console.log("No athlete found for streak achievements");
+      return;
+    }
+    
     // Get the athlete ID for this user
-    const athlete = await storage.getAthleteByUserId(userId);
+    const athlete = await storage.getAthlete(userId);
     
     if (!athlete) {
       console.log("No athlete found for streak achievements");
       return;
     }
     
-    // Get achievements for streak milestones
-    const achievementMapping: { [milestone: number]: string } = {
-      3: 'streak-three-days',
-      7: 'streak-one-week',
-      14: 'streak-two-weeks',
-      30: 'streak-one-month',
-      60: 'streak-two-months',
-      90: 'streak-three-months',
-      180: 'streak-six-months',
-      365: 'streak-one-year'
-    };
+    // Update achievement progress based on the current streak
+    // For each achievement, we set the progress to the current streak
+    // as long as it doesn't exceed the maximum
     
-    // Find the highest milestone achieved
-    const milestones = Object.keys(achievementMapping)
-      .map(key => parseInt(key))
-      .sort((a, b) => a - b);
-    
-    for (const milestone of milestones) {
-      if (streakCount >= milestone) {
-        const achievementId = achievementMapping[milestone];
-        
-        // Update this achievement progress to 100%
-        await storage.updateAchievementProgress(
-          userId,
-          achievementId,
-          100
-        );
-      }
+    // Bronze - 5 day streak
+    if (streakCount >= 5) {
+      await storage.updateAchievementProgress(
+        userId,
+        'login-streak-bronze',
+        Math.min(streakCount, 5)
+      );
+    } else if (streakCount > 0) {
+      // Partial progress
+      await storage.updateAchievementProgress(
+        userId,
+        'login-streak-bronze',
+        streakCount
+      );
     }
+    
+    // Silver - 10 day streak
+    if (streakCount >= 10) {
+      await storage.updateAchievementProgress(
+        userId,
+        'login-streak-silver',
+        Math.min(streakCount, 10)
+      );
+    } else if (streakCount > 0) {
+      // Partial progress
+      await storage.updateAchievementProgress(
+        userId,
+        'login-streak-silver',
+        streakCount
+      );
+    }
+    
+    // Gold - 25 day streak
+    if (streakCount >= 25) {
+      await storage.updateAchievementProgress(
+        userId,
+        'login-streak-gold',
+        Math.min(streakCount, 25)
+      );
+    } else if (streakCount > 0) {
+      // Partial progress
+      await storage.updateAchievementProgress(
+        userId,
+        'login-streak-gold',
+        streakCount
+      );
+    }
+    
+    // Platinum - 50 day streak
+    if (streakCount >= 50) {
+      await storage.updateAchievementProgress(
+        userId,
+        'login-streak-platinum',
+        Math.min(streakCount, 50)
+      );
+    } else if (streakCount > 0) {
+      // Partial progress
+      await storage.updateAchievementProgress(
+        userId,
+        'login-streak-platinum',
+        streakCount
+      );
+    }
+    
+    console.log(`Updated login streak achievements for user ${userId}, streak: ${streakCount}`);
   } catch (error) {
     console.error("Error updating streak achievements:", error);
   }

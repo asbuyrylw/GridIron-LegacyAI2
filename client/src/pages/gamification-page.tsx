@@ -3,7 +3,7 @@ import { PageHeader } from '@/components/layout/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AchievementGrid } from '@/components/achievements/achievement-grid';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, Award, Users, Trophy, Zap, User, BookOpen, Apple, Dumbbell } from 'lucide-react';
+import { ChevronRight, Award, Users, Trophy, Zap, User, BookOpen, Apple, Dumbbell, Flame } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -21,6 +21,7 @@ const categories: { id: AchievementCategory; label: string; icon: React.ReactNod
   { id: 'social', label: 'Social', icon: <Users className="h-4 w-4" /> },
   { id: 'recruiting', label: 'Recruiting', icon: <Award className="h-4 w-4" /> },
   { id: 'academic', label: 'Academic', icon: <BookOpen className="h-4 w-4" /> },
+  { id: 'engagement', label: 'Engagement', icon: <Flame className="h-4 w-4" /> },
   { id: 'coach', label: 'Coach', icon: <Award className="h-4 w-4" /> },
 ];
 
@@ -42,6 +43,7 @@ function AchievementTester() {
     { type: 'profile', action: 'update_profile', label: 'Profile: Update', icon: <User className="h-4 w-4" /> },
     { type: 'academic', action: 'update_academic', label: 'Academic: Update', icon: <BookOpen className="h-4 w-4" /> },
     { type: 'social', action: 'join_team', label: 'Social: Join Team', icon: <Users className="h-4 w-4" /> },
+    { type: 'engagement', action: 'login_streak', label: 'Engagement: Login Streak', icon: <Flame className="h-4 w-4" /> },
     { type: 'coach', action: 'coach_achievement', label: 'Coach Achievement', icon: <Award className="h-4 w-4" /> },
     { type: 'recruiting', action: 'update_recruiting', label: 'Recruiting: Update', icon: <Award className="h-4 w-4" /> },
   ];
