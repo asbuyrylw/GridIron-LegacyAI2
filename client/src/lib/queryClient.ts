@@ -1,5 +1,12 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Interface for request options when making API calls
+export interface RequestOptions {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string | FormData;
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -7,20 +14,56 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// Support different call patterns for API requests
 export async function apiRequest(
-  method: string,
-  url: string,
-  data?: unknown | undefined,
+  urlOrMethod: string,
+  optionsOrUrl?: RequestOptions | string,
+  data?: unknown,
 ): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  // Case 1: Just a URL
+  if (typeof urlOrMethod === 'string' && !optionsOrUrl) {
+    const res = await fetch(urlOrMethod, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    
+    await throwIfResNotOk(res);
+    return res;
+  }
+  
+  // Case 2: URL + RequestOptions object
+  if (typeof urlOrMethod === 'string' && typeof optionsOrUrl === 'object') {
+    const url = urlOrMethod;
+    const options = optionsOrUrl;
+    
+    const res = await fetch(url, {
+      method: options.method || 'GET',
+      headers: options.headers || {},
+      body: options.body,
+      credentials: 'include',
+    });
+    
+    await throwIfResNotOk(res);
+    return res;
+  }
+  
+  // Case 3: Method + URL + data
+  if (typeof urlOrMethod === 'string' && typeof optionsOrUrl === 'string') {
+    const method = urlOrMethod;
+    const url = optionsOrUrl;
+    
+    const res = await fetch(url, {
+      method,
+      headers: data ? { "Content-Type": "application/json" } : {},
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
 
-  await throwIfResNotOk(res);
-  return res;
+    await throwIfResNotOk(res);
+    return res;
+  }
+  
+  throw new Error('Invalid parameters for apiRequest');
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

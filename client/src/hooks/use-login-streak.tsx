@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, RequestOptions } from '@/lib/queryClient';
 
 interface LoginStreak {
   id: number;
@@ -21,13 +21,15 @@ const fetchLoginStreak = async (): Promise<LoginStreak> => {
 
 // Function to update the login streak
 const updateLoginStreak = async (): Promise<LoginStreak> => {
-  const response = await apiRequest('/api/login-streak/update', {
+  const options: RequestOptions = {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({}) // Empty body but proper JSON format
-  });
+  };
+  
+  const response = await apiRequest('/api/login-streak/update', options);
   
   if (!response.ok) {
     throw new Error('Failed to update login streak');

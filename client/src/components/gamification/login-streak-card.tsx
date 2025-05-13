@@ -1,130 +1,110 @@
-import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CalendarDays, CheckCircle, Star, TrendingUp, Trophy } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
-import { useLoginStreak } from '@/hooks/use-login-streak';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { CalendarClock, Trophy, Award, Flame } from "lucide-react";
+import { useLoginStreak } from "@/hooks/use-login-streak";
+import { Skeleton } from "@/components/ui/skeleton";
+import { format, parseISO } from "date-fns";
 
 export function LoginStreakCard() {
-  const { streak, isLoading, error } = useLoginStreak();
-
+  const { streak, isLoading } = useLoginStreak();
+  
   if (isLoading) {
     return (
-      <Card>
+      <Card className="shadow-md">
         <CardHeader className="pb-2">
-          <CardTitle className="text-md flex items-center">
-            <CalendarDays className="h-5 w-5 mr-2" />
-            <span>Daily Login Streak</span>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CalendarClock className="h-5 w-5 text-amber-500" />
+              <span>Login Streak</span>
+            </div>
+            <Skeleton className="h-6 w-14" />
           </CardTitle>
+          <CardDescription>Track your consecutive logins</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex justify-center items-center py-6">
-            <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary"></div>
-          </div>
+        <CardContent className="space-y-3">
+          <Skeleton className="h-16 w-full rounded-md" />
+          <Skeleton className="h-8 w-full rounded-md" />
         </CardContent>
       </Card>
     );
   }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-md flex items-center">
-            <CalendarDays className="h-5 w-5 mr-2" />
-            <span>Daily Login Streak</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-4 text-muted-foreground">
-            Unable to load streak data
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Calculate the next tier threshold
-  const currentStreak = streak.currentStreak;
-  let nextMilestone = 0;
   
-  if (currentStreak < 3) {
-    nextMilestone = 3;
-  } else if (currentStreak < 7) {
-    nextMilestone = 7;
-  } else if (currentStreak < 14) {
-    nextMilestone = 14;
-  } else if (currentStreak < 30) {
-    nextMilestone = 30;
-  } else if (currentStreak < 60) {
-    nextMilestone = 60;
-  } else if (currentStreak < 90) {
-    nextMilestone = 90;
-  } else {
-    nextMilestone = Math.ceil(currentStreak / 30) * 30;
-  }
+  // Calculate next milestone based on current streak
+  let nextMilestone = 5;
+  if (streak.currentStreak >= 5) nextMilestone = 10;
+  if (streak.currentStreak >= 10) nextMilestone = 25;
+  if (streak.currentStreak >= 25) nextMilestone = 50;
+  if (streak.currentStreak >= 50) nextMilestone = 100;
+  if (streak.currentStreak >= 100) nextMilestone = 365;
   
-  const progressToNextMilestone = (currentStreak / nextMilestone) * 100;
-
-  function getStreakEmoji(count: number) {
-    if (count >= 90) return "🔥🔥🔥";
-    if (count >= 30) return "🔥🔥";
-    if (count >= 7) return "🔥";
-    return "";
-  }
-
+  // Calculate progress to next milestone
+  const progress = Math.min(100, (streak.currentStreak / nextMilestone) * 100);
+  
+  // Format last login date
+  const lastLoginFormatted = streak.lastLoginDate 
+    ? format(parseISO(streak.lastLoginDate), 'MMM d, yyyy')
+    : 'None';
+  
+  // Get badge color based on longest streak
+  const getBadgeColor = () => {
+    if (streak.longestStreak >= 100) return "bg-purple-600 hover:bg-purple-700";
+    if (streak.longestStreak >= 50) return "bg-indigo-600 hover:bg-indigo-700";
+    if (streak.longestStreak >= 25) return "bg-blue-600 hover:bg-blue-700";
+    if (streak.longestStreak >= 10) return "bg-green-600 hover:bg-green-700";
+    if (streak.longestStreak >= 5) return "bg-amber-600 hover:bg-amber-700";
+    return "bg-gray-600 hover:bg-gray-700";
+  };
+  
   return (
-    <Card>
+    <Card className="shadow-md">
       <CardHeader className="pb-2">
-        <CardTitle className="text-md flex items-center justify-between">
-          <div className="flex items-center">
-            <CalendarDays className="h-5 w-5 mr-2" />
-            <span>Daily Login Streak</span>
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Flame className="h-5 w-5 text-amber-500" />
+            <span>Login Streak</span>
           </div>
-          {streak.currentStreak > 0 && (
-            <Badge variant={streak.currentStreak >= 7 ? "default" : "outline"}>
-              {getStreakEmoji(streak.currentStreak)} {streak.currentStreak} day{streak.currentStreak !== 1 ? 's' : ''}
-            </Badge>
-          )}
+          <Badge className="text-md bg-amber-600 hover:bg-amber-700">
+            {streak.currentStreak} day{streak.currentStreak !== 1 ? 's' : ''}
+          </Badge>
         </CardTitle>
+        <CardDescription>Track your consecutive logins</CardDescription>
       </CardHeader>
-      <CardContent className="pb-2">
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="flex flex-col items-center justify-center bg-muted/50 rounded-lg p-4">
-            <div className="text-2xl font-bold flex items-center">
-              {streak.currentStreak}
-              {streak.currentStreak >= 7 && <CheckCircle className="h-4 w-4 text-green-500 ml-1" />}
-            </div>
-            <div className="text-xs text-muted-foreground text-center">Current Streak</div>
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col items-center justify-center rounded-md bg-muted p-3">
+            <Trophy className="mb-1 h-5 w-5 text-amber-500" />
+            <span className="text-xs text-muted-foreground">Longest Streak</span>
+            <Badge className={`mt-1 text-md ${getBadgeColor()}`}>
+              {streak.longestStreak} day{streak.longestStreak !== 1 ? 's' : ''}
+            </Badge>
           </div>
-          <div className="flex flex-col items-center justify-center bg-muted/50 rounded-lg p-4">
-            <div className="text-2xl font-bold flex items-center">
-              {streak.longestStreak}
-              {streak.longestStreak >= 30 && <Trophy className="h-4 w-4 text-amber-500 ml-1" />}
-            </div>
-            <div className="text-xs text-muted-foreground text-center">Record Streak</div>
+          <div className="flex flex-col items-center justify-center rounded-md bg-muted p-3">
+            <CalendarClock className="mb-1 h-5 w-5 text-blue-500" />
+            <span className="text-xs text-muted-foreground">Last Login</span>
+            <span className="mt-1 text-sm font-medium">
+              {lastLoginFormatted}
+            </span>
           </div>
         </div>
         
-        {nextMilestone > currentStreak && (
-          <div className="space-y-1 mb-2">
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Next milestone</span>
-              <span className="font-medium">{currentStreak} / {nextMilestone} days</span>
-            </div>
-            <Progress value={progressToNextMilestone} />
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs">
+            <span>Progress to next milestone ({nextMilestone} days)</span>
+            <span>{Math.round(progress)}%</span>
           </div>
-        )}
-      </CardContent>
-      <CardFooter className="pt-1">
-        <div className="w-full text-xs text-muted-foreground">
-          <div className="flex items-center">
-            <TrendingUp className="h-3 w-3 mr-1" />
-            Keep logging in daily to earn achievement points and rewards
-          </div>
+          <Progress value={progress} />
         </div>
-      </CardFooter>
+        
+        <div className="rounded-md bg-muted p-3 text-center text-sm">
+          <Award className="inline-block h-5 w-5 text-purple-500" /> 
+          <span className="ml-1">
+            {streak.currentStreak === 0 
+              ? "Log in tomorrow to start your streak!" 
+              : `Keep logging in daily to earn achievements!`}
+          </span>
+        </div>
+      </CardContent>
     </Card>
   );
 }
