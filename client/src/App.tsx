@@ -38,6 +38,7 @@ import WebSocketTester from "@/pages/websocket-tester";
 import EmailTestPage from "@/pages/email-test-page";
 // Import GameificationPage component directly to fix lazy loading issue
 import GameificationPage from "@/pages/gamification-page";
+import GrowthPredictionPage from "@/pages/growth-prediction-page";
 
 // Landing Pages
 import LandingIndex from "@/pages/landing/index";
@@ -102,6 +103,7 @@ function Router() {
         <ProtectedRoute path="/recruiting" component={RecruitingPage} />
         <ProtectedRoute path="/recruiting-profile-builder" component={RecruitingProfileBuilderPage} />
         <ProtectedRoute path="/college-matcher" component={EnhancedCollegeMatcherPage} />
+        <ProtectedRoute path="/growth-prediction" component={GrowthPredictionPage} />
         {/* Removed parent-dashboard as we're using email-only approach */}
         <ProtectedRoute path="/coach-dashboard" component={CoachDashboard} />
         <ProtectedRoute path="/parent-reports" component={ParentReportsPage} />

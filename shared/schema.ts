@@ -18,6 +18,17 @@ export interface GrowthPrediction {
 }
 
 // Schema for height prediction form inputs
+export interface GrowthPrediction {
+  predictedHeight: string;
+  predictedHeightCm: number;
+  predictedHeightInches: number;
+  percentComplete: number;
+  growthRemaining: number;
+  predictedRange: string;
+  recommendedPositions: string[];
+  calculatedAt: string;
+}
+
 export const heightPredictionSchema = z.object({
   gender: z.enum(["male", "female"]),
   age: z.number().min(5).max(18),
