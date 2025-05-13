@@ -18,7 +18,11 @@ class EmailService {
   constructor() {
     this.enabled = !!process.env.SENDGRID_API_KEY;
     if (!this.enabled) {
-      console.warn('SendGrid API key not provided. Email sending is disabled.');
+      console.warn('SendGrid API key not provided. Email service will run in DEVELOPMENT MODE.');
+      console.warn('Emails will be simulated in console logs but not actually sent.');
+      console.warn('To enable real email delivery, provide a SENDGRID_API_KEY environment variable.');
+    } else {
+      console.log('SendGrid email service initialized.');
     }
   }
 
