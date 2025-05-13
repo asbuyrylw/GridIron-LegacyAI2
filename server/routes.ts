@@ -82,6 +82,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Login Streak API endpoints
   setupLoginStreakRoutes(app);
   
+  // Scheduled Reports API endpoints
+  app.use(scheduledReportsRoutes);
+  
   // Achievement and Gamification routes
   app.get("/api/athlete/:id/achievements", async (req, res, next) => {
     try {
