@@ -17,7 +17,8 @@ import {
   X,
   FileText,
   Ruler,
-  Mail
+  Mail,
+  Camera
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -80,6 +81,12 @@ export function SideNav() {
       href: "/football-iq",
       icon: Brain,
       active: location.includes("/football-iq")
+    },
+    {
+      label: "Player Branding",
+      href: "/player-branding",
+      icon: Camera,
+      active: location === "/player-branding"
     },
     {
       label: "Social",

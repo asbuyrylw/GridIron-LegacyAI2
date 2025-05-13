@@ -116,6 +116,7 @@ function Router() {
         <ProtectedRoute path="/football-iq/quiz/:quizId/attempt/:attemptId" component={FootballIqQuizPage} />
         <ProtectedRoute path="/football-iq/results/:attemptId" component={FootballIqResultsPage} />
         <ProtectedRoute path="/football-iq/admin" component={FootballIqAdminPage} />
+        <ProtectedRoute path="/player-branding" component={PlayerBrandingToolkitPage} />
         {/* Removed parent-dashboard as we're using email-only approach */}
         <ProtectedRoute path="/coach-dashboard" component={CoachDashboard} />
         <ProtectedRoute path="/parent-reports" component={ParentReportsPage} />
