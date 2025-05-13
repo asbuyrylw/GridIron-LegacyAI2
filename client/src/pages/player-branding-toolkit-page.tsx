@@ -38,7 +38,8 @@ import {
   FileText,
   Download,
   CheckCircle,
-  Filter
+  Filter,
+  Mail
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import html2canvas from 'html2canvas';

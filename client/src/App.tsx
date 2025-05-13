@@ -44,6 +44,7 @@ import FootballIqPage from "@/pages/football-iq-page";
 import FootballIqQuizPage from "@/pages/football-iq-quiz-page";
 import FootballIqResultsPage from "@/pages/football-iq-results-page";
 import FootballIqAdminPage from "@/pages/football-iq-admin-page";
+import PlayerBrandingToolkitPage from "@/pages/player-branding-toolkit-page";
 
 // Landing Pages
 import LandingIndex from "@/pages/landing/index";

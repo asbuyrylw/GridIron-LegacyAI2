@@ -15,6 +15,7 @@ import { emailNotificationTestRouter } from "./routes/email-notification-test-ro
 import { growthPredictionRouter } from "./routes/growth-prediction-routes";
 import { registerExternalIntegrationsRoutes } from "./routes/external-integrations-routes";
 import footballIqRoutes from "./routes/football-iq-routes";
+import playerBrandingRoutes from "./routes/player-branding-routes";
 import { Router } from "express";
 
 // Extend the Express Session type to include our onboarding progress
@@ -101,6 +102,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Football IQ assessment routes
   app.use(footballIqRoutes);
+  
+  // Player Branding Toolkit routes
+  app.use(playerBrandingRoutes);
   
   // External Integrations routes (Twitter, Hudl, MaxPreps)
   registerExternalIntegrationsRoutes(app);

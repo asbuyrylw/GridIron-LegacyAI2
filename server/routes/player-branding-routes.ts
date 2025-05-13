@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { storage } from '../storage';
-import { openai } from '../openai';
+import { generateCoachingResponse } from '../openai';
 import { z } from 'zod';
 
 const router = Router();
@@ -107,7 +107,7 @@ Athlete details:
     
     // Generate bio using OpenAI
     try {
-      const bioResponse = await openai.generateCoachingResponse(prompt);
+      const bioResponse = await generateCoachingResponse(prompt, { position: athlete.position });
       
       return res.status(200).json({
         bio: bioResponse,
@@ -196,7 +196,7 @@ Athlete details:
     
     // Generate caption using OpenAI
     try {
-      const captionResponse = await openai.generateCoachingResponse(prompt);
+      const captionResponse = await generateCoachingResponse(prompt, { position: athlete.position });
       
       return res.status(200).json({
         caption: captionResponse,
