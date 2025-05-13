@@ -6,11 +6,21 @@ import {
   InsertFootballIqQuestion,
   FootballIqQuizAttempt,
   InsertFootballIqQuizAttempt,
-  FootballIqAnswer,
   FootballIqProgress,
   InsertFootballIqProgress,
-  calculateIqLevel
+  iqLevels,
+  QuizAnswer
 } from '../shared/football-iq-schema';
+
+// Helper function to determine IQ level based on score
+function calculateIqLevel(score: number): string {
+  if (score <= 30) return 'novice';
+  if (score <= 50) return 'developing';
+  if (score <= 70) return 'competent';
+  if (score <= 85) return 'proficient';
+  if (score <= 95) return 'expert';
+  return 'master';
+}
 
 // ===== QUIZ MANAGEMENT =====
 
@@ -591,7 +601,7 @@ export async function updateFootballIqQuizAttempt(
 export async function completeFootballIqQuizAttempt(
   this: MemStorage,
   attemptId: number,
-  answers: (FootballIqAnswer & { isCorrect: boolean })[],
+  answers: (QuizAnswer & { isCorrect: boolean })[],
   timeSpent: number
 ): Promise<FootballIqQuizAttempt | undefined> {
   try {

@@ -40,6 +40,10 @@ import EmailTestPage from "@/pages/email-test-page";
 import GameificationPage from "@/pages/gamification-page";
 import GrowthPredictionPage from "@/pages/growth-prediction-page";
 import ExternalIntegrationsPage from "@/pages/external-integrations-page";
+import FootballIqPage from "@/pages/football-iq-page";
+import FootballIqQuizPage from "@/pages/football-iq-quiz-page";
+import FootballIqResultsPage from "@/pages/football-iq-results-page";
+import FootballIqAdminPage from "@/pages/football-iq-admin-page";
 
 // Landing Pages
 import LandingIndex from "@/pages/landing/index";
@@ -107,6 +111,10 @@ function Router() {
         <ProtectedRoute path="/college-matcher" component={EnhancedCollegeMatcherPage} />
         <ProtectedRoute path="/growth-prediction" component={GrowthPredictionPage} />
         <ProtectedRoute path="/external-integrations" component={ExternalIntegrationsPage} />
+        <ProtectedRoute path="/football-iq" component={FootballIqPage} />
+        <ProtectedRoute path="/football-iq/quiz/:quizId/attempt/:attemptId" component={FootballIqQuizPage} />
+        <ProtectedRoute path="/football-iq/results/:attemptId" component={FootballIqResultsPage} />
+        <ProtectedRoute path="/football-iq/admin" component={FootballIqAdminPage} />
         {/* Removed parent-dashboard as we're using email-only approach */}
         <ProtectedRoute path="/coach-dashboard" component={CoachDashboard} />
         <ProtectedRoute path="/parent-reports" component={ParentReportsPage} />

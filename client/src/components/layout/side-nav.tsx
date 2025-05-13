@@ -6,6 +6,7 @@ import {
   LineChart, 
   User, 
   Award, 
+  Brain,
   CandlestickChart, 
   Share2,
   Settings,
@@ -72,6 +73,12 @@ export function SideNav() {
       href: "/growth-prediction",
       icon: Ruler,
       active: location === "/growth-prediction"
+    },
+    {
+      label: "Football IQ",
+      href: "/football-iq",
+      icon: Brain,
+      active: location.includes("/football-iq")
     },
     {
       label: "Social",
