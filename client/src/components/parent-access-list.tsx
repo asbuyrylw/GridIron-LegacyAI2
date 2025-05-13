@@ -92,13 +92,13 @@ export function ParentAccessList({ athleteId }: ParentAccessListProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/athlete", athleteId, "parent-access"] });
       toast({
-        title: "Access revoked",
-        description: "Parent access has been revoked.",
+        title: "Email updates stopped",
+        description: "Parent will no longer receive email updates.",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to revoke access",
+        title: "Failed to stop email updates",
         description: error.message,
         variant: "destructive",
       });
@@ -229,7 +229,7 @@ export function ParentAccessList({ athleteId }: ParentAccessListProps) {
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Revoke Parent Access?</AlertDialogTitle>
+                          <AlertDialogTitle>Stop Parent Email Updates?</AlertDialogTitle>
                           <AlertDialogDescription>
                             {access.name} will no longer receive email updates about your performance and nutrition.
                             This action can be reversed by sending a new invitation.
@@ -241,7 +241,7 @@ export function ParentAccessList({ athleteId }: ParentAccessListProps) {
                             onClick={() => handleDeactivate(access.id)}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                           >
-                            Revoke Access
+                            Stop Email Updates
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -256,7 +256,7 @@ export function ParentAccessList({ athleteId }: ParentAccessListProps) {
                       })}
                       disabled={updateAccessMutation.isPending}
                     >
-                      Restore
+                      Restore Email Updates
                     </Button>
                   )}
                 </TableCell>
