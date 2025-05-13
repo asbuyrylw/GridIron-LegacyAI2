@@ -2182,6 +2182,36 @@ MemStorage.prototype.createOrUpdateLeaderboardEntry = createOrUpdateLeaderboardE
 MemStorage.prototype.deleteLeaderboardEntry = deleteLeaderboardEntry;
 MemStorage.prototype.getLeaderboard = gamificationMethods.getLeaderboard;
 
+// Add external integration methods to MemStorage prototype
+import * as externalIntegrationMethods from './external-integration-methods';
+MemStorage.prototype.getExternalServiceTokens = externalIntegrationMethods.getExternalServiceTokens;
+MemStorage.prototype.getExternalServiceTokenById = externalIntegrationMethods.getExternalServiceTokenById;
+MemStorage.prototype.getExternalServiceTokenByUserAndService = externalIntegrationMethods.getExternalServiceTokenByUserAndService;
+MemStorage.prototype.createExternalServiceToken = externalIntegrationMethods.createExternalServiceToken;
+MemStorage.prototype.updateExternalServiceToken = externalIntegrationMethods.updateExternalServiceToken;
+MemStorage.prototype.deleteExternalServiceToken = externalIntegrationMethods.deleteExternalServiceToken;
+
+MemStorage.prototype.getHudlVideosByAthlete = externalIntegrationMethods.getHudlVideosByAthlete;
+MemStorage.prototype.getHudlVideoById = externalIntegrationMethods.getHudlVideoById;
+MemStorage.prototype.getHudlVideoByHudlId = externalIntegrationMethods.getHudlVideoByHudlId;
+MemStorage.prototype.createHudlVideo = externalIntegrationMethods.createHudlVideo;
+MemStorage.prototype.updateHudlVideo = externalIntegrationMethods.updateHudlVideo;
+MemStorage.prototype.deleteHudlVideo = externalIntegrationMethods.deleteHudlVideo;
+
+MemStorage.prototype.getMaxPrepsStatsByAthlete = externalIntegrationMethods.getMaxPrepsStatsByAthlete;
+MemStorage.prototype.getMaxPrepsStatsById = externalIntegrationMethods.getMaxPrepsStatsById;
+MemStorage.prototype.getMaxPrepsStatsByAthleteSeason = externalIntegrationMethods.getMaxPrepsStatsByAthleteSeason;
+MemStorage.prototype.createMaxPrepsStats = externalIntegrationMethods.createMaxPrepsStats;
+MemStorage.prototype.updateMaxPrepsStats = externalIntegrationMethods.updateMaxPrepsStats;
+MemStorage.prototype.deleteMaxPrepsStats = externalIntegrationMethods.deleteMaxPrepsStats;
+
+MemStorage.prototype.getTwitterPostsByUser = externalIntegrationMethods.getTwitterPostsByUser;
+MemStorage.prototype.getTwitterPostById = externalIntegrationMethods.getTwitterPostById;
+MemStorage.prototype.createTwitterPost = externalIntegrationMethods.createTwitterPost;
+MemStorage.prototype.updateTwitterPost = externalIntegrationMethods.updateTwitterPost;
+MemStorage.prototype.deleteTwitterPost = externalIntegrationMethods.deleteTwitterPost;
+MemStorage.prototype.getCombineMetricsById = externalIntegrationMethods.getCombineMetricsById;
+
 // Add a method to add team members (not defined elsewhere)
 MemStorage.prototype.addTeamMember = async function(teamMember: InsertTeamMember): Promise<TeamMember> {
   const id = ++this.currentTeamMemberId;
