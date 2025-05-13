@@ -35,6 +35,7 @@ import ParentAccessTester from "@/pages/parent-access-tester";
 import ParentNotificationTester from "@/pages/parent-notification-tester";
 import ParentReportsPage from "@/pages/parent-reports-page";
 import WebSocketTester from "@/pages/websocket-tester";
+import EmailTestPage from "@/pages/email-test-page";
 // Import GameificationPage component directly to fix lazy loading issue
 import GameificationPage from "@/pages/gamification-page";
 
@@ -107,6 +108,7 @@ function Router() {
         <ProtectedRoute path="/parent-management" component={ParentManagementPage} />
         <ProtectedRoute path="/parent-access-tester" component={ParentAccessTester} />
         <ProtectedRoute path="/parent-notification-tester" component={ParentNotificationTester} />
+        <ProtectedRoute path="/email-test" component={EmailTestPage} />
         
         {/* Public Routes */}
         <Route path="/auth" component={AuthPage} />
