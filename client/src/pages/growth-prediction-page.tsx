@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { HeightPredictor } from "@/components/growth/height-predictor";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function GrowthPredictionPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   
   const { data, isLoading, isError } = useQuery({
     queryKey: [user?.id ? `/api/athlete/${user.id}/height-prediction` : null],
@@ -15,7 +15,7 @@ export default function GrowthPredictionPage() {
       }
       return apiRequest(`/api/athlete/${user.id}/height-prediction`);
     },
-    enabled: !!user?.id && isAuthenticated,
+    enabled: !!user?.id,
   });
   
   return (

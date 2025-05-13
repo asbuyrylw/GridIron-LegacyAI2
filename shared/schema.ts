@@ -9,12 +9,12 @@ export type LeaderboardPeriod = 'all-time' | 'yearly' | 'monthly' | 'weekly' | '
 export interface GrowthPrediction {
   predictedHeight: string;
   predictedHeightCm: number;
+  predictedHeightInches: number;
   percentComplete: number;
   growthRemaining: number;
   predictedRange: string;
   recommendedPositions: string[];
   calculatedAt: string;
-  updatedAt: string;
 }
 
 // Type for college match results from the College Matcher tool
