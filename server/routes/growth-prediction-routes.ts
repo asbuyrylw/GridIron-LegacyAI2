@@ -1,20 +1,15 @@
-import { Router, Request, Response } from 'express';
-import { z } from 'zod';
-import { storage } from '../storage';
+import { Router, Request, Response } from "express";
+import { storage } from "../storage";
+import { heightPredictionSchema, type GrowthPrediction } from "@shared/schema";
+import { z } from "zod";
+import { emailService } from "../email-service";
+import { fromZodError } from "zod-validation-error";
 
 const router = Router();
 
-// Schema for height prediction data
-const heightPredictionSchema = z.object({
-  predictedHeight: z.string(),
-  predictedHeightCm: z.number(),
-  percentComplete: z.number(),
-  growthRemaining: z.number(),
-  predictedRange: z.string(),
-  recommendedPositions: z.array(z.string()),
-  calculatedAt: z.string()
-});
-
+/**
+ * Height prediction type from form input
+ */
 type HeightPredictionData = z.infer<typeof heightPredictionSchema>;
 
 /**
@@ -23,59 +18,144 @@ type HeightPredictionData = z.infer<typeof heightPredictionSchema>;
  */
 router.post('/:id/height-prediction', async (req: Request, res: Response) => {
   try {
-    // Verify authentication
-    if (!req.user) {
-      return res.status(401).json({ message: 'Not authenticated' });
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
     }
-
+    
     const athleteId = parseInt(req.params.id);
-    if (isNaN(athleteId)) {
-      return res.status(400).json({ message: 'Invalid athlete ID' });
+    
+    // Check if user has permission to update this athlete's data
+    const isOwnProfile = req.user?.id === athleteId;
+    const isCoach = req.user?.userType === 'coach';
+    const isParent = req.user?.userType === 'parent';
+    
+    // Get athlete by ID for athletes parented by this parent
+    let hasPermission = isOwnProfile || isCoach;
+    
+    if (isParent) {
+      // Check if parent has relationship with this athlete
+      const parentId = req.user.id;
+      const relationships = await storage.getParentAthleteRelationships({ parentId });
+      const athleteIds = relationships.map(r => r.athleteId);
+      
+      hasPermission = athleteIds.includes(athleteId);
     }
-
-    // Validate request body
+    
+    if (!hasPermission) {
+      return res.status(403).json({ message: "Not authorized to update this athlete's data" });
+    }
+    
+    // Validate the request body
     const validationResult = heightPredictionSchema.safeParse(req.body);
+    
     if (!validationResult.success) {
-      return res.status(400).json({ 
-        message: 'Invalid height prediction data',
-        errors: validationResult.error.errors 
+      return res.status(400).json({
+        message: "Invalid height prediction data",
+        errors: fromZodError(validationResult.error).message
       });
     }
-
+    
     const predictionData: HeightPredictionData = validationResult.data;
-
-    // If athlete exists, update their profile
+    
+    // Get athlete to update
     const athlete = await storage.getAthlete(athleteId);
     if (!athlete) {
-      return res.status(404).json({ message: 'Athlete not found' });
+      return res.status(404).json({ message: "Athlete not found" });
     }
-
-    // Check if user has permission (is the athlete or a coach/admin)
-    if (req.user.id !== athlete.userId && req.user.userType !== 'coach' && req.user.userType !== 'admin') {
-      return res.status(403).json({ message: 'Permission denied' });
-    }
-
-    // Update the athlete's growth prediction data
+    
+    // Create growth prediction object
+    const growthPrediction: GrowthPrediction = {
+      predictedHeight: req.body.predictedHeight,
+      predictedHeightCm: req.body.predictedHeightCm,
+      percentComplete: req.body.percentComplete,
+      growthRemaining: req.body.growthRemaining,
+      predictedRange: req.body.predictedRange,
+      recommendedPositions: req.body.recommendedPositions,
+      calculatedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Update athlete with growth prediction
     await storage.updateAthlete(athleteId, {
-      growthPrediction: {
-        predictedHeight: predictionData.predictedHeight,
-        predictedHeightCm: predictionData.predictedHeightCm,
-        percentComplete: predictionData.percentComplete,
-        growthRemaining: predictionData.growthRemaining,
-        predictedRange: predictionData.predictedRange,
-        recommendedPositions: predictionData.recommendedPositions,
-        calculatedAt: new Date(predictionData.calculatedAt).toISOString(),
-        updatedAt: new Date().toISOString()
-      }
+      growthPrediction: growthPrediction
     });
-
-    res.status(200).json({ 
-      message: 'Height prediction saved successfully',
-      athleteId
+    
+    // Get updated athlete
+    const updatedAthlete = await storage.getAthlete(athleteId);
+    
+    // If user is an athlete, check if they have parents who should be notified
+    if (isOwnProfile) {
+      try {
+        const relationships = await storage.getParentAthleteRelationships({ athleteId });
+        const parentsToNotify = relationships.map(r => r.parentId);
+        
+        for (const parentId of parentsToNotify) {
+          const parent = await storage.getParent(parentId);
+          const parentUser = await storage.getUser(parent.userId);
+          
+          if (parent && parentUser && parentUser.email) {
+            // Notify parent about the updated growth prediction
+            await emailService.sendEmail({
+              to: parentUser.email,
+              from: "notifications@gridironlegacyai.com",
+              subject: `${athlete.firstName}'s Growth Prediction Updated`,
+              text: `
+                Hello ${parent.firstName},
+                
+                ${athlete.firstName} has updated their growth prediction information in GridIron LegacyAI.
+                
+                Current stats:
+                - Current Height: ${req.body.currentHeight} inches
+                - Current Weight: ${req.body.currentWeight} pounds
+                
+                Prediction results:
+                - Predicted Adult Height: ${athlete.growthPrediction?.predictedHeight}
+                - Growth Progress: ${athlete.growthPrediction?.percentComplete}% complete
+                - Recommended Positions: ${athlete.growthPrediction?.recommendedPositions.join(', ')}
+                
+                You can view more details by logging into your parent dashboard.
+                
+                Best,
+                GridIron LegacyAI Team
+              `,
+              html: `
+                <h2>Growth Prediction Update</h2>
+                <p>Hello ${parent.firstName},</p>
+                <p>${athlete.firstName} has updated their growth prediction information in GridIron LegacyAI.</p>
+                
+                <h3>Current Stats:</h3>
+                <ul>
+                  <li><strong>Current Height:</strong> ${req.body.currentHeight} inches</li>
+                  <li><strong>Current Weight:</strong> ${req.body.currentWeight} pounds</li>
+                </ul>
+                
+                <h3>Prediction Results:</h3>
+                <ul>
+                  <li><strong>Predicted Adult Height:</strong> ${athlete.growthPrediction?.predictedHeight}</li>
+                  <li><strong>Growth Progress:</strong> ${athlete.growthPrediction?.percentComplete}% complete</li>
+                  <li><strong>Recommended Positions:</strong> ${athlete.growthPrediction?.recommendedPositions.join(', ')}</li>
+                </ul>
+                
+                <p>You can view more details by logging into your parent dashboard.</p>
+                
+                <p>Best,<br>GridIron LegacyAI Team</p>
+              `
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error notifying parents about growth prediction update:", error);
+        // Continue with the response even if notifications fail
+      }
+    }
+    
+    res.status(200).json({
+      message: "Growth prediction saved successfully",
+      data: updatedAthlete
     });
   } catch (error) {
-    console.error('Error saving height prediction:', error);
-    res.status(500).json({ message: 'Failed to save height prediction data' });
+    console.error("Error saving growth prediction:", error);
+    res.status(500).json({ message: "Failed to save growth prediction data" });
   }
 });
 
@@ -85,46 +165,71 @@ router.post('/:id/height-prediction', async (req: Request, res: Response) => {
  */
 router.get('/:id/height-prediction', async (req: Request, res: Response) => {
   try {
-    // Verify authentication
-    if (!req.user) {
-      return res.status(401).json({ message: 'Not authenticated' });
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
     }
-
+    
     const athleteId = parseInt(req.params.id);
-    if (isNaN(athleteId)) {
-      return res.status(400).json({ message: 'Invalid athlete ID' });
+    
+    // Check if user has permission to view this athlete's data
+    const isOwnProfile = req.user?.id === athleteId;
+    const isCoach = req.user?.userType === 'coach';
+    const isParent = req.user?.userType === 'parent';
+    
+    // Get athlete by ID for athletes parented by this parent
+    let hasPermission = isOwnProfile || isCoach;
+    
+    if (isParent) {
+      // Check if parent has relationship with this athlete
+      const parentId = req.user.id;
+      const relationships = await storage.getParentAthleteRelationships({ parentId });
+      const athleteIds = relationships.map(r => r.athleteId);
+      
+      hasPermission = athleteIds.includes(athleteId);
     }
-
-    // Get athlete data
+    
+    if (!hasPermission) {
+      return res.status(403).json({ message: "Not authorized to view this athlete's data" });
+    }
+    
+    // Get athlete
     const athlete = await storage.getAthlete(athleteId);
     if (!athlete) {
-      return res.status(404).json({ message: 'Athlete not found' });
+      return res.status(404).json({ message: "Athlete not found" });
     }
-
-    // Check if user has permission (is the athlete, a parent, or a coach/admin)
-    if (req.user.id !== athlete.userId && req.user.userType !== 'coach' && req.user.userType !== 'admin') {
-      // Check if user is a parent with access to this athlete
-      if (req.user.userType === 'parent') {
-        const isParent = await storage.getParentAthleteRelationshipsByAthleteId(athleteId)
-          .then(relationships => relationships.some(r => r.parentId === req.user!.id));
-        
-        if (!isParent) {
-          return res.status(403).json({ message: 'Permission denied' });
-        }
-      } else {
-        return res.status(403).json({ message: 'Permission denied' });
-      }
-    }
-
-    // Return the growth prediction data if it exists
+    
     if (!athlete.growthPrediction) {
-      return res.status(404).json({ message: 'No height prediction data found' });
+      return res.status(404).json({ 
+        message: "No growth prediction found for this athlete",
+        athleteData: {
+          id: athlete.id,
+          firstName: athlete.firstName,
+          lastName: athlete.lastName,
+          height: athlete.height,
+          weight: athlete.weight,
+          motherHeight: athlete.motherHeight,
+          fatherHeight: athlete.fatherHeight,
+          dateOfBirth: athlete.dateOfBirth
+        }
+      });
     }
-
-    res.status(200).json(athlete.growthPrediction);
+    
+    res.status(200).json({
+      growthPrediction: athlete.growthPrediction,
+      athleteData: {
+        id: athlete.id,
+        firstName: athlete.firstName,
+        lastName: athlete.lastName,
+        height: athlete.height,
+        weight: athlete.weight,
+        motherHeight: athlete.motherHeight,
+        fatherHeight: athlete.fatherHeight,
+        dateOfBirth: athlete.dateOfBirth
+      }
+    });
   } catch (error) {
-    console.error('Error retrieving height prediction:', error);
-    res.status(500).json({ message: 'Failed to retrieve height prediction data' });
+    console.error("Error retrieving growth prediction:", error);
+    res.status(500).json({ message: "Failed to retrieve growth prediction data" });
   }
 });
 

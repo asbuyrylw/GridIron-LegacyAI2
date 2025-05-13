@@ -1,273 +1,178 @@
-/**
- * Implementation of the Khamis-Roche Height Predictor
- * This is a validated method for predicting adult height based on current height,
- * weight, age, and parents' heights.
- */
+import type { GrowthPrediction } from "@shared/schema";
 
+// Input types for height prediction calculations
 export interface HeightPredictionInputs {
+  gender: "male" | "female";
+  age: number;
   currentHeight: number; // in inches
   currentWeight: number; // in pounds
-  ageInYears: number; // age in decimal years (15.5 = 15 years, 6 months)
-  isMale: boolean; // true for male, false for female
   motherHeight: number; // in inches
   fatherHeight: number; // in inches
+  birthDate: Date;
 }
-
-export interface HeightPredictionResult {
-  predictedAdultHeight: number; // in inches
-  predictedAdultHeightCm: number; // in centimeters
-  percentOfAdultHeight: number; // percentage (0-100) of adult height already achieved
-  heightRemainingInches: number; // inches of growth remaining
-  heightRemainingCm: number; // centimeters of growth remaining
-  predictedRange: {
-    min: number; // in inches
-    max: number; // in inches
-  };
-  predictionTimestamp: string; // ISO date string
-}
-
-// Khamis-Roche coefficient tables (simplified version)
-// These are regression coefficients from the original research paper
-const maleCoefficients = {
-  intercept: 9.92,
-  ageCoefficients: [
-    { minAge: 4, maxAge: 8, coefficient: 1.21 },
-    { minAge: 8, maxAge: 12, coefficient: 1.05 },
-    { minAge: 12, maxAge: 14, coefficient: 0.96 },
-    { minAge: 14, maxAge: 16, coefficient: 0.68 },
-    { minAge: 16, maxAge: 18, coefficient: 0.28 },
-  ],
-  heightCoefficient: 0.74,
-  weightCoefficient: 0.06,
-  midparentHeightCoefficient: 0.54,
-};
-
-const femaleCoefficients = {
-  intercept: 11.35,
-  ageCoefficients: [
-    { minAge: 4, maxAge: 8, coefficient: 1.01 },
-    { minAge: 8, maxAge: 10, coefficient: 0.87 },
-    { minAge: 10, maxAge: 12, coefficient: 0.76 },
-    { minAge: 12, maxAge: 13.5, coefficient: 0.38 },
-    { minAge: 13.5, maxAge: 18, coefficient: 0.21 },
-  ],
-  heightCoefficient: 0.71,
-  weightCoefficient: 0.05,
-  midparentHeightCoefficient: 0.51,
-};
 
 /**
- * Convert height from feet/inches format to total inches
- * @param feet 
- * @param inches 
- * @returns total inches
+ * Convert height from inches to a formatted string (feet and inches)
  */
-export function convertToInches(feet: number, inches: number): number {
-  return (feet * 12) + inches;
+export function formatHeight(heightInInches: number): string {
+  const feet = Math.floor(heightInInches / 12);
+  const inches = Math.round(heightInInches % 12);
+  return `${feet}'${inches}"`;
 }
 
 /**
- * Convert height from inches to feet/inches format
- * @param inches 
- * @returns Object with feet and inches
- */
-export function convertToFeetInches(inches: number): { feet: number, inches: number } {
-  const feet = Math.floor(inches / 12);
-  const remainingInches = Math.round((inches % 12) * 10) / 10;
-  return { feet, inches: remainingInches };
-}
-
-/**
- * Convert height from inches to centimeters
- * @param inches 
- * @returns height in centimeters
- */
-export function inchesToCm(inches: number): number {
-  return inches * 2.54;
-}
-
-/**
- * Convert height from centimeters to inches
- * @param cm 
- * @returns height in inches
+ * Convert centimeters to inches
  */
 export function cmToInches(cm: number): number {
   return cm / 2.54;
 }
 
 /**
- * Format height as a string in feet and inches
- * @param inches 
- * @returns formatted height string (e.g., "5' 10"")
+ * Convert inches to centimeters
  */
-export function formatHeight(inches: number): string {
-  const { feet, inches: remainingInches } = convertToFeetInches(inches);
-  return `${feet}' ${remainingInches}"`;
+export function inchesToCm(inches: number): number {
+  return inches * 2.54;
 }
 
 /**
- * Calculate the mid-parent height
- * @param motherHeight in inches
- * @param fatherHeight in inches
- * @param isMale true for male child, false for female child
- * @returns mid-parent height in inches
+ * Convert kilograms to pounds
  */
-function calculateMidParentHeight(
-  motherHeight: number,
-  fatherHeight: number,
-  isMale: boolean
-): number {
-  // For boys: (mother's height + father's height) / 2
-  // For girls: ((mother's height + father's height) / 2) - 2.5 inches
-  const average = (motherHeight + fatherHeight) / 2;
-  return isMale ? average : average - 2.5; 
+export function kgToLbs(kg: number): number {
+  return kg * 2.20462;
 }
 
 /**
- * Get age coefficient based on current age
- * @param age current age in years
- * @param isMale true for male, false for female
- * @returns coefficient for the age
+ * Convert pounds to kilograms
  */
-function getAgeCoefficient(age: number, isMale: boolean): number {
-  const coefficients = isMale ? maleCoefficients.ageCoefficients : femaleCoefficients.ageCoefficients;
+export function lbsToKg(lbs: number): number {
+  return lbs / 2.20462;
+}
+
+/**
+ * Calculate age in years from birth date
+ */
+export function calculateAge(birthDate: Date): number {
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
   
-  for (const { minAge, maxAge, coefficient } of coefficients) {
-    if (age >= minAge && age < maxAge) {
-      return coefficient;
-    }
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
   }
   
-  // Default to the last age range coefficient if age is outside ranges
-  return coefficients[coefficients.length - 1].coefficient;
+  return age;
 }
 
 /**
- * Predict adult height using the Khamis-Roche method
- * @param inputs Height prediction inputs
- * @returns Height prediction result
+ * Use the Khamis-Roche method to predict adult height
+ * Reference: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2693322/
+ * 
+ * This is for children between 5-18 years old
  */
-export function predictAdultHeight(
-  inputs: HeightPredictionInputs
-): HeightPredictionResult {
-  const { 
-    currentHeight, 
-    currentWeight, 
-    ageInYears, 
-    isMale, 
-    motherHeight, 
-    fatherHeight 
-  } = inputs;
-  
-  // Get appropriate coefficients based on gender
-  const coefficients = isMale ? maleCoefficients : femaleCoefficients;
+export function predictAdultHeight(inputs: HeightPredictionInputs): GrowthPrediction {
+  const { gender, age, currentHeight, currentWeight, motherHeight, fatherHeight } = inputs;
   
   // Calculate mid-parent height
-  const midParentHeight = calculateMidParentHeight(motherHeight, fatherHeight, isMale);
+  const midParentHeight = gender === "male" 
+    ? (fatherHeight + motherHeight + 5) / 2  // Boys: add 5 inches to mother's height
+    : (fatherHeight - 5 + motherHeight) / 2; // Girls: subtract 5 inches from father's height
   
-  // Get age-specific coefficient
-  const ageCoefficient = getAgeCoefficient(ageInYears, isMale);
+  // Calculate predicted adult height using Khamis-Roche method
+  let predictedHeightInches = 0;
+
+  if (gender === "male") {
+    // Male calculation
+    predictedHeightInches = -9.11 + 
+      0.23 * currentWeight +
+      0.74 * currentHeight + 
+      0.38 * midParentHeight;
+      
+    // Apply age adjustment
+    if (age <= 10) {
+      predictedHeightInches *= 1.15;
+    } else if (age <= 13) {
+      predictedHeightInches *= 1.10;
+    } else if (age <= 16) {
+      predictedHeightInches *= 1.05;
+    }
+  } else {
+    // Female calculation
+    predictedHeightInches = -9.59 + 
+      0.19 * currentWeight +
+      0.73 * currentHeight + 
+      0.42 * midParentHeight;
+      
+    // Apply age adjustment - females generally complete growth earlier
+    if (age <= 9) {
+      predictedHeightInches *= 1.12;
+    } else if (age <= 11) {
+      predictedHeightInches *= 1.07;
+    } else if (age <= 13) {
+      predictedHeightInches *= 1.03;
+    }
+  }
   
-  // Khamis-Roche formula:
-  // Predicted height = intercept + (age coefficient × age) + (height coefficient × current height) 
-  //                  + (weight coefficient × current weight) 
-  //                  + (midparent height coefficient × midparent height)
+  // Round to nearest quarter inch
+  predictedHeightInches = Math.round(predictedHeightInches * 4) / 4;
   
-  const predictedAdultHeight = 
-    coefficients.intercept + 
-    (ageCoefficient * ageInYears) + 
-    (coefficients.heightCoefficient * currentHeight) + 
-    (coefficients.weightCoefficient * currentWeight) + 
-    (coefficients.midparentHeightCoefficient * midParentHeight);
+  // Calculate percentage of adult height reached
+  const percentComplete = Math.min(100, Math.round((currentHeight / predictedHeightInches) * 100));
   
-  // Calculate percentage of adult height already achieved
-  const percentOfAdultHeight = (currentHeight / predictedAdultHeight) * 100;
+  // Calculate growth remaining in inches
+  const growthRemaining = Math.max(0, predictedHeightInches - currentHeight);
   
-  // Calculate height remaining
-  const heightRemainingInches = predictedAdultHeight - currentHeight;
+  // Convert to metric
+  const predictedHeightCm = inchesToCm(predictedHeightInches);
   
-  // Standard error of the prediction is approximately 1.7 inches
-  // Create a prediction range of ±2 inches
-  const predictionRange = {
-    min: Math.round((predictedAdultHeight - 2) * 10) / 10,
-    max: Math.round((predictedAdultHeight + 2) * 10) / 10,
-  };
+  // Calculate range (±2 inches)
+  const predictionRange = `${formatHeight(predictedHeightInches - 2)} - ${formatHeight(predictedHeightInches + 2)}`;
+  
+  // Determine recommended positions based on predicted height
+  const recommendedPositions = getRecommendedPositions(gender, predictedHeightInches);
   
   return {
-    predictedAdultHeight: Math.round(predictedAdultHeight * 10) / 10,
-    predictedAdultHeightCm: Math.round(inchesToCm(predictedAdultHeight) * 10) / 10,
-    percentOfAdultHeight: Math.round(percentOfAdultHeight * 10) / 10,
-    heightRemainingInches: Math.round(heightRemainingInches * 10) / 10,
-    heightRemainingCm: Math.round(inchesToCm(heightRemainingInches) * 10) / 10,
-    predictedRange,
-    predictionTimestamp: new Date().toISOString(),
+    predictedHeight: formatHeight(predictedHeightInches),
+    predictedHeightCm: Math.round(predictedHeightCm),
+    percentComplete,
+    growthRemaining,
+    predictedRange: predictionRange,
+    recommendedPositions,
+    calculatedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 }
 
 /**
- * Get a textual interpretation of the prediction results
- * @param result The height prediction result
- * @param currentAge The athlete's current age
- * @returns A text description of the prediction
+ * Get list of recommended football positions based on predicted adult height
  */
-export function getHeightPredictionInterpretation(
-  result: HeightPredictionResult,
-  currentAge: number
-): string {
-  const { percentOfAdultHeight, predictedAdultHeight } = result;
-  const formattedAdultHeight = formatHeight(predictedAdultHeight);
-  
-  let interpretation = `Predicted adult height: ${formattedAdultHeight}\n`;
-  interpretation += `You are currently at ${percentOfAdultHeight}% of your predicted adult height.\n\n`;
-  
-  if (currentAge < 13) {
-    interpretation += "You're in the early growth phase with significant growth potential ahead. ";
-    interpretation += "Proper nutrition and training now will establish a foundation for your athletic development.";
-  } else if (currentAge < 16) {
-    interpretation += "You're in the peak growth phase where proper training and nutrition are critical. ";
-    interpretation += "Focus on technique as your body adjusts to rapid changes in height and proportions.";
-  } else {
-    interpretation += "You're nearing your full adult height. ";
-    interpretation += "Focus on maximizing strength, speed, and technique as your growth stabilizes.";
+function getRecommendedPositions(gender: "male" | "female", heightInches: number): string[] {
+  // Only provide position recommendations for males for football
+  if (gender !== "male") {
+    return [];
   }
   
-  return interpretation;
-}
-
-/**
- * Get position recommendations based on predicted height
- * @param predictedHeightInches Predicted adult height in inches
- * @param isMale Whether the athlete is male
- * @returns Array of recommended positions
- */
-export function getPositionRecommendations(
-  predictedHeightInches: number,
-  isMale: boolean
-): string[] {
-  // Position recommendations for male athletes
-  if (isMale) {
-    if (predictedHeightInches >= 77) { // 6'5"+ 
-      return ['Offensive Tackle', 'Defensive End', 'Tight End'];
-    } else if (predictedHeightInches >= 74) { // 6'2"+ 
-      return ['Quarterback', 'Tight End', 'Linebacker', 'Defensive End'];
-    } else if (predictedHeightInches >= 72) { // 6'0"+
-      return ['Quarterback', 'Wide Receiver', 'Safety', 'Cornerback', 'Running Back'];
-    } else if (predictedHeightInches >= 70) { // 5'10"+
-      return ['Running Back', 'Slot Receiver', 'Cornerback', 'Safety'];
-    } else {
-      return ['Running Back', 'Slot Receiver', 'Cornerback', 'Kick Returner'];
+  // Positions by height ranges (in inches)
+  const positions = [
+    { min: 77, max: 85, positions: ["Offensive Tackle", "Defensive End"] },
+    { min: 74, max: 80, positions: ["Tight End", "Defensive End", "Offensive Tackle"] },
+    { min: 72, max: 78, positions: ["Quarterback", "Tight End", "Linebacker", "Defensive End"] },
+    { min: 70, max: 76, positions: ["Quarterback", "Wide Receiver", "Safety", "Cornerback", "Linebacker"] },
+    { min: 68, max: 74, positions: ["Running Back", "Wide Receiver", "Cornerback", "Safety"] },
+    { min: 65, max: 71, positions: ["Running Back", "Slot Receiver", "Cornerback"] },
+    { min: 60, max: 70, positions: ["Running Back", "Slot Receiver", "Kicker"] }
+  ];
+  
+  // Find matching position ranges
+  let recommendedPositions: string[] = [];
+  
+  for (const range of positions) {
+    if (heightInches >= range.min && heightInches <= range.max) {
+      recommendedPositions = [...recommendedPositions, ...range.positions];
     }
   }
-  // Position recommendations for female athletes
-  else {
-    if (predictedHeightInches >= 70) { // 5'10"+ 
-      return ['Quarterback', 'Wide Receiver', 'Defensive End'];
-    } else if (predictedHeightInches >= 67) { // 5'7"+
-      return ['Quarterback', 'Wide Receiver', 'Safety', 'Cornerback'];
-    } else if (predictedHeightInches >= 65) { // 5'5"+
-      return ['Running Back', 'Slot Receiver', 'Cornerback', 'Safety'];
-    } else {
-      return ['Running Back', 'Slot Receiver', 'Cornerback', 'Kick Returner'];
-    }
-  }
+  
+  // Remove duplicates
+  recommendedPositions = Array.from(new Set(recommendedPositions));
+  
+  return recommendedPositions;
 }

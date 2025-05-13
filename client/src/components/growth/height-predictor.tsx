@@ -1,326 +1,218 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useAuth } from "@/hooks/use-auth";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { heightPredictionSchema } from "@shared/schema";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
-import { Loader2, Calculator, Info, HelpCircle, ArrowRight, ChevronsUpDown, Award } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import { 
-  predictAdultHeight, 
-  formatHeight, 
-  convertToInches, 
-  getHeightPredictionInterpretation,
-  getPositionRecommendations,
-  HeightPredictionInputs,
-  HeightPredictionResult
+  cmToInches, 
+  inchesToCm, 
+  kgToLbs,
+  lbsToKg,
+  formatHeight,
+  calculateAge,
+  predictAdultHeight,
+  type HeightPredictionInputs
 } from "@/lib/height-prediction";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import type { GrowthPrediction } from "@shared/schema";
 
-// Validation schema
-const heightPredictorSchema = z.object({
-  feet: z.number().min(3).max(7),
-  inches: z.number().min(0).max(11.9),
-  weightLbs: z.number().min(50).max(350),
-  age: z.number().min(8).max(18),
-  gender: z.enum(["male", "female"]),
-  motherHeightFeet: z.number().min(4).max(7),
-  motherHeightInches: z.number().min(0).max(11.9),
-  fatherHeightFeet: z.number().min(4).max(7),
-  fatherHeightInches: z.number().min(0).max(11.9),
-});
-
-type HeightPredictorFormValues = z.infer<typeof heightPredictorSchema>;
+type HeightPredictorFormValues = z.infer<typeof heightPredictionSchema>;
 
 export function HeightPredictor() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [prediction, setPrediction] = useState<HeightPredictionResult | null>(null);
-  const [positionRecommendations, setPositionRecommendations] = useState<string[]>([]);
-  const [savingPrediction, setSavingPrediction] = useState(false);
-
-  // Get athlete data if available
-  const { data: athlete, isLoading: athleteLoading } = useQuery({
-    queryKey: ["/api/athlete/me"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/athlete/me");
-      return res.json();
-    },
-    enabled: !!user && user.userType === "athlete",
-  });
-
-  // Form setup
+  const [prediction, setPrediction] = useState<GrowthPrediction | null>(null);
+  const [loading, setLoading] = useState(false);
+  
   const form = useForm<HeightPredictorFormValues>({
-    resolver: zodResolver(heightPredictorSchema),
+    resolver: zodResolver(heightPredictionSchema),
     defaultValues: {
-      feet: 5,
-      inches: 10,
-      weightLbs: 160,
-      age: 16,
       gender: "male",
-      motherHeightFeet: 5,
-      motherHeightInches: 5,
-      fatherHeightFeet: 5,
-      fatherHeightInches: 11,
+      age: 16,
+      currentHeight: 70, // 5'10"
+      currentHeightUnit: "in",
+      currentWeight: 160,
+      currentWeightUnit: "lb",
+      motherHeight: 64, // 5'4"
+      motherHeightUnit: "in",
+      fatherHeight: 72, // 6'0"
+      fatherHeightUnit: "in",
+      birthMonth: new Date().getMonth() + 1,
+      birthDay: new Date().getDate(),
+      birthYear: new Date().getFullYear() - 16
+    }
+  });
+  
+  const saveMutation = useMutation({
+    mutationFn: async (data: any) => {
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+      return apiRequest(`/api/athlete/${user.id}/height-prediction`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
     },
+    onSuccess: () => {
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/athlete/${user.id}/height-prediction`] });
+      }
+      toast({
+        title: "Growth prediction saved",
+        description: "Your growth prediction has been saved successfully."
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to save prediction",
+        description: "There was an error saving your growth prediction.",
+        variant: "destructive"
+      });
+    }
   });
 
-  // Update form with athlete data if available
-  useEffect(() => {
-    if (athlete) {
-      if (athlete.height) {
-        // Expected format: "5'10"" - need to parse
-        try {
-          const heightParts = athlete.height.split("'");
-          const feet = parseInt(heightParts[0]);
-          const inches = parseInt(heightParts[1]);
-          
-          if (!isNaN(feet)) {
-            form.setValue("feet", feet);
-          }
-          
-          if (!isNaN(inches)) {
-            form.setValue("inches", inches);
-          }
-        } catch (error) {
-          console.error("Error parsing height:", error);
-        }
-      }
-      
-      if (athlete.weight) {
-        form.setValue("weightLbs", athlete.weight);
-      }
-      
-      // Calculate age from dateOfBirth if available
-      if (athlete.dateOfBirth) {
-        const birthDate = new Date(athlete.dateOfBirth);
-        const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-        
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-          age--;
-        }
-        
-        form.setValue("age", age);
-      }
-      
-      // Set gender based on athlete data if available
-      if (athlete.gender) {
-        form.setValue("gender", athlete.gender.toLowerCase() as "male" | "female");
-      }
-    }
-  }, [athlete, form]);
-
-  // Form submission handler
   function onSubmit(data: HeightPredictorFormValues) {
-    // Convert form values to height predictor inputs
-    const predictorInputs: HeightPredictionInputs = {
-      currentHeight: convertToInches(data.feet, data.inches),
-      currentWeight: data.weightLbs,
-      ageInYears: data.age,
-      isMale: data.gender === "male",
-      motherHeight: convertToInches(data.motherHeightFeet, data.motherHeightInches),
-      fatherHeight: convertToInches(data.fatherHeightFeet, data.fatherHeightInches),
-    };
-
-    // Calculate prediction
-    const result = predictAdultHeight(predictorInputs);
-    setPrediction(result);
-    
-    // Get position recommendations
-    const recommendations = getPositionRecommendations(
-      result.predictedAdultHeight, 
-      predictorInputs.isMale
-    );
-    setPositionRecommendations(recommendations);
-
-    // Show success toast
-    toast({
-      title: "Height Prediction Calculated",
-      description: `Predicted adult height: ${formatHeight(result.predictedAdultHeight)}`,
-    });
-  }
-
-  // Save prediction to athlete profile
-  const savePrediction = async () => {
-    if (!prediction || !user || !athlete) return;
-    
-    setSavingPrediction(true);
+    setLoading(true);
     
     try {
-      // Format the prediction data for saving
-      const predictionData = {
-        predictedHeight: formatHeight(prediction.predictedAdultHeight),
-        predictedHeightCm: prediction.predictedAdultHeightCm,
-        percentComplete: prediction.percentOfAdultHeight,
-        growthRemaining: prediction.heightRemainingInches,
-        predictedRange: `${formatHeight(prediction.predictedRange.min)} - ${formatHeight(prediction.predictedRange.max)}`,
-        recommendedPositions: positionRecommendations,
-        calculatedAt: prediction.predictionTimestamp
+      // Convert to height and weight to inches and pounds
+      let heightInches = data.currentHeight;
+      if (data.currentHeightUnit === "cm") {
+        heightInches = cmToInches(data.currentHeight);
+      }
+      
+      let weightLbs = data.currentWeight;
+      if (data.currentWeightUnit === "kg") {
+        weightLbs = kgToLbs(data.currentWeight);
+      }
+      
+      let motherHeightInches = data.motherHeight;
+      if (data.motherHeightUnit === "cm") {
+        motherHeightInches = cmToInches(data.motherHeight);
+      }
+      
+      let fatherHeightInches = data.fatherHeight;
+      if (data.fatherHeightUnit === "cm") {
+        fatherHeightInches = cmToInches(data.fatherHeight);
+      }
+      
+      // Create birth date from form data
+      const birthDate = new Date(data.birthYear, data.birthMonth - 1, data.birthDay);
+      
+      // Calculate age (as a backup to the entered age)
+      const calculatedAge = calculateAge(birthDate);
+      
+      // Prepare inputs for prediction
+      const predictorInputs: HeightPredictionInputs = {
+        gender: data.gender,
+        age: data.age || calculatedAge,
+        currentHeight: heightInches,
+        currentWeight: weightLbs,
+        motherHeight: motherHeightInches,
+        fatherHeight: fatherHeightInches,
+        birthDate: birthDate
       };
       
-      // Send to API
-      await apiRequest("POST", `/api/athlete/${athlete.id}/height-prediction`, predictionData);
+      // Calculate prediction
+      const predictionResult = predictAdultHeight(predictorInputs);
+      setPrediction(predictionResult);
       
-      // Update athlete data
-      queryClient.invalidateQueries({ queryKey: ["/api/athlete/me"] });
-      
-      // Success toast
-      toast({
-        title: "Prediction Saved",
-        description: "Height prediction has been saved to your profile",
+      // Save prediction data
+      saveMutation.mutate({
+        ...data,
+        ...predictionResult
       });
     } catch (error) {
-      console.error("Error saving prediction:", error);
+      console.error("Error calculating height prediction:", error);
       toast({
-        title: "Error Saving Prediction",
-        description: "There was a problem saving your height prediction",
-        variant: "destructive",
+        title: "Calculation error",
+        description: "There was an error calculating your growth prediction. Please check your inputs.",
+        variant: "destructive"
       });
     } finally {
-      setSavingPrediction(false);
+      setLoading(false);
     }
-  };
-
+  }
+  
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Calculator className="mr-2 h-5 w-5" />
-          Khamis-Roche Height Predictor
-        </CardTitle>
-        <CardDescription>
-          Predict your adult height based on your current metrics and genetics
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent>
-        <Tabs defaultValue="calculator">
-          <TabsList className="mb-4">
-            <TabsTrigger value="calculator">Calculator</TabsTrigger>
-            <TabsTrigger value="results" disabled={!prediction}>Results</TabsTrigger>
-            <TabsTrigger value="about">About</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="calculator">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid gap-6 md:grid-cols-2">
-                  {/* Current Height */}
-                  <div className="grid gap-3 grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="feet"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Height (ft)</FormLabel>
+    <div className="w-full max-w-4xl mx-auto grid md:grid-cols-2 gap-6">
+      <Card className="md:col-span-1">
+        <CardHeader>
+          <CardTitle>Height Prediction Calculator</CardTitle>
+          <CardDescription>
+            Enter your information to predict your adult height using the Khamis-Roche method
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel>Biological Gender</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex space-x-4"
+                      >
+                        <FormItem className="flex items-center space-x-2 space-y-0">
                           <FormControl>
-                            <Input
-                              type="number"
-                              min={3}
-                              max={7}
-                              step={1}
-                              {...field}
-                              onChange={(e) => field.onChange(Number(e.target.value))}
-                            />
+                            <RadioGroupItem value="male" />
                           </FormControl>
-                          <FormMessage />
+                          <FormLabel className="font-normal">Male</FormLabel>
                         </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="inches"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Inches</FormLabel>
+                        <FormItem className="flex items-center space-x-2 space-y-0">
                           <FormControl>
-                            <Input
-                              type="number"
-                              min={0}
-                              max={11.9}
-                              step={0.1}
-                              {...field}
-                              onChange={(e) => field.onChange(Number(e.target.value))}
-                            />
+                            <RadioGroupItem value="female" />
                           </FormControl>
-                          <FormMessage />
+                          <FormLabel className="font-normal">Female</FormLabel>
                         </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  {/* Weight */}
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="age"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Current Age</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} min={5} max={18} onChange={e => field.onChange(parseInt(e.target.value))} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-3 gap-2">
                   <FormField
                     control={form.control}
-                    name="weightLbs"
+                    name="birthMonth"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Weight (lbs)</FormLabel>
+                        <FormLabel>Month</FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            min={50}
-                            max={350}
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {/* Age and Gender */}
-                  <FormField
-                    control={form.control}
-                    name="age"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Age (years)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={8}
-                            max={18}
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                          />
+                          <Input type="number" {...field} min={1} max={12} onChange={e => field.onChange(parseInt(e.target.value))} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -329,22 +221,66 @@ export function HeightPredictor() {
                   
                   <FormField
                     control={form.control}
-                    name="gender"
+                    name="birthDay"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Gender</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                        <FormLabel>Day</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} min={1} max={31} onChange={e => field.onChange(parseInt(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="birthYear"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Year</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} min={2000} max={new Date().getFullYear() - 5} onChange={e => field.onChange(parseInt(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2">
+                  <FormField
+                    control={form.control}
+                    name="currentHeight"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Current Height</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} step="0.1" onChange={e => field.onChange(parseFloat(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="col-span-1">
+                  <FormField
+                    control={form.control}
+                    name="currentHeightUnit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unit</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select gender" />
+                              <SelectValue placeholder="Unit" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="in">Inches</SelectItem>
+                            <SelectItem value="cm">Centimeters</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -352,289 +288,201 @@ export function HeightPredictor() {
                     )}
                   />
                 </div>
-                
-                <Separator />
-                
-                <div>
-                  <div className="flex items-center mb-3">
-                    <h3 className="text-md font-medium">Parents' Heights</h3>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className="ml-2 h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p>Genetic height potential is a significant factor in predicting adult height.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  
-                  <div className="grid gap-6 md:grid-cols-2">
-                    {/* Mother's Height */}
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-2">Mother's Height</div>
-                      <div className="grid gap-3 grid-cols-2">
-                        <FormField
-                          control={form.control}
-                          name="motherHeightFeet"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  min={4}
-                                  max={7}
-                                  placeholder="Feet"
-                                  {...field}
-                                  onChange={(e) => field.onChange(Number(e.target.value))}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="motherHeightInches"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  min={0}
-                                  max={11.9}
-                                  placeholder="Inches"
-                                  {...field}
-                                  onChange={(e) => field.onChange(Number(e.target.value))}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Father's Height */}
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-2">Father's Height</div>
-                      <div className="grid gap-3 grid-cols-2">
-                        <FormField
-                          control={form.control}
-                          name="fatherHeightFeet"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  min={4}
-                                  max={7}
-                                  placeholder="Feet"
-                                  {...field}
-                                  onChange={(e) => field.onChange(Number(e.target.value))}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="fatherHeightInches"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  min={0}
-                                  max={11.9}
-                                  placeholder="Inches"
-                                  {...field}
-                                  onChange={(e) => field.onChange(Number(e.target.value))}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <Button type="submit" className="w-full">
-                  Calculate Prediction
-                </Button>
-              </form>
-            </Form>
-          </TabsContent>
-          
-          <TabsContent value="results">
-            {prediction ? (
-              <div className="space-y-6">
-                <div className="grid gap-6 md:grid-cols-2">
-                  <Card className="bg-primary/5">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Predicted Adult Height</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold text-primary">
-                        {formatHeight(prediction.predictedAdultHeight)}
-                        <span className="text-sm font-normal text-muted-foreground ml-2">
-                          ({prediction.predictedAdultHeightCm} cm)
-                        </span>
-                      </div>
-                      <div className="text-sm text-muted-foreground mt-1">
-                        Range: {formatHeight(prediction.predictedRange.min)} - {formatHeight(prediction.predictedRange.max)}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Growth Progress</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Current Progress</span>
-                          <span className="font-medium">{prediction.percentOfAdultHeight}%</span>
-                        </div>
-                        <Progress value={prediction.percentOfAdultHeight} />
-                        <div className="text-sm text-muted-foreground">
-                          Estimated growth remaining: {prediction.heightRemainingInches}" ({prediction.heightRemainingCm} cm)
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Interpretation</h3>
-                  <div className="bg-muted p-4 rounded-md whitespace-pre-line">
-                    {getHeightPredictionInterpretation(prediction, form.getValues("age"))}
-                  </div>
-                </div>
-                
-                {positionRecommendations.length > 0 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium flex items-center">
-                      <Award className="h-5 w-5 mr-2 text-amber-500" />
-                      Recommended Positions
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {positionRecommendations.map((position) => (
-                        <div key={position} className="px-3 py-1.5 bg-secondary rounded-full text-sm font-medium">
-                          {position}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      <p>
-                        These position recommendations are based on height projections and general
-                        positional fit. Many other factors like speed, agility, strength, and skill
-                        development also influence positional success.
-                      </p>
-                    </div>
-                  </div>
-                )}
-                
-                {user && user.userType === "athlete" && (
-                  <Button 
-                    onClick={savePrediction} 
-                    disabled={savingPrediction}
-                    className="w-full"
-                  >
-                    {savingPrediction && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save to Profile
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  Complete the calculator form to see your height prediction
-                </p>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="about">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium mb-2">About the Khamis-Roche Method</h3>
-                <p className="text-muted-foreground">
-                  The Khamis-Roche method is a scientifically validated height prediction formula
-                  developed by pediatric researchers. It uses current height, weight, age, and parent
-                  heights to predict adult stature with reasonable accuracy.
-                </p>
               </div>
               
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="accuracy">
-                  <AccordionTrigger>How accurate is this prediction?</AccordionTrigger>
-                  <AccordionContent>
-                    <p className="mb-2">
-                      The Khamis-Roche method has a standard error of approximately 1.7 inches
-                      for boys and 1.5 inches for girls. This means:
-                    </p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li>About 68% of predictions will be within this range of the actual adult height</li>
-                      <li>The accuracy is highest for children between 9-17 years old</li>
-                      <li>Other factors like nutrition, sleep, and overall health also influence growth</li>
-                      <li>The prediction range provided gives a more realistic picture of potential outcomes</li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-                
-                <AccordionItem value="growth-factors">
-                  <AccordionTrigger>What factors affect growth potential?</AccordionTrigger>
-                  <AccordionContent>
-                    <p className="mb-2">
-                      While genetics play a major role in determining height, several other factors can influence growth:
-                    </p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li><strong>Nutrition:</strong> Adequate protein, calcium, and overall calories</li>
-                      <li><strong>Sleep:</strong> Growth hormone is released during deep sleep</li>
-                      <li><strong>Physical Activity:</strong> Appropriate exercise supports healthy development</li>
-                      <li><strong>Health:</strong> Chronic illness or certain medications can affect growth</li>
-                      <li><strong>Stress:</strong> Chronic stress can impact growth hormone production</li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-                
-                <AccordionItem value="training">
-                  <AccordionTrigger>How should training adjust during growth?</AccordionTrigger>
-                  <AccordionContent>
-                    <p className="mb-2">
-                      Training should be adapted based on growth stage:
-                    </p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li><strong>During growth spurts:</strong> Focus on flexibility and technique as body proportions change</li>
-                      <li><strong>Early adolescence:</strong> Emphasize proper movement patterns and bodyweight exercises</li>
-                      <li><strong>Late adolescence:</strong> Gradually increase strength training as growth stabilizes</li>
-                      <li><strong>Near adult height:</strong> Tailored position-specific training becomes more effective</li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2">
+                  <FormField
+                    control={form.control}
+                    name="currentWeight"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Current Weight</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} step="0.1" onChange={e => field.onChange(parseFloat(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="col-span-1">
+                  <FormField
+                    control={form.control}
+                    name="currentWeightUnit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unit</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Unit" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="lb">Pounds</SelectItem>
+                            <SelectItem value="kg">Kilograms</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
               
-              <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-900">
-                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <AlertTitle>Disclaimer</AlertTitle>
-                <AlertDescription>
-                  This tool provides estimates only and should not replace medical advice.
-                  Growth patterns can vary significantly between individuals, and many factors
-                  besides genetics influence final adult height.
-                </AlertDescription>
-              </Alert>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2">
+                  <FormField
+                    control={form.control}
+                    name="motherHeight"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mother's Height</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} step="0.1" onChange={e => field.onChange(parseFloat(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="col-span-1">
+                  <FormField
+                    control={form.control}
+                    name="motherHeightUnit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unit</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Unit" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="in">Inches</SelectItem>
+                            <SelectItem value="cm">Centimeters</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2">
+                  <FormField
+                    control={form.control}
+                    name="fatherHeight"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Father's Height</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} step="0.1" onChange={e => field.onChange(parseFloat(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="col-span-1">
+                  <FormField
+                    control={form.control}
+                    name="fatherHeightUnit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unit</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Unit" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="in">Inches</SelectItem>
+                            <SelectItem value="cm">Centimeters</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Calculating..." : "Calculate Height Prediction"}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+      
+      {prediction ? (
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle>Your Height Prediction</CardTitle>
+            <CardDescription>
+              Results based on the Khamis-Roche method
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="text-center">
+              <h3 className="text-3xl font-bold">{prediction.predictedHeight}</h3>
+              <p className="text-sm text-muted-foreground">({prediction.predictedHeightCm} cm)</p>
+              <p className="text-sm mt-2">Predicted adult height range: {prediction.predictedRange}</p>
             </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+            
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-xs">Growth Progress</span>
+                <span className="text-xs font-bold">{prediction.percentComplete}%</span>
+              </div>
+              <Progress value={prediction.percentComplete} className="h-2" />
+              <p className="text-xs mt-1">Approximately {prediction.growthRemaining.toFixed(1)} inches of growth remaining</p>
+            </div>
+            
+            <Separator />
+            
+            <div>
+              <h3 className="font-semibold mb-2">Recommended Football Positions</h3>
+              {prediction.recommendedPositions.length > 0 ? (
+                <ul className="list-disc pl-5 space-y-1">
+                  {prediction.recommendedPositions.map((position, index) => (
+                    <li key={index} className="text-sm">{position}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">No position recommendations available.</p>
+              )}
+            </div>
+            
+            <div className="text-xs text-muted-foreground mt-4">
+              <p>Note: This prediction is an estimate based on the Khamis-Roche method. Many factors including nutrition, exercise, genetics, and other environmental factors can influence actual adult height.</p>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <p className="text-xs text-muted-foreground">
+              Last calculated: {new Date(prediction.calculatedAt).toLocaleDateString()}
+            </p>
+          </CardFooter>
+        </Card>
+      ) : (
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle>Your Height Prediction</CardTitle>
+            <CardDescription>
+              Fill out the form to see your predicted adult height
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center min-h-[300px] text-center">
+            <p className="text-muted-foreground">Enter your information and click "Calculate" to see your predicted adult height and growth progress.</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
