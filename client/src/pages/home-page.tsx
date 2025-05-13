@@ -7,6 +7,7 @@ import { CombineMetric } from "@shared/schema";
 import { Redirect } from "wouter";
 import { useEffect } from "react";
 import { useLoginStreakUpdate } from "@/hooks/use-login-streak";
+import { LoginStreakCard } from "@/components/gamification/login-streak-card";
 
 // New Dashboard Components
 import { MilestoneTrackers } from "@/components/dashboard/milestone-trackers";
@@ -122,6 +123,9 @@ export default function HomePage() {
           <div className="space-y-6">
             {/* Yearly Goals Section - Moved up to top */}
             <YearlyGoals />
+            
+            {/* Login Streak Card */}
+            <LoginStreakCard />
             
             {/* Achievements */}
             <AchievementSummary />
