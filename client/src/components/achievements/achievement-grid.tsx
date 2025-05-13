@@ -237,10 +237,13 @@ export function AchievementGrid({
         {selectedAchievement && (
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+              <DialogTitle className="flex items-center gap-2 flex-wrap">
                 <Icon name={selectedAchievement.icon} className="h-5 w-5" />
                 {selectedAchievement.name}
                 <Badge className="ml-1 capitalize">{selectedAchievement.tier}</Badge>
+                {selectedAchievement.coachOnly && (
+                  <Badge variant="outline" className="ml-1">Coach Only</Badge>
+                )}
               </DialogTitle>
               <DialogDescription>
                 {selectedAchievement.description}
@@ -299,6 +302,15 @@ export function AchievementGrid({
                     value={(getProgress(selectedAchievement.id) / selectedAchievement.progressMax) * 100} 
                     className="h-2"
                   />
+                </div>
+              )}
+              
+              {selectedAchievement.unlockMessage && isCompleted(selectedAchievement.id) && (
+                <div className="bg-sky-50 dark:bg-sky-950 p-3 rounded-md border border-sky-200 dark:border-sky-800 text-sm">
+                  <h4 className="font-semibold mb-1 flex items-center">
+                    <span className="mr-1">🎁</span> Reward Unlocked
+                  </h4>
+                  <p>{selectedAchievement.unlockMessage}</p>
                 </div>
               )}
             </div>

@@ -14,12 +14,13 @@ import { useAchievements } from '@/components/achievements/achievement-provider'
 
 const categories: { id: AchievementCategory; label: string; icon: React.ReactNode }[] = [
   { id: 'performance', label: 'Performance', icon: <Trophy className="h-4 w-4" /> },
-  { id: 'training', label: 'Training', icon: <Award className="h-4 w-4" /> },
-  { id: 'nutrition', label: 'Nutrition', icon: <Award className="h-4 w-4" /> },
-  { id: 'profile', label: 'Profile', icon: <Award className="h-4 w-4" /> },
+  { id: 'training', label: 'Training', icon: <Dumbbell className="h-4 w-4" /> },
+  { id: 'nutrition', label: 'Nutrition', icon: <Apple className="h-4 w-4" /> },
+  { id: 'profile', label: 'Profile', icon: <User className="h-4 w-4" /> },
   { id: 'social', label: 'Social', icon: <Users className="h-4 w-4" /> },
   { id: 'recruiting', label: 'Recruiting', icon: <Award className="h-4 w-4" /> },
-  { id: 'academic', label: 'Academic', icon: <Award className="h-4 w-4" /> },
+  { id: 'academic', label: 'Academic', icon: <BookOpen className="h-4 w-4" /> },
+  { id: 'coach', label: 'Coach', icon: <Award className="h-4 w-4" /> },
 ];
 
 const tiers: { id: TierType; label: string }[] = [
@@ -40,6 +41,8 @@ function AchievementTester() {
     { type: 'profile', action: 'update_profile', label: 'Profile: Update', icon: <User className="h-4 w-4" /> },
     { type: 'academic', action: 'update_academic', label: 'Academic: Update', icon: <BookOpen className="h-4 w-4" /> },
     { type: 'social', action: 'join_team', label: 'Social: Join Team', icon: <Users className="h-4 w-4" /> },
+    { type: 'coach', action: 'coach_achievement', label: 'Coach Achievement', icon: <Award className="h-4 w-4" /> },
+    { type: 'recruiting', action: 'update_recruiting', label: 'Recruiting: Update', icon: <Award className="h-4 w-4" /> },
   ];
 
   return (

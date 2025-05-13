@@ -137,6 +137,12 @@ export function AchievementBadge({
                 {achievement.name}
               </div>
               
+              {achievement.coachOnly && (
+                <Badge variant="outline" className="text-[8px] px-1 py-0 rounded-sm">
+                  COACH ONLY
+                </Badge>
+              )}
+              
               {showProgress && !isCompleted && (
                 <Progress 
                   value={percentComplete} 
@@ -157,12 +163,20 @@ export function AchievementBadge({
         </TooltipTrigger>
         <TooltipContent>
           <div className="space-y-2 max-w-xs">
-            <div className="font-bold flex items-center gap-2">
+            <div className="font-bold flex items-center gap-2 flex-wrap">
               <Icon name={achievement.icon} className="h-4 w-4" />
               {achievement.name}
               <Badge className="ml-1 capitalize">{achievement.tier}</Badge>
+              {achievement.coachOnly && (
+                <Badge variant="outline" className="ml-1 text-xs">Coach Only</Badge>
+              )}
             </div>
             <p className="text-sm">{achievement.description}</p>
+            {achievement.unlockMessage && isCompleted && (
+              <div className="bg-sky-50 dark:bg-sky-950 p-2 rounded-md border border-sky-200 dark:border-sky-800 text-xs">
+                <span className="font-semibold">🎁 Reward:</span> {achievement.unlockMessage}
+              </div>
+            )}
             <div className="text-xs flex justify-between">
               <span>Progress: {progress} / {achievement.progressMax}</span>
               <span className="font-semibold">{achievement.pointValue} pts</span>
