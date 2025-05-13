@@ -136,9 +136,14 @@ router.get('/api/athlete/:athleteId/scheduled-reports/:id', async (req: Request,
     const athleteId = parseInt(req.params.athleteId);
     const reportId = parseInt(req.params.id);
     
-    // For now, we'll use a simplified authentication check
-    if (!req.session.userId) {
+    // Check for user authentication
+    if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Verify athlete access permission
+    if (!(await validateAthleteAccess(req, athleteId))) {
+      return res.status(403).json({ message: 'Not authorized to view this report' });
     }
     
     const report = scheduledReports.find(r => r.id === reportId && r.athleteId === athleteId);
@@ -159,9 +164,14 @@ router.post('/api/athlete/:athleteId/scheduled-reports', async (req: Request, re
   try {
     const athleteId = parseInt(req.params.athleteId);
     
-    // For now, we'll use a simplified authentication check
-    if (!req.session.userId) {
+    // Check for user authentication
+    if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Verify athlete access permission
+    if (!(await validateAthleteAccess(req, athleteId))) {
+      return res.status(403).json({ message: 'Not authorized to create reports for this athlete' });
     }
     
     // Validate the request body
@@ -207,9 +217,14 @@ router.patch('/api/athlete/:athleteId/scheduled-reports/:id', async (req: Reques
     const athleteId = parseInt(req.params.athleteId);
     const reportId = parseInt(req.params.id);
     
-    // For now, we'll use a simplified authentication check
-    if (!req.session.userId) {
+    // Check for user authentication
+    if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Verify athlete access permission
+    if (!(await validateAthleteAccess(req, athleteId))) {
+      return res.status(403).json({ message: 'Not authorized to update reports for this athlete' });
     }
     
     // Find the report
@@ -259,9 +274,14 @@ router.delete('/api/athlete/:athleteId/scheduled-reports/:id', async (req: Reque
     const athleteId = parseInt(req.params.athleteId);
     const reportId = parseInt(req.params.id);
     
-    // For now, we'll use a simplified authentication check
-    if (!req.session.userId) {
+    // Check for user authentication
+    if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    // Verify athlete access permission
+    if (!(await validateAthleteAccess(req, athleteId))) {
+      return res.status(403).json({ message: 'Not authorized to delete reports for this athlete' });
     }
     
     // Find the report
