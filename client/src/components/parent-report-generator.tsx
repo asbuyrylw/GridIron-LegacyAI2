@@ -1,291 +1,186 @@
-import React, { useState, useEffect } from 'react';
-import { z } from 'zod';
+import { useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
-import { Loader2, Send, Calendar, FileText, AlertTriangle } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { useQuery } from '@tanstack/react-query';
 
-interface ParentReportGeneratorProps {
-  athleteId: number;
-}
-
-interface ParentAccess {
-  id: number;
-  email: string;
-  name: string;
-  relationship: string;
-  active: boolean;
-}
-
-// Define report sections
-const reportSections = [
+const REPORT_SECTIONS = [
   { id: 'performance', label: 'Performance Metrics' },
-  { id: 'academics', label: 'Academic Progress' },
   { id: 'training', label: 'Training Summary' },
+  { id: 'nutrition', label: 'Nutrition Overview' },
+  { id: 'academics', label: 'Academic Progress' },
   { id: 'achievements', label: 'Recent Achievements' },
   { id: 'upcoming', label: 'Upcoming Events' },
-  { id: 'nutrition', label: 'Nutrition Overview' },
   { id: 'recommendations', label: 'Coach Recommendations' },
 ];
 
-export function ParentReportGenerator({ athleteId }: ParentReportGeneratorProps) {
+export interface ParentReportData {
+  sections: string[];
+  customMessage?: string;
+  parentIds?: number[];
+  sendToAll: boolean;
+  includeInsights: boolean;
+}
+
+interface ParentReportGeneratorProps {
+  onSuccess?: (result: any) => void;
+}
+
+export function ParentReportGenerator({ onSuccess }: ParentReportGeneratorProps) {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const [reportType, setReportType] = useState<'full' | 'summary'>('full');
-  const [dateRange, setDateRange] = useState<'week' | 'month' | 'quarter' | 'custom'>('month');
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const athleteId = user?.athlete?.id;
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedSections, setSelectedSections] = useState<string[]>(['performance', 'achievements']);
+  const [customMessage, setCustomMessage] = useState<string>('');
   const [selectedParents, setSelectedParents] = useState<number[]>([]);
-  const [selectedSections, setSelectedSections] = useState<string[]>(reportSections.map(section => section.id));
-  const [scheduleRecurring, setScheduleRecurring] = useState(false);
-  const [recurringFrequency, setRecurringFrequency] = useState<'weekly' | 'biweekly' | 'monthly'>('monthly');
+  const [sendToAll, setSendToAll] = useState(true);
+  const [includeInsights, setIncludeInsights] = useState(true);
   
-  // Fetch parent access list
-  const { data: parentAccessList, isLoading: loadingParents } = useQuery({
-    queryKey: ['/api/athlete', athleteId, 'parent-access'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', `/api/athlete/${athleteId}/parent-access`);
-      return response.json();
-    }
+  // Get parent access records
+  const { data: parentAccess = [], isLoading: parentsLoading } = useQuery({
+    queryKey: [`/api/athlete/${athleteId}/parent-access`],
+    enabled: !!athleteId,
   });
-  
-  // Select all parents by default when list loads
-  useEffect(() => {
-    if (parentAccessList?.parents && parentAccessList.parents.length > 0) {
-      setSelectedParents(parentAccessList.parents
-        .filter((parent: ParentAccess) => parent.active)
-        .map((parent: ParentAccess) => parent.id));
-    }
-  }, [parentAccessList]);
-  
-  // Handle date range changes
-  useEffect(() => {
-    const now = new Date();
-    let start = new Date();
-    
-    switch(dateRange) {
-      case 'week':
-        start.setDate(now.getDate() - 7);
-        break;
-      case 'month':
-        start.setMonth(now.getMonth() - 1);
-        break;
-      case 'quarter':
-        start.setMonth(now.getMonth() - 3);
-        break;
-      case 'custom':
-        // Don't update dates for custom range
-        return;
-    }
-    
-    setStartDate(start);
-    setEndDate(now);
-  }, [dateRange]);
   
   // Toggle section selection
   const toggleSection = (sectionId: string) => {
-    if (selectedSections.includes(sectionId)) {
-      setSelectedSections(selectedSections.filter(id => id !== sectionId));
-    } else {
-      setSelectedSections([...selectedSections, sectionId]);
-    }
+    setSelectedSections(prev => 
+      prev.includes(sectionId) 
+        ? prev.filter(id => id !== sectionId)
+        : [...prev, sectionId]
+    );
   };
   
   // Toggle parent selection
   const toggleParent = (parentId: number) => {
-    if (selectedParents.includes(parentId)) {
-      setSelectedParents(selectedParents.filter(id => id !== parentId));
-    } else {
-      setSelectedParents([...selectedParents, parentId]);
-    }
+    setSelectedParents(prev => 
+      prev.includes(parentId) 
+        ? prev.filter(id => id !== parentId)
+        : [...prev, parentId]
+    );
   };
   
-  // Select all sections
-  const selectAllSections = () => {
-    setSelectedSections(reportSections.map(section => section.id));
-  };
-  
-  // Clear all sections
-  const clearSections = () => {
-    setSelectedSections([]);
-  };
-  
-  // Select all parents
-  const selectAllParents = () => {
-    if (parentAccessList?.parents) {
-      setSelectedParents(parentAccessList.parents
-        .filter((parent: ParentAccess) => parent.active)
-        .map((parent: ParentAccess) => parent.id));
-    }
-  };
-  
-  // Clear all parents
-  const clearParents = () => {
-    setSelectedParents([]);
-  };
-  
-  // Generate and send report mutation
-  const generateReportMutation = useMutation({
-    mutationFn: async () => {
-      if (!startDate || !endDate) {
-        throw new Error('Please select a date range for the report');
-      }
-      
-      if (selectedParents.length === 0) {
-        throw new Error('Please select at least one parent to receive the report');
-      }
-      
-      if (selectedSections.length === 0) {
-        throw new Error('Please select at least one section to include in the report');
-      }
-      
-      const reportData = {
-        athleteId,
-        parentIds: selectedParents,
-        reportType,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        sections: selectedSections,
-        recurring: scheduleRecurring,
-        recurringFrequency: scheduleRecurring ? recurringFrequency : undefined
-      };
-      
-      const response = await apiRequest('POST', `/api/athlete/${athleteId}/parent-report`, reportData);
-      return response.json();
-    },
-    onSuccess: () => {
+  const handleSubmit = async () => {
+    if (!athleteId) {
       toast({
-        title: "Report sent successfully",
-        description: scheduleRecurring 
-          ? `Recurring reports will be emailed to parents ${recurringFrequency}` 
-          : "The performance report has been sent to parents via email",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to send report",
-        description: error.message,
+        title: "Error",
+        description: "No athlete profile found",
         variant: "destructive",
       });
+      return;
     }
-  });
+    
+    if (selectedSections.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one section to include in the report",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!sendToAll && selectedParents.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one parent or enable 'Send to all'",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    const reportData: ParentReportData = {
+      sections: selectedSections,
+      customMessage: customMessage.trim() || undefined,
+      parentIds: sendToAll ? undefined : selectedParents,
+      sendToAll,
+      includeInsights,
+    };
+    
+    try {
+      const response = await apiRequest(
+        `/api/athlete/${athleteId}/parent-report`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(reportData)
+        }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to send report");
+      }
+      
+      const result = await response.json();
+      
+      toast({
+        title: "Reports Sent",
+        description: `Successfully sent reports to ${result.successfulSends?.length || 0} parents`,
+        variant: "default",
+      });
+      
+      if (onSuccess) {
+        onSuccess(result);
+      }
+      
+    } catch (error: any) {
+      toast({
+        title: "Error Sending Reports",
+        description: error.message || "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  if (!athleteId) {
+    return <div>You need to be logged in as an athlete to use this feature.</div>;
+  }
   
   return (
-    <Card>
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <FileText className="mr-2 h-5 w-5" />
-          Generate Parent Report
-        </CardTitle>
+        <CardTitle>Generate Parent Performance Report</CardTitle>
         <CardDescription>
-          Create and email reports to keep parents updated on your progress
+          Create a customized performance report to send to your parents or guardians
         </CardDescription>
       </CardHeader>
-      
       <CardContent className="space-y-6">
-        {/* Report Type */}
-        <div className="space-y-3">
-          <h3 className="font-medium">Report Type</h3>
-          <div className="flex space-x-4">
-            <div className="flex items-center space-x-2">
-              <input
-                type="radio"
-                id="full-report"
-                checked={reportType === 'full'}
-                onChange={() => setReportType('full')}
-                className="h-4 w-4 rounded-full text-primary"
-              />
-              <Label htmlFor="full-report">Full Report</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <input
-                type="radio"
-                id="summary-report"
-                checked={reportType === 'summary'}
-                onChange={() => setReportType('summary')}
-                className="h-4 w-4 rounded-full text-primary"
-              />
-              <Label htmlFor="summary-report">Summary Report</Label>
-            </div>
-          </div>
-        </div>
-        
-        {/* Date Range */}
-        <div className="space-y-3">
-          <h3 className="font-medium">Time Period</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <Select value={dateRange} onValueChange={(value) => setDateRange(value as any)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select time period" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="week">Past Week</SelectItem>
-                <SelectItem value="month">Past Month</SelectItem>
-                <SelectItem value="quarter">Past Quarter</SelectItem>
-                <SelectItem value="custom">Custom Range</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            {dateRange === 'custom' && (
-              <div className="col-span-2 grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="start-date" className="mb-2 block">Start Date</Label>
-                  <DatePicker date={startDate} setDate={setStartDate} label="Start date" />
-                </div>
-                <div>
-                  <Label htmlFor="end-date" className="mb-2 block">End Date</Label>
-                  <DatePicker date={endDate} setDate={setEndDate} label="End date" />
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {startDate && endDate && (
-            <div className="text-sm text-muted-foreground flex items-center">
-              <Calendar className="w-4 h-4 mr-1" />
-              {startDate.toLocaleDateString()} to {endDate.toLocaleDateString()}
-            </div>
-          )}
-        </div>
-        
-        <Separator />
-        
-        {/* Report Sections */}
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <h3 className="font-medium">Report Sections</h3>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm" onClick={selectAllSections}>
-                Select All
-              </Button>
-              <Button variant="outline" size="sm" onClick={clearSections}>
-                Clear
-              </Button>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2">
-            {reportSections.map((section) => (
-              <div key={section.id} className="flex items-center space-x-2">
+        {/* Report sections */}
+        <div>
+          <h3 className="text-md font-medium mb-2">Report Sections</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Select which sections to include in the report
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {REPORT_SECTIONS.map((section) => (
+              <div key={section.id} className="flex items-start space-x-2">
                 <Checkbox 
-                  id={`section-${section.id}`}
+                  id={section.id}
                   checked={selectedSections.includes(section.id)}
                   onCheckedChange={() => toggleSection(section.id)}
                 />
-                <Label htmlFor={`section-${section.id}`}>{section.label}</Label>
+                <Label 
+                  htmlFor={section.id}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
+                  {section.label}
+                </Label>
               </div>
             ))}
           </div>
@@ -293,98 +188,95 @@ export function ParentReportGenerator({ athleteId }: ParentReportGeneratorProps)
         
         <Separator />
         
-        {/* Parents */}
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <h3 className="font-medium">Recipients</h3>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm" onClick={selectAllParents}>
-                Select All
-              </Button>
-              <Button variant="outline" size="sm" onClick={clearParents}>
-                Clear
-              </Button>
-            </div>
-          </div>
-          
-          {loadingParents ? (
-            <div className="py-2 flex items-center justify-center">
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              <span>Loading parents...</span>
-            </div>
-          ) : parentAccessList?.parents && parentAccessList.parents.length > 0 ? (
-            <div className="grid grid-cols-1 gap-2">
-              {parentAccessList.parents
-                .filter((parent: ParentAccess) => parent.active)
-                .map((parent: ParentAccess) => (
-                  <div key={parent.id} className="flex items-center space-x-2 p-2 rounded-md border">
-                    <Checkbox 
-                      id={`parent-${parent.id}`}
-                      checked={selectedParents.includes(parent.id)}
-                      onCheckedChange={() => toggleParent(parent.id)}
-                    />
-                    <div>
-                      <Label htmlFor={`parent-${parent.id}`} className="font-medium">{parent.name}</Label>
-                      <div className="text-sm text-muted-foreground">{parent.email} • {parent.relationship}</div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <div className="py-4 text-center text-muted-foreground">
-              <AlertTriangle className="h-5 w-5 mx-auto mb-2" />
-              <p>No parents have access yet. Invite a parent first.</p>
-              <p className="text-xs text-muted-foreground mt-2">Parents will receive reports via email - no login required.</p>
-            </div>
-          )}
+        {/* Custom message */}
+        <div className="space-y-2">
+          <Label htmlFor="custom-message">Add a Personal Message (Optional)</Label>
+          <Textarea
+            id="custom-message"
+            placeholder="Add a personal message to include in the report..."
+            value={customMessage}
+            onChange={(e) => setCustomMessage(e.target.value)}
+            className="min-h-[100px]"
+          />
         </div>
         
         <Separator />
         
-        {/* Recurring settings */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium">Schedule Recurring Reports</h3>
-              <p className="text-sm text-muted-foreground">Send reports automatically on a regular schedule</p>
+        {/* AI Insights toggle */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="insights-toggle">Include AI Performance Insights</Label>
+            <div className="text-sm text-muted-foreground">
+              Add AI-generated insights and recommendations based on performance data
             </div>
-            <Switch
-              checked={scheduleRecurring}
-              onCheckedChange={setScheduleRecurring}
+          </div>
+          <Switch
+            id="insights-toggle"
+            checked={includeInsights}
+            onCheckedChange={setIncludeInsights}
+          />
+        </div>
+        
+        <Separator />
+        
+        {/* Parent selection */}
+        <div>
+          <h3 className="text-md font-medium mb-2">Select Recipients</h3>
+          <div className="flex items-center space-x-2 mb-4">
+            <Switch 
+              id="send-to-all"
+              checked={sendToAll}
+              onCheckedChange={(checked) => {
+                setSendToAll(checked);
+                if (checked) {
+                  setSelectedParents([]);
+                }
+              }}
             />
+            <Label 
+              htmlFor="send-to-all"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Send to all parents
+            </Label>
           </div>
           
-          {scheduleRecurring && (
-            <Select 
-              value={recurringFrequency} 
-              onValueChange={(value) => setRecurringFrequency(value as any)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select frequency" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-              </SelectContent>
-            </Select>
+          {!sendToAll && (
+            <div className="space-y-2 mt-4 max-h-[200px] overflow-y-auto p-2 border rounded-md">
+              {parentsLoading ? (
+                <p>Loading parents...</p>
+              ) : parentAccess.length === 0 ? (
+                <p>No parents have been granted access yet.</p>
+              ) : (
+                parentAccess.map((parent: any) => (
+                  <div key={parent.id} className="flex items-center space-x-2 py-2 border-b last:border-0">
+                    <Checkbox 
+                      id={`parent-${parent.id}`}
+                      checked={selectedParents.includes(parent.id)}
+                      onCheckedChange={() => toggleParent(parent.id)}
+                      disabled={!parent.active}
+                    />
+                    <Label 
+                      htmlFor={`parent-${parent.id}`}
+                      className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer ${!parent.active ? 'line-through text-muted-foreground' : ''}`}
+                    >
+                      {parent.name} ({parent.relationship}) 
+                      <div className="text-xs text-muted-foreground mt-1">{parent.email}</div>
+                    </Label>
+                  </div>
+                ))
+              )}
+            </div>
           )}
         </div>
       </CardContent>
-      
-      <CardFooter className="flex justify-between">
-        <Button variant="outline">Preview Report</Button>
+      <CardFooter>
         <Button 
-          onClick={() => generateReportMutation.mutate()}
-          disabled={generateReportMutation.isPending || selectedParents.length === 0 || selectedSections.length === 0}
+          onClick={handleSubmit} 
+          disabled={isSubmitting || selectedSections.length === 0 || (!sendToAll && selectedParents.length === 0)}
+          className="w-full"
         >
-          {generateReportMutation.isPending && (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          )}
-          {!generateReportMutation.isPending && (
-            <Send className="mr-2 h-4 w-4" />
-          )}
-          {scheduleRecurring ? 'Schedule Email Reports' : 'Email Report to Parents'}
+          {isSubmitting ? 'Sending...' : 'Send Performance Report'}
         </Button>
       </CardFooter>
     </Card>
