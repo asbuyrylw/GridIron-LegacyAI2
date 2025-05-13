@@ -99,7 +99,16 @@ const HEIGHT_PERCENT_OF_ADULT = {
 };
 
 // Position recommendations by height range (in inches)
-const POSITION_RECOMMENDATIONS = {
+type PositionRanges = {
+  [key: string]: string[];
+};
+
+type GenderPositions = {
+  male: PositionRanges;
+  female: PositionRanges;
+};
+
+const POSITION_RECOMMENDATIONS: GenderPositions = {
   male: {
     under70: ['Cornerback', 'Running Back', 'Wide Receiver', 'Kicker', 'Punt Returner', 'Slot Receiver', 'Safety'],
     under73: ['Quarterback', 'Running Back', 'Wide Receiver', 'Cornerback', 'Safety', 'Slot Receiver'],
