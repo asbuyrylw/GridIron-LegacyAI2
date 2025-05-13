@@ -13,7 +13,8 @@ import {
   School,
   ClipboardCopy,
   Menu,
-  X
+  X,
+  FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
