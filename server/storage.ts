@@ -397,6 +397,19 @@ export class MemStorage implements IStorage {
   private nutritionPlansMap: Map<number, NutritionPlan>;
   private mealLogsMap: Map<number, MealLog>;
   private aiMealSuggestionsMap: Map<number, AiMealSuggestion>;
+  
+  // External Integrations
+  private readonly externalServiceTokensMap = new Map<number, ExternalServiceToken>();
+  private externalServiceTokenId = 1;
+  
+  private readonly hudlVideosMap = new Map<number, HudlVideo>();
+  private hudlVideoId = 1;
+  
+  private readonly maxPrepsStatsMap = new Map<number, MaxPrepsStats>();
+  private maxPrepsStatsId = 1;
+  
+  private readonly twitterPostsMap = new Map<number, TwitterPost>();
+  private twitterPostId = 1;
   private socialConnectionsMap: Map<number, SocialConnection>;
   private socialPostsMap: Map<number, SocialPost>;
   private socialCommentsMap: Map<number, any>;
