@@ -281,6 +281,18 @@ export function ScheduledReportManager() {
   const getDayOfWeekDisplay = (day: string) => {
     return day.charAt(0).toUpperCase() + day.slice(1);
   };
+  
+  // Format template type for display
+  const formatTemplateType = (templateType: string) => {
+    const types = {
+      weekly_summary: 'Weekly Summary',
+      performance_update: 'Performance Update',
+      training_progress: 'Training Progress',
+      academic_update: 'Academic Update',
+      achievement_notification: 'Achievement Notification'
+    };
+    return types[templateType as keyof typeof types] || templateType;
+  };
 
   // Loading state
   if (isLoading) {
@@ -554,6 +566,11 @@ export function ScheduledReportManager() {
                         <TableCell>
                           <div className="font-medium">{getFrequencyDisplay(report.frequency)}</div>
                           <div className="text-xs text-muted-foreground">{getDayOfWeekDisplay(report.dayOfWeek)}s</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {formatTemplateType(report.templateType || 'weekly_summary')}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">

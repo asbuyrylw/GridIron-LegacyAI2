@@ -1,10 +1,5 @@
-import sgMail from '@sendgrid/mail';
 import { EmailNotificationType } from '../shared/parent-access';
-
-// Initialize SendGrid if API key exists
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-}
+import { sendEmail as sendGridEmail } from './sendgrid';
 
 // Email interface
 interface EmailData {
