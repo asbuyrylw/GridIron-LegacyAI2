@@ -25,6 +25,11 @@ export class LoginStreakService {
     this.streakMap = new Map();
   }
 
+  // Get all streaks for leaderboard
+  getAllStreaks(): LoginStreak[] {
+    return Array.from(this.streakMap.values());
+  }
+
   // Get a user's login streak record
   async getLoginStreak(userId: number): Promise<LoginStreak | undefined> {
     return Array.from(this.streakMap.values()).find(s => s.userId === userId);

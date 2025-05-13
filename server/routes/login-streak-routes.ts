@@ -21,11 +21,11 @@ export function setupLoginStreakRoutes(app: Express) {
   // Get current user's login streak
   app.get("/api/login-streak", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
-      
-      if (!userId) {
+      if (!req.user || !req.user.id) {
         return res.status(400).json({ message: "User ID not found" });
       }
+      
+      const userId = req.user.id;
       
       // Get or create login streak for this user
       let streak = await loginStreakService.getLoginStreak(userId);
@@ -44,11 +44,11 @@ export function setupLoginStreakRoutes(app: Express) {
   // Update login streak (processes a login)
   app.post("/api/login-streak/update", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
-      
-      if (!userId) {
+      if (!req.user || !req.user.id) {
         return res.status(400).json({ message: "User ID not found" });
       }
+      
+      const userId = req.user.id;
       
       // Process the login and update streak
       const updatedStreak = await loginStreakService.processLogin(userId);
@@ -66,8 +66,24 @@ export function setupLoginStreakRoutes(app: Express) {
   // Get login streak leaderboard
   app.get("/api/login-streak/leaderboard", isAuthenticated, async (req, res) => {
     try {
+      if (!req.user || !req.user.id) {
+        return res.status(400).json({ message: "User ID not found" });
+      }
+      
       // Fetch all streaks
-      const allStreaks = Array.from(loginStreakService.getAllStreaks());
+      const allStreaks = loginStreakService.getAllStreaks();
+      
+      // Define the response type
+      interface LeaderboardEntry {
+        id: number;
+        userId: number;
+        currentStreak: number;
+        longestStreak: number;
+        lastLoginDate: string | null;
+        username: string;
+        userType: string;
+        fullName: string;
+      }
       
       // Sort by current streak (descending)
       const leaderboard = allStreaks
@@ -75,18 +91,36 @@ export function setupLoginStreakRoutes(app: Express) {
         .slice(0, 10); // Get top 10
       
       // Get user info for display
-      const leaderboardWithUserInfo = await Promise.all(
-        leaderboard.map(async (streak) => {
+      const leaderboardWithUserInfo: LeaderboardEntry[] = await Promise.all(
+        leaderboard.map(async (streak): Promise<LeaderboardEntry> => {
           try {
             const user = await storage.getUser(streak.userId);
+            
+            if (!user) {
+              return {
+                id: streak.id,
+                userId: streak.userId,
+                currentStreak: streak.currentStreak,
+                longestStreak: streak.longestStreak,
+                lastLoginDate: streak.lastLoginDate,
+                username: 'Unknown',
+                userType: 'unknown',
+                fullName: 'Unknown User'
+              };
+            }
+            
             const athlete = user.userType === 'athlete' 
               ? await storage.getAthlete(streak.userId) 
               : null;
               
             return {
-              ...streak,
-              username: user?.username || 'Unknown',
-              userType: user?.userType || 'unknown',
+              id: streak.id,
+              userId: streak.userId,
+              currentStreak: streak.currentStreak,
+              longestStreak: streak.longestStreak,
+              lastLoginDate: streak.lastLoginDate,
+              username: user.username || 'Unknown',
+              userType: user.userType || 'unknown',
               fullName: athlete 
                 ? `${athlete.firstName} ${athlete.lastName}` 
                 : user.username
@@ -94,7 +128,11 @@ export function setupLoginStreakRoutes(app: Express) {
           } catch (error) {
             console.error("Error getting user info for streak leaderboard:", error);
             return {
-              ...streak,
+              id: streak.id,
+              userId: streak.userId,
+              currentStreak: streak.currentStreak,
+              longestStreak: streak.longestStreak,
+              lastLoginDate: streak.lastLoginDate,
               username: 'Unknown',
               userType: 'unknown',
               fullName: 'Unknown User'

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 
 interface LoginStreak {
@@ -10,11 +10,38 @@ interface LoginStreak {
   streakHistory: { date: string; count: number }[];
 }
 
+// Function to handle the API call with proper TypeScript types
+const fetchLoginStreak = async (): Promise<LoginStreak> => {
+  const response = await apiRequest('/api/login-streak');
+  if (!response.ok) {
+    throw new Error('Failed to fetch login streak data');
+  }
+  return response.json();
+};
+
+// Function to update the login streak
+const updateLoginStreak = async (): Promise<LoginStreak> => {
+  const response = await apiRequest('/api/login-streak/update', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({}) // Empty body but proper JSON format
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to update login streak');
+  }
+  
+  return response.json();
+};
+
 export function useLoginStreak() {
   const { data, isLoading, error, refetch } = useQuery<LoginStreak>({
     queryKey: ['/api/login-streak'],
-    queryFn: () => apiRequest('/api/login-streak').then(r => r.json()),
-    refetchOnWindowFocus: false
+    queryFn: fetchLoginStreak,
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 
   return {
@@ -33,20 +60,15 @@ export function useLoginStreak() {
 }
 
 export function useLoginStreakUpdate() {
-  return async () => {
-    try {
-      const response = await apiRequest('/api/login-streak/update', {
-        method: 'POST'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update login streak');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating login streak:', error);
-      throw error;
+  const queryClient = useQueryClient();
+  
+  const mutation = useMutation({
+    mutationFn: updateLoginStreak,
+    onSuccess: () => {
+      // Invalidate login streak data to force a refetch
+      queryClient.invalidateQueries({ queryKey: ['/api/login-streak'] });
     }
-  };
+  });
+
+  return mutation;
 }

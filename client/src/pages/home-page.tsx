@@ -5,6 +5,8 @@ import { SubscriptionInfo } from "@/components/subscription-info";
 import { Header } from "@/components/layout/header";
 import { CombineMetric } from "@shared/schema";
 import { Redirect } from "wouter";
+import { useEffect } from "react";
+import { useLoginStreakUpdate } from "@/hooks/use-login-streak";
 
 // New Dashboard Components
 import { MilestoneTrackers } from "@/components/dashboard/milestone-trackers";
@@ -17,6 +19,14 @@ import { BellRing, CalendarClock } from "lucide-react";
 export default function HomePage() {
   const { user, isLoading } = useAuth();
   const athleteId = user?.athlete?.id;
+  const updateLoginStreak = useLoginStreakUpdate();
+  
+  // Update login streak when user logs in and reaches the home page
+  useEffect(() => {
+    if (user && !isLoading) {
+      updateLoginStreak.mutate();
+    }
+  }, [user, isLoading, updateLoginStreak]);
   
   const { data: metrics } = useQuery<CombineMetric[]>({
     queryKey: [`/api/athlete/${athleteId}/metrics`],
