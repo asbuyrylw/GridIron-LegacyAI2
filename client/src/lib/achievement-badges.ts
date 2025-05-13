@@ -1,5 +1,5 @@
 // Types
-export type AchievementCategory = 'performance' | 'training' | 'nutrition' | 'profile' | 'social' | 'recruiting' | 'academic';
+export type AchievementCategory = 'performance' | 'training' | 'nutrition' | 'profile' | 'social' | 'recruiting' | 'academic' | 'coach';
 export type TierType = 'bronze' | 'silver' | 'gold' | 'platinum';
 
 export interface Achievement {
@@ -11,6 +11,8 @@ export interface Achievement {
   icon: string;
   progressMax: number;
   pointValue: number;
+  coachOnly?: boolean;
+  unlockMessage?: string; // For video messages that unlock with achievement
 }
 
 // Achievement data
