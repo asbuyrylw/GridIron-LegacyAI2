@@ -65,6 +65,7 @@ function Router() {
         <Route path="/auth" component={AuthPage} />
         {/* Removed parent-view as we're using email-only approach */}
         <Route path="/parent-access-tester" component={ParentAccessTester} />
+        <Route path="/parent-notification-tester" component={ParentNotificationTester} />
         <Route path="/websocket-tester" component={WebSocketTester} />
         
         {/* Landing Pages */}
