@@ -7,10 +7,10 @@ import { ParentAccessList } from "@/components/parent-access-list";
 import { ParentReportGenerator } from "@/components/parent-report-generator";
 import { NutritionShoppingListGenerator } from "@/components/nutrition-shopping-list-generator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Mail, Shield, FileText, ShoppingBag } from "lucide-react";
+import { AlertCircle, Mail, Shield, FileText, ShoppingBag, Calendar, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 
 export default function ParentManagementPage() {
@@ -151,7 +151,7 @@ export default function ParentManagementPage() {
         </TabsContent>
         
         <TabsContent value="reports" className="space-y-4">
-          <ParentReportGenerator athleteId={athlete.id} />
+          <ParentReportGenerator />
           
           <Card>
             <CardHeader>
@@ -177,11 +177,20 @@ export default function ParentManagementPage() {
                 Only parents who have been given access will receive reports.
               </p>
             </CardContent>
+            <CardFooter>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/parent-reports">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Configure Scheduled Reports
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </CardFooter>
           </Card>
         </TabsContent>
         
         <TabsContent value="nutrition" className="space-y-4">
-          <NutritionShoppingListGenerator athleteId={athlete.id} />
+          <NutritionShoppingListGenerator />
           
           <Card>
             <CardHeader>

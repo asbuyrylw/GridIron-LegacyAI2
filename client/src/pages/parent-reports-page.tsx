@@ -1,11 +1,17 @@
 import { useState } from 'react';
 import { ParentReportGenerator } from '@/components/parent-report-generator';
 import { ScheduledReportManager } from '@/components/scheduled-report-manager';
+import { ScheduledReportProcessor } from '@/components/scheduled-report-processor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function ParentReportsPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.userType === 'admin' || user?.userType === 'coach';
+  
   const [lastSentReport, setLastSentReport] = useState<{
     successfulSends: any[];
     failedSends: any[];
@@ -37,9 +43,10 @@ export default function ParentReportsPage() {
       </Alert>
       
       <Tabs defaultValue="manual" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="manual">Send Manual Report</TabsTrigger>
           <TabsTrigger value="schedule">Schedule Automatic Reports</TabsTrigger>
+          <TabsTrigger value="process">Process Reports</TabsTrigger>
         </TabsList>
         
         <TabsContent value="manual" className="mt-6">
@@ -84,6 +91,20 @@ export default function ParentReportsPage() {
         
         <TabsContent value="schedule" className="mt-6">
           <ScheduledReportManager />
+        </TabsContent>
+        
+        <TabsContent value="process" className="mt-6">
+          <div className="space-y-6">
+            <div className="bg-amber-50 border border-amber-200 p-4 rounded-md">
+              <h3 className="text-amber-800 font-medium text-sm">Development Feature</h3>
+              <p className="text-sm text-amber-700 mt-1">
+                This tab allows you to manually trigger the processing of scheduled reports for testing purposes. 
+                In production, these reports would be automatically processed by a scheduled task.
+              </p>
+            </div>
+            
+            <ScheduledReportProcessor />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

@@ -1,210 +1,198 @@
-import React from "react";
-import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Loader2, Mail } from "lucide-react";
+import { useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { apiRequest } from '@/lib/queryClient';
+import { 
+  Form, 
+  FormControl, 
+  FormDescription, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from '@/components/ui/form';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Loader2, Send } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
-// Form validation schema
 const inviteSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  relationship: z.string().min(1, { message: "Please select a relationship" }),
-  receiveUpdates: z.boolean().default(true),
-  receiveNutritionInfo: z.boolean().default(true),
+  parentName: z.string().min(1, 'Parent name is required'),
+  email: z.string().email('Invalid email address'),
+  relationship: z.string().min(1, 'Relationship is required')
 });
 
 type InviteFormValues = z.infer<typeof inviteSchema>;
 
 export function InviteParentForm() {
+  const { user } = useAuth();
   const { toast } = useToast();
-  
-  // Define form with validation
+  const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const athleteId = user?.athlete?.id;
+
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      relationship: "",
-      receiveUpdates: true,
-      receiveNutritionInfo: true
-    },
+      parentName: '',
+      email: '',
+      relationship: 'Parent'
+    }
   });
-  
-  // Mutation for sending invitation
-  const inviteMutation = useMutation({
-    mutationFn: async (data: InviteFormValues) => {
-      const response = await apiRequest("POST", "/api/athlete/parent-invite", data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/athlete", "parent-access"] });
+
+  const onSubmit = async (values: InviteFormValues) => {
+    if (!athleteId) {
       toast({
-        title: "Invitation sent",
-        description: "Your parent/guardian will receive updates via email. No login portal is needed as all information is sent directly to their inbox.",
+        title: 'Error',
+        description: 'You must be logged in as an athlete to invite parents',
+        variant: 'destructive'
       });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch(`/api/athlete/${athleteId}/parent-invite`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: values.parentName,
+          email: values.email,
+          relationship: values.relationship
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send invite');
+      }
+
+      const data = await response.json();
+      
+      toast({
+        title: 'Invitation Sent',
+        description: `An email invitation has been sent to ${values.email}`,
+      });
+
+      // Invalidate parent access query to refresh the list
+      queryClient.invalidateQueries({
+        queryKey: [`/api/athlete/${athleteId}/parent-access`],
+      });
+      
       form.reset();
-    },
-    onError: (error: Error) => {
+    } catch (error: any) {
       toast({
-        title: "Failed to send invitation",
-        description: error.message,
-        variant: "destructive",
+        title: 'Error',
+        description: error.message || 'An unexpected error occurred',
+        variant: 'destructive'
       });
-    },
-  });
-  
-  // Form submission handler
-  function onSubmit(data: InviteFormValues) {
-    inviteMutation.mutate(data);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!athleteId) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <p>You need to be logged in as an athlete to invite parents.</p>
+        </CardContent>
+      </Card>
+    );
   }
-  
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Name field */}
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Parent/Guardian Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter full name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        {/* Email field */}
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email Address</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="parent@example.com" {...field} />
-              </FormControl>
-              <FormDescription>
-                We'll send performance updates and reports directly to this email. No account or login required - parents receive everything via email only.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        {/* Relationship field */}
-        <FormField
-          control={form.control}
-          name="relationship"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Relationship</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select relationship" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Mother">Mother</SelectItem>
-                  <SelectItem value="Father">Father</SelectItem>
-                  <SelectItem value="Stepmother">Stepmother</SelectItem>
-                  <SelectItem value="Stepfather">Stepfather</SelectItem>
-                  <SelectItem value="Guardian">Legal Guardian</SelectItem>
-                  <SelectItem value="Grandparent">Grandparent</SelectItem>
-                  <SelectItem value="Other">Other Family Member</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        {/* Notification options */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium">Notification Options</h3>
-          
-          <FormField
-            control={form.control}
-            name="receiveUpdates"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Performance Updates</FormLabel>
+    <Card>
+      <CardHeader>
+        <CardTitle>Invite a Parent or Guardian</CardTitle>
+        <CardDescription>
+          Send an invitation email to your parent or guardian to allow them to receive performance updates
+        </CardDescription>
+      </CardHeader>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="parentName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Parent/Guardian Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter full name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email Address</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="parent@example.com" {...field} />
+                  </FormControl>
                   <FormDescription>
-                    Receive email notifications about performance milestones and achievements.
+                    Updates will be sent to this email address
                   </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="relationship"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Relationship</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Parent, Guardian, Coach, etc." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
           
-          <FormField
-            control={form.control}
-            name="receiveNutritionInfo"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Nutrition Shopping Lists</FormLabel>
-                  <FormDescription>
-                    Receive shopping lists based on nutrition plan recommendations.
-                  </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <Button type="submit" className="w-full" disabled={inviteMutation.isPending}>
-          {inviteMutation.isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Sending Invitation...
-            </>
-          ) : (
-            <>
-              <Mail className="mr-2 h-4 w-4" />
-              Send Invitation
-            </>
-          )}
-        </Button>
-      </form>
-    </Form>
+          <CardFooter>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="w-full"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending Invitation...
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  Send Invitation
+                </>
+              )}
+            </Button>
+          </CardFooter>
+        </form>
+      </Form>
+    </Card>
   );
 }
