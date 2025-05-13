@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ReloadIcon, TwitterLogoIcon, Pencil2Icon } from "@radix-ui/react-icons";
-import { SiHudl, SiMaxcdn } from "react-icons/si";
+import { ReloadIcon } from "@radix-ui/react-icons";
+import { FaTwitter, FaPlusCircle } from "react-icons/fa";
+import { SiHuawei, SiMakerbot } from "react-icons/si";
 import { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
@@ -263,15 +264,15 @@ export function IntegrationStatus() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="twitter">
-            <TwitterLogoIcon className="mr-2 h-4 w-4" />
+            <FaTwitter className="mr-2 h-4 w-4" />
             Twitter
           </TabsTrigger>
           <TabsTrigger value="hudl">
-            <SiHudl className="mr-2 h-4 w-4" />
+            <SiHuawei className="mr-2 h-4 w-4" />
             Hudl
           </TabsTrigger>
           <TabsTrigger value="maxpreps">
-            <SiMaxcdn className="mr-2 h-4 w-4" />
+            <SiMakerbot className="mr-2 h-4 w-4" />
             MaxPreps
           </TabsTrigger>
         </TabsList>
@@ -280,7 +281,7 @@ export function IntegrationStatus() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <TwitterLogoIcon className="mr-2 h-5 w-5 text-blue-500" />
+                <FaTwitter className="mr-2 h-5 w-5 text-blue-500" />
                 Twitter Integration
               </CardTitle>
               <CardDescription>
@@ -344,7 +345,7 @@ export function IntegrationStatus() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <SiHudl className="mr-2 h-5 w-5 text-orange-500" />
+                <SiHuawei className="mr-2 h-5 w-5 text-orange-500" />
                 Hudl Integration
               </CardTitle>
               <CardDescription>
@@ -420,7 +421,7 @@ export function IntegrationStatus() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <SiMaxcdn className="mr-2 h-5 w-5 text-red-500" />
+                <SiMakerbot className="mr-2 h-5 w-5 text-red-500" />
                 MaxPreps Integration
               </CardTitle>
               <CardDescription>
