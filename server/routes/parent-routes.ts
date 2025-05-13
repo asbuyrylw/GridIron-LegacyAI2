@@ -710,11 +710,16 @@ router.post('/api/athlete/:athleteId/achievement-notification', async (req: Requ
       message: `Achievement notifications sent to ${successfulSends.length} parents`,
       successfulSends,
       failedSends,
-      notifiedAchievements: achievements.map(a => ({
-        id: a.achievementId,
-        name: a.name,
-        level: a.level
-      }))
+      notifiedAchievements: achievements.map(a => {
+        // Map the data we need for the response - making sure to handle potentially missing fields
+        return {
+          id: a.achievementId,
+          // Use the string achievement ID if available, otherwise use the numeric ID
+          achievementId: a.achievementStringId || `achievement-${a.achievementId}`,
+          progress: a.progress,
+          completed: a.completed
+        };
+      })
     });
   } catch (error) {
     console.error('Error sending achievement notifications:', error);

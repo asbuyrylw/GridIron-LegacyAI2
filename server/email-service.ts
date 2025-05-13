@@ -40,10 +40,45 @@ class EmailService {
     }
 
     try {
-      await sgMail.send(emailData);
+      // Set default text content if only HTML is provided
+      if (!emailData.text && emailData.html) {
+        // Simple HTML to text conversion (not perfect but helps with plain text fallback)
+        const textContent = emailData.html
+          .replace(/<[^>]*>/g, '') // Remove HTML tags
+          .replace(/\s+/g, ' ')    // Normalize whitespace
+          .trim();                 // Trim unnecessary whitespace
+        
+        emailData.text = textContent;
+      }
+
+      // Always ensure we have a from address
+      if (!emailData.from) {
+        emailData.from = this.fromEmail;
+      }
+
+      // Send email via SendGrid
+      const response = await sgMail.send(emailData);
+      
+      // Log success with message ID if available
+      if (response && response[0] && response[0].headers) {
+        console.log(`Email sent successfully to ${emailData.to}. Status: ${response[0].statusCode}`);
+      } else {
+        console.log(`Email sent successfully to ${emailData.to}`);
+      }
+      
       return true;
-    } catch (error) {
-      console.error('SendGrid error:', error);
+    } catch (error: any) {
+      // Enhanced error logging with SendGrid response details if available
+      console.error('SendGrid error sending email to', emailData.to);
+      
+      if (error.response) {
+        console.error(`Status code: ${error.response.statusCode}`);
+        console.error(`Body: ${JSON.stringify(error.response.body)}`);
+        console.error(`Headers: ${JSON.stringify(error.response.headers)}`);
+      } else {
+        console.error(error);
+      }
+      
       return false;
     }
   }
