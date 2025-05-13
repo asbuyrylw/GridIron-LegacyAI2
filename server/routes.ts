@@ -14,6 +14,7 @@ import { emailTestRouter } from "./routes/email-test-route";
 import { emailNotificationTestRouter } from "./routes/email-notification-test-route";
 import { growthPredictionRouter } from "./routes/growth-prediction-routes";
 import { registerExternalIntegrationsRoutes } from "./routes/external-integrations-routes";
+import footballIqRoutes from "./routes/football-iq-routes";
 import { Router } from "express";
 
 // Extend the Express Session type to include our onboarding progress

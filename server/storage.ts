@@ -77,6 +77,29 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
   
+  // Football IQ Methods
+  getFootballIqQuizzes(filters?: any): Promise<any[]>;
+  getFootballIqQuiz(id: number): Promise<any | undefined>;
+  createFootballIqQuiz(quiz: any): Promise<any>;
+  updateFootballIqQuiz(id: number, updates: any): Promise<any | undefined>;
+  deleteFootballIqQuiz(id: number): Promise<boolean>;
+  
+  getFootballIqQuestions(quizId: number): Promise<any[]>;
+  getFootballIqQuestion(id: number): Promise<any | undefined>;
+  createFootballIqQuestion(question: any): Promise<any>;
+  updateFootballIqQuestion(id: number, updates: any): Promise<any | undefined>;
+  deleteFootballIqQuestion(id: number): Promise<boolean>;
+  
+  getFootballIqQuizAttempts(filters?: any): Promise<any[]>;
+  getFootballIqQuizAttempt(id: number): Promise<any | undefined>;
+  createFootballIqQuizAttempt(attempt: any): Promise<any>;
+  updateFootballIqQuizAttempt(id: number, updates: any): Promise<any | undefined>;
+  completeFootballIqQuizAttempt(id: number, answers: any[], timeSpent: number): Promise<any | undefined>;
+  
+  getFootballIqProgress(athleteId: number, position?: string): Promise<any[]>;
+  getFootballIqProgressById(id: number): Promise<any | undefined>;
+  updateFootballIqProgress(athleteId: number, position: string, quizResult: any): Promise<any>;
+  
   // Parent Access (read-only)
   createParentAccess(parentAccess: InsertParentAccess): Promise<ParentAccess>;
   getParentAccessByEmail(email: string, athleteId: number): Promise<ParentAccess | undefined>;

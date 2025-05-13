@@ -6,6 +6,7 @@ import { createTestUsers } from "./create-test-users";
 import { seedAchievements } from "./seed-achievements";
 import { seedLeaderboards } from "./leaderboard-storage";
 import { storage } from "./storage";
+import { extendMemStorageWithFootballIq } from "./football-iq-storage";
 
 const app = express();
 app.use(express.json());
@@ -61,6 +62,10 @@ app.use((req, res, next) => {
   await seedLeaderboards(storage).catch(err => {
     console.error('Error seeding leaderboards:', err);
   });
+  
+  // Initialize Football IQ storage methods
+  extendMemStorageWithFootballIq(storage);
+  console.log('Football IQ assessment system initialized');
   
   // Initialize external integration services
   try {
