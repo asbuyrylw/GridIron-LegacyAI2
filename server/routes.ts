@@ -99,6 +99,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Growth prediction routes
   app.use('/api/athlete', growthPredictionRouter);
   
+  // Football IQ assessment routes
+  app.use(footballIqRoutes);
+  
   // External Integrations routes (Twitter, Hudl, MaxPreps)
   registerExternalIntegrationsRoutes(app);
   

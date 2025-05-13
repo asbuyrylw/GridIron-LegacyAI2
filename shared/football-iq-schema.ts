@@ -1,196 +1,202 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, real, date, jsonb } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
+import { z } from 'zod';
+import { createInsertSchema } from 'drizzle-zod';
+import { type Json } from 'drizzle-orm';
 
-// Football IQ quiz difficulty levels
-export const quizDifficultyLevels = ['beginner', 'intermediate', 'advanced', 'expert'] as const;
-export type QuizDifficultyLevel = (typeof quizDifficultyLevels)[number];
+// ===== CONSTANTS =====
 
-// Football IQ level classifications
-export const iqLevelClassifications = ['rookie', 'developing', 'proficient', 'veteran', 'elite'] as const;
-export type IqLevelClassification = (typeof iqLevelClassifications)[number];
-
-// Question types
-export const questionTypes = ['multiple_choice', 'true_false', 'scenario_based', 'diagram'] as const;
-export type QuestionType = (typeof questionTypes)[number];
-
-// Football positions for position-specific quizzes
+// Define the possible football positions for quizzes
 export const footballPositions = [
-  'Quarterback (QB)', 
-  'Running Back (RB)', 
-  'Wide Receiver (WR)', 
-  'Tight End (TE)', 
+  'Quarterback (QB)',
+  'Running Back (RB)',
+  'Wide Receiver (WR)',
+  'Tight End (TE)',
   'Offensive Line (OL)',
-  'Defensive Line (DL)', 
-  'Linebacker (LB)', 
-  'Cornerback (CB)', 
-  'Safety (S)', 
-  'Special Teams'
+  'Defensive Line (DL)',
+  'Linebacker (LB)',
+  'Cornerback (CB)',
+  'Safety (S)',
+  'Special Teams (ST)',
+  'General Football Knowledge'
 ] as const;
-export type FootballPosition = (typeof footballPositions)[number];
 
-// Quiz categories
+// Define the difficulty levels for quizzes
+export const quizDifficultyLevels = [
+  'beginner',
+  'intermediate',
+  'advanced',
+  'elite'
+] as const;
+
+// Define the categories for quizzes
 export const quizCategories = [
   'rules',
   'strategy',
-  'position_fundamentals',
-  'situational_awareness',
-  'play_recognition',
-  'terminology',
-  'game_management'
+  'position-specific',
+  'situational',
+  'play-recognition',
+  'football-history',
+  'football-terminology',
+  'team-concepts',
+  'mental-toughness'
 ] as const;
-export type QuizCategory = (typeof quizCategories)[number];
 
-// Football IQ Quiz schema
-export interface FootballIqQuiz {
-  id: number;
-  title: string;
-  description: string;
-  position: FootballPosition | null; // null means applicable to all positions
-  difficulty: QuizDifficultyLevel;
-  category: QuizCategory;
-  timeLimit: number | null; // in seconds, null means no time limit
-  passingScore: number; // minimum percentage to pass
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  createdBy: number; // userId of creator (coach or admin)
-  questions: FootballIqQuestion[];
-}
+// Define the types of questions
+export const questionTypes = [
+  'multiple-choice',
+  'true-false',
+  'diagram-based',
+  'video-analysis',
+  'play-recognition'
+] as const;
 
-export const insertFootballIqQuizSchema = z.object({
-  title: z.string().min(3).max(100),
-  description: z.string().max(500),
-  position: z.enum(footballPositions).nullable(),
-  difficulty: z.enum(quizDifficultyLevels),
-  category: z.enum(quizCategories),
-  timeLimit: z.number().nullable(),
-  passingScore: z.number().min(0).max(100),
-  isActive: z.boolean().default(true),
-  createdBy: z.number(),
+// ===== QUIZ SCHEMAS =====
+
+// Define the schema for a quiz option
+export const footballIqQuizOptionSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+  isCorrect: z.boolean(),
+  explanation: z.string().optional()
 });
 
-export type InsertFootballIqQuiz = z.infer<typeof insertFootballIqQuizSchema>;
-
-// Football IQ Question schema
-export interface FootballIqQuestion {
-  id: number;
-  quizId: number; 
-  questionText: string;
-  questionType: QuestionType;
-  options: {
-    id: string;
-    text: string;
-    isCorrect: boolean;
-    explanation?: string;
-  }[];
-  points: number;
-  imageUrl?: string | null;
-  diagramData?: any | null; // For storing play diagrams or illustrations
-  orderIndex: number; // For ordering questions
-}
-
-export const insertFootballIqQuestionSchema = z.object({
+// Define the schema for a quiz question
+export const footballIqQuestionSchema = z.object({
+  id: z.number(),
   quizId: z.number(),
-  questionText: z.string().min(3).max(500),
+  questionText: z.string().min(5, "Question text is too short"),
   questionType: z.enum(questionTypes),
-  options: z.array(z.object({
-    id: z.string(),
-    text: z.string(),
-    isCorrect: z.boolean(),
-    explanation: z.string().optional(),
-  })).min(2),
-  points: z.number().min(1).default(1),
-  imageUrl: z.string().url().nullable().optional(),
+  options: z.array(footballIqQuizOptionSchema),
+  imageUrl: z.string().nullable().optional(),
   diagramData: z.any().nullable().optional(),
-  orderIndex: z.number().default(0),
+  videoUrl: z.string().nullable().optional(),
+  explanation: z.string().nullable().optional(),
+  orderIndex: z.number().optional(),
+  points: z.number().default(1),
+  difficulty: z.enum(quizDifficultyLevels).optional()
 });
+
+// Create an insert schema for questions
+export const insertFootballIqQuestionSchema = footballIqQuestionSchema
+  .omit({ id: true });
 
 export type InsertFootballIqQuestion = z.infer<typeof insertFootballIqQuestionSchema>;
+export type FootballIqQuestion = z.infer<typeof footballIqQuestionSchema>;
+export type FootballIqQuizOption = z.infer<typeof footballIqQuizOptionSchema>;
 
-// Football IQ Quiz Attempt schema
-export interface FootballIqQuizAttempt {
-  id: number;
-  athleteId: number;
-  quizId: number;
-  startedAt: Date;
-  completedAt: Date | null;
-  score: number | null; // Percentage score 0-100
-  timeSpent: number | null; // in seconds
-  iqLevel: IqLevelClassification | null; // Classification based on score
-  isPassed: boolean | null;
-  answers: {
-    questionId: number;
-    selectedOptionId: string;
-    isCorrect: boolean;
-    timeSpent?: number; // time spent on this question in seconds
-  }[];
-}
+// Define the schema for a quiz
+export const footballIqQuizSchema = z.object({
+  id: z.number(),
+  title: z.string().min(3, "Title is too short"),
+  description: z.string().optional().nullable(),
+  position: z.enum(footballPositions),
+  difficulty: z.enum(quizDifficultyLevels),
+  category: z.enum(quizCategories),
+  questions: z.array(footballIqQuestionSchema).default([]),
+  timeLimit: z.number().optional().nullable(),
+  passingScore: z.number().default(70),
+  createdBy: z.number(),
+  createdAt: z.date().default(() => new Date()),
+  updatedAt: z.date().optional(),
+  isActive: z.boolean().default(true),
+  tags: z.array(z.string()).optional().nullable()
+});
 
-export const insertFootballIqQuizAttemptSchema = z.object({
+// Create an insert schema for quizzes
+export const insertFootballIqQuizSchema = footballIqQuizSchema
+  .omit({ id: true, questions: true, createdAt: true, updatedAt: true })
+  .extend({
+    description: z.string().optional(),
+    timeLimit: z.number().optional(),
+    tags: z.array(z.string()).optional()
+  });
+
+export type InsertFootballIqQuiz = z.infer<typeof insertFootballIqQuizSchema>;
+export type FootballIqQuiz = z.infer<typeof footballIqQuizSchema>;
+
+// ===== QUIZ ATTEMPT SCHEMAS =====
+
+// Define the schema for a quiz answer
+export const footballIqAnswerSchema = z.object({
+  questionId: z.number(),
+  selectedOptionId: z.string(),
+  isCorrect: z.boolean().optional(),
+  timeSpent: z.number().optional()
+});
+
+export type FootballIqAnswer = z.infer<typeof footballIqAnswerSchema>;
+
+// Define the schema for a quiz attempt
+export const footballIqQuizAttemptSchema = z.object({
+  id: z.number(),
   athleteId: z.number(),
   quizId: z.number(),
-  startedAt: z.date().default(() => new Date()),
+  startedAt: z.date(),
   completedAt: z.date().nullable().optional(),
-  score: z.number().min(0).max(100).nullable().optional(),
+  answers: z.array(footballIqAnswerSchema).default([]),
+  score: z.number().nullable().optional(),
   timeSpent: z.number().nullable().optional(),
-  iqLevel: z.enum(iqLevelClassifications).nullable().optional(),
-  isPassed: z.boolean().nullable().optional(),
-  answers: z.array(z.object({
-    questionId: z.number(),
-    selectedOptionId: z.string(),
-    isCorrect: z.boolean(),
-    timeSpent: z.number().optional(),
-  })).optional().default([]),
+  isPassed: z.boolean().nullable().optional()
 });
+
+// Create an insert schema for quiz attempts
+export const insertFootballIqQuizAttemptSchema = footballIqQuizAttemptSchema
+  .omit({ id: true, answers: true, score: true, isPassed: true })
+  .extend({
+    completedAt: z.date().optional()
+  });
 
 export type InsertFootballIqQuizAttempt = z.infer<typeof insertFootballIqQuizAttemptSchema>;
+export type FootballIqQuizAttempt = z.infer<typeof footballIqQuizAttemptSchema>;
 
-// Football IQ Progress schema
-export interface FootballIqProgress {
-  id: number;
-  athleteId: number;
-  position: FootballPosition;
-  currentIqLevel: IqLevelClassification;
-  quizzesCompleted: number;
-  quizzesPassed: number;
-  totalScore: number; // accumulated points
-  averageScore: number; // average percentage score
-  lastAttemptAt: Date | null;
-  history: {
-    date: string;
-    quizId: number;
-    quizTitle: string;
-    score: number;
-    iqLevel: IqLevelClassification;
-  }[];
+// ===== PROGRESS SCHEMAS =====
+
+// Define the IQ levels
+export const iqLevels = [
+  'novice',        // 0-30
+  'developing',    // 31-50
+  'competent',     // 51-70
+  'proficient',    // 71-85
+  'expert',        // 86-95
+  'master'         // 96-100
+] as const;
+
+// Function to calculate IQ level based on score
+export function calculateIqLevel(score: number): typeof iqLevels[number] {
+  if (score <= 30) return 'novice';
+  if (score <= 50) return 'developing';
+  if (score <= 70) return 'competent';
+  if (score <= 85) return 'proficient';
+  if (score <= 95) return 'expert';
+  return 'master';
 }
 
-export const insertFootballIqProgressSchema = z.object({
+// Define the schema for Football IQ progress
+export const footballIqProgressSchema = z.object({
+  id: z.number(),
   athleteId: z.number(),
   position: z.enum(footballPositions),
-  currentIqLevel: z.enum(iqLevelClassifications).default('rookie'),
+  score: z.number().min(0).max(100),
+  level: z.enum(iqLevels),
   quizzesCompleted: z.number().default(0),
   quizzesPassed: z.number().default(0),
-  totalScore: z.number().default(0),
-  averageScore: z.number().default(0),
-  lastAttemptAt: z.date().nullable(),
-  history: z.array(z.object({
-    date: z.string(),
-    quizId: z.number(),
-    quizTitle: z.string(),
-    score: z.number(),
-    iqLevel: z.enum(iqLevelClassifications),
-  })).optional().default([]),
+  lastQuizId: z.number().nullable().optional(),
+  lastQuizScore: z.number().nullable().optional(),
+  lastUpdated: z.date().default(() => new Date()),
+  recommendations: z.string().array().optional().nullable(),
+  strengthAreas: z.string().array().optional().nullable(),
+  weaknessAreas: z.string().array().optional().nullable(),
+  scoreHistory: z.array(
+    z.object({
+      date: z.date(),
+      score: z.number(),
+      quizId: z.number()
+    })
+  ).optional().nullable()
 });
 
-export type InsertFootballIqProgress = z.infer<typeof insertFootballIqProgressSchema>;
+// Create an insert schema for progress
+export const insertFootballIqProgressSchema = footballIqProgressSchema
+  .omit({ id: true, lastUpdated: true });
 
-// Helper functions
-export function calculateIqLevel(score: number): IqLevelClassification {
-  if (score >= 90) return 'elite';
-  if (score >= 80) return 'veteran';
-  if (score >= 70) return 'proficient';
-  if (score >= 60) return 'developing';
-  return 'rookie';
-}
+export type InsertFootballIqProgress = z.infer<typeof insertFootballIqProgressSchema>;
+export type FootballIqProgress = z.infer<typeof footballIqProgressSchema>;

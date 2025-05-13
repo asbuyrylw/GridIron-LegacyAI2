@@ -78,27 +78,93 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   
   // Football IQ Methods
-  getFootballIqQuizzes(filters?: any): Promise<any[]>;
-  getFootballIqQuiz(id: number): Promise<any | undefined>;
-  createFootballIqQuiz(quiz: any): Promise<any>;
-  updateFootballIqQuiz(id: number, updates: any): Promise<any | undefined>;
+  getFootballIqQuizzes(filters?: {
+    position?: string;
+    difficulty?: string;
+    category?: string;
+    isActive?: boolean;
+    createdBy?: number;
+  }): Promise<import('../shared/football-iq-schema').FootballIqQuiz[]>;
+  
+  getFootballIqQuiz(id: number): Promise<import('../shared/football-iq-schema').FootballIqQuiz | undefined>;
+  
+  createFootballIqQuiz(
+    quiz: import('../shared/football-iq-schema').InsertFootballIqQuiz
+  ): Promise<import('../shared/football-iq-schema').FootballIqQuiz>;
+  
+  updateFootballIqQuiz(
+    id: number, 
+    updates: Partial<import('../shared/football-iq-schema').InsertFootballIqQuiz>
+  ): Promise<import('../shared/football-iq-schema').FootballIqQuiz | undefined>;
+  
   deleteFootballIqQuiz(id: number): Promise<boolean>;
   
-  getFootballIqQuestions(quizId: number): Promise<any[]>;
-  getFootballIqQuestion(id: number): Promise<any | undefined>;
-  createFootballIqQuestion(question: any): Promise<any>;
-  updateFootballIqQuestion(id: number, updates: any): Promise<any | undefined>;
+  getFootballIqQuestions(
+    quizId: number
+  ): Promise<import('../shared/football-iq-schema').FootballIqQuestion[]>;
+  
+  getFootballIqQuestion(
+    id: number
+  ): Promise<import('../shared/football-iq-schema').FootballIqQuestion | undefined>;
+  
+  createFootballIqQuestion(
+    question: import('../shared/football-iq-schema').InsertFootballIqQuestion
+  ): Promise<import('../shared/football-iq-schema').FootballIqQuestion>;
+  
+  updateFootballIqQuestion(
+    id: number, 
+    updates: Partial<import('../shared/football-iq-schema').InsertFootballIqQuestion>
+  ): Promise<import('../shared/football-iq-schema').FootballIqQuestion | undefined>;
+  
   deleteFootballIqQuestion(id: number): Promise<boolean>;
   
-  getFootballIqQuizAttempts(filters?: any): Promise<any[]>;
-  getFootballIqQuizAttempt(id: number): Promise<any | undefined>;
-  createFootballIqQuizAttempt(attempt: any): Promise<any>;
-  updateFootballIqQuizAttempt(id: number, updates: any): Promise<any | undefined>;
-  completeFootballIqQuizAttempt(id: number, answers: any[], timeSpent: number): Promise<any | undefined>;
+  getFootballIqQuizAttempts(
+    filters: {
+      athleteId: number;
+      quizId?: number;
+      isPassed?: boolean;
+      recent?: boolean;
+      limit?: number;
+    }
+  ): Promise<import('../shared/football-iq-schema').FootballIqQuizAttempt[]>;
   
-  getFootballIqProgress(athleteId: number, position?: string): Promise<any[]>;
-  getFootballIqProgressById(id: number): Promise<any | undefined>;
-  updateFootballIqProgress(athleteId: number, position: string, quizResult: any): Promise<any>;
+  getFootballIqQuizAttempt(
+    id: number
+  ): Promise<import('../shared/football-iq-schema').FootballIqQuizAttempt | undefined>;
+  
+  createFootballIqQuizAttempt(
+    attempt: import('../shared/football-iq-schema').InsertFootballIqQuizAttempt
+  ): Promise<import('../shared/football-iq-schema').FootballIqQuizAttempt>;
+  
+  updateFootballIqQuizAttempt(
+    id: number,
+    updates: Partial<import('../shared/football-iq-schema').FootballIqQuizAttempt>
+  ): Promise<import('../shared/football-iq-schema').FootballIqQuizAttempt | undefined>;
+  
+  completeFootballIqQuizAttempt(
+    id: number,
+    answers: (import('../shared/football-iq-schema').FootballIqAnswer & { isCorrect: boolean })[],
+    timeSpent: number
+  ): Promise<import('../shared/football-iq-schema').FootballIqQuizAttempt | undefined>;
+  
+  getFootballIqProgress(
+    athleteId: number,
+    position?: string
+  ): Promise<import('../shared/football-iq-schema').FootballIqProgress[]>;
+  
+  getFootballIqProgressById(
+    id: number
+  ): Promise<import('../shared/football-iq-schema').FootballIqProgress | undefined>;
+  
+  updateFootballIqProgress(
+    athleteId: number,
+    position: string,
+    quizResult: {
+      quizId: number;
+      score: number;
+      isPassed: boolean;
+    }
+  ): Promise<import('../shared/football-iq-schema').FootballIqProgress>;
   
   // Parent Access (read-only)
   createParentAccess(parentAccess: InsertParentAccess): Promise<ParentAccess>;
