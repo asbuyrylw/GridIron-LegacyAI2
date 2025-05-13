@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ParentReportGenerator } from '@/components/parent-report-generator';
+import { ScheduledReportManager } from '@/components/scheduled-report-manager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
@@ -82,21 +83,7 @@ export default function ParentReportsPage() {
         </TabsContent>
         
         <TabsContent value="schedule" className="mt-6">
-          <div className="bg-muted p-8 rounded-lg text-center">
-            <h3 className="text-xl font-medium mb-2">Coming Soon</h3>
-            <p className="mb-4">
-              We're working on making it possible to schedule automated weekly or monthly reports 
-              to be sent to your parents/guardians. This feature will be available soon!
-            </p>
-            <div className="p-4 bg-background rounded-md inline-block">
-              <ul className="text-left list-disc pl-5 space-y-2">
-                <li>Weekly performance summaries</li>
-                <li>Monthly progress reports</li>
-                <li>Achievement notifications</li>
-                <li>Custom reporting schedules</li>
-              </ul>
-            </div>
-          </div>
+          <ScheduledReportManager />
         </TabsContent>
       </Tabs>
     </div>
