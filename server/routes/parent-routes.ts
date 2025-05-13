@@ -10,14 +10,11 @@ const router = Router();
 
 // Schema for parent report request
 const parentReportSchema = z.object({
-  athleteId: z.number(),
-  parentIds: z.array(z.number()),
-  reportType: z.enum(['full', 'summary']),
-  startDate: z.string().datetime(),
-  endDate: z.string().datetime(),
   sections: z.array(z.string()),
-  recurring: z.boolean(),
-  recurringFrequency: z.enum(['weekly', 'biweekly', 'monthly']).optional(),
+  customMessage: z.string().optional(),
+  parentIds: z.array(z.number()).optional(),
+  sendToAll: z.boolean().default(false),
+  includeInsights: z.boolean().default(true),
 });
 
 // Schema for shopping list request
@@ -258,25 +255,24 @@ router.post('/api/athlete/:athleteId/parent-report', async (req: Request, res: R
       return res.status(404).json({ message: 'Athlete not found' });
     }
     
-    // Generate report data
+    // Generate report content
     const reportContent: any = {
       athleteName: `${athlete.firstName} ${athlete.lastName}`,
-      dateRange: {
-        start: new Date(reportData.startDate).toLocaleDateString(),
-        end: new Date(reportData.endDate).toLocaleDateString(),
-      },
-      reportType: reportData.reportType,
+      customMessage: reportData.customMessage,
+      includeInsights: reportData.includeInsights,
+      date: new Date().toISOString(),
       sections: {}
     };
     
     // Include sections based on selection
     if (reportData.sections.includes('performance')) {
       // Get performance metrics
-      const metrics = await storage.getCombineMetrics(athleteId);
+      const metrics = await storage.getCombineMetricsByAthlete(athleteId);
+      const latestMetrics = metrics.length > 0 ? metrics[0] : null;
       
       reportContent.sections.performance = {
         title: 'Performance Metrics',
-        metrics: metrics || {},
+        metrics: latestMetrics || {},
       };
     }
     
@@ -287,8 +283,8 @@ router.post('/api/athlete/:athleteId/parent-report', async (req: Request, res: R
       
       reportContent.sections.training = {
         title: 'Training Summary',
-        sessions: sessions || [],
-        plans: plans || [],
+        sessions: sessions.slice(0, 5) || [], // Include only the 5 most recent sessions
+        plans: plans.filter(p => p.active) || [],
       };
     }
     
@@ -298,7 +294,7 @@ router.post('/api/athlete/:athleteId/parent-report', async (req: Request, res: R
       
       reportContent.sections.nutrition = {
         title: 'Nutrition Overview',
-        plans: nutritionPlans?.map(plan => ({
+        plans: nutritionPlans?.filter(p => p.active).map(plan => ({
           title: plan.title,
           goals: plan.goals,
           startDate: plan.startDate,
@@ -311,7 +307,6 @@ router.post('/api/athlete/:athleteId/parent-report', async (req: Request, res: R
       reportContent.sections.academics = {
         title: 'Academic Progress',
         school: athlete.school,
-        grade: athlete.grade,
         gpa: athlete.gpa,
         actScore: athlete.actScore,
       };
@@ -355,45 +350,57 @@ router.post('/api/athlete/:athleteId/parent-report', async (req: Request, res: R
       };
     }
     
-    // Set up recurring reports if requested
-    if (reportData.recurring) {
-      // Store recurring report schedule in database
-      // This is just a placeholder; actual implementation would depend on your scheduling system
-      console.log(`Scheduled recurring ${reportData.recurringFrequency} report for athlete ${athleteId}`);
+    // Determine which parents to send to
+    let parentIdsToSend: number[] = [];
+    const successfulSends: any[] = [];
+    const failedSends: any[] = [];
+    
+    if (reportData.sendToAll) {
+      // Get all parent accesses and use only active ones
+      const parentAccesses = await parentAccessService.getParentAccessesByAthleteId(athleteId);
+      parentIdsToSend = parentAccesses
+        .filter(access => access.active && access.receiveUpdates)
+        .map(access => access.id);
+    } else if (reportData.parentIds && reportData.parentIds.length > 0) {
+      parentIdsToSend = reportData.parentIds;
+    } else {
+      return res.status(400).json({ message: 'No parents selected to receive the report' });
     }
     
     // Send reports to selected parents
-    const successfulSends = [];
-    const failedSends = [];
-    
-    for (const parentId of reportData.parentIds) {
+    for (const parentId of parentIdsToSend) {
       try {
-        // Get all parent accesses for this athlete and find the one matching the parentId
+        // Get parent access info
         const parentAccesses = await parentAccessService.getParentAccessesByAthleteId(athleteId);
         const parentAccess = parentAccesses.find(access => access.id === parentId);
         
         if (!parentAccess || !parentAccess.active) {
           failedSends.push({
             parentId,
+            email: parentAccess?.email || 'unknown',
             reason: "Parent does not have active access"
           });
           continue;
         }
         
         // Send email with report
-        const emailSuccess = await emailService.sendNotification(
-          EmailNotificationType.PERFORMANCE_UPDATE, // Using PERFORMANCE_UPDATE instead of PERFORMANCE_REPORT
+        const emailSuccess = await emailService.sendPerformanceUpdate(
           parentAccess.email,
           parentAccess.name,
           `${athlete.firstName} ${athlete.lastName}`,
-          { stats: reportContent } // Wrapping in stats object as expected by the email service
+          reportContent
         );
         
         if (emailSuccess) {
-          successfulSends.push(parentId);
+          successfulSends.push({
+            parentId,
+            name: parentAccess.name,
+            email: parentAccess.email
+          });
         } else {
           failedSends.push({
             parentId,
+            email: parentAccess.email,
             reason: "Email delivery failed"
           });
         }
@@ -410,8 +417,7 @@ router.post('/api/athlete/:athleteId/parent-report', async (req: Request, res: R
       success: true,
       message: `Report sent to ${successfulSends.length} parents`,
       successfulSends,
-      failedSends,
-      reportContent: reportData.reportType === 'summary' ? null : reportContent,
+      failedSends
     });
   } catch (error) {
     console.error('Error generating parent report:', error);
