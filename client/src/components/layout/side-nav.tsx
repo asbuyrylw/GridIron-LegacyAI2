@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   FileText,
-  Ruler
+  Ruler,
+  Mail
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -103,6 +104,12 @@ export function SideNav() {
       href: "/parent-reports",
       icon: FileText,
       active: location === "/parent-reports"
+    },
+    {
+      label: "Email Test",
+      href: "/email-test",
+      icon: Mail,
+      active: location === "/email-test"
     },
     {
       label: "Profile",
