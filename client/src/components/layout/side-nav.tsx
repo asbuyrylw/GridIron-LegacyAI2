@@ -14,7 +14,8 @@ import {
   ClipboardCopy,
   Menu,
   X,
-  FileText
+  FileText,
+  Ruler
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,12 @@ export function SideNav() {
       href: "/nutrition",
       icon: CandlestickChart,
       active: location === "/nutrition"
+    },
+    {
+      label: "Growth Prediction",
+      href: "/growth-prediction",
+      icon: Ruler,
+      active: location === "/growth-prediction"
     },
     {
       label: "Social",

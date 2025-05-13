@@ -30,7 +30,8 @@ growthPredictionRouter.get("/:athleteId/height-prediction", async (req: Request,
       const isParent = req.session.userType === "parent";
       
       if (isParent) {
-        const relationships = await storage.getParentAthleteRelationships();
+        // Get all parent-athlete relationships
+        const relationships = await storage.query('parentAthleteRelationships');
         const hasAccess = relationships.some((relationship: any) => 
           relationship.parentId === req.session.userId && 
           relationship.athleteId === athleteId && 
@@ -85,7 +86,8 @@ growthPredictionRouter.post("/:athleteId/height-prediction", async (req: Request
     
     // Notify parents about the updated growth prediction if the athlete has parents
     try {
-      const relationships = await storage.getParentAthleteRelationships();
+      // Get all parent-athlete relationships
+      const relationships = await storage.query('parentAthleteRelationships');
       const athleteRelationships = relationships.filter((r: any) => r.athleteId === athleteId);
       
       for (const relationship of athleteRelationships) {
@@ -96,9 +98,7 @@ growthPredictionRouter.post("/:athleteId/height-prediction", async (req: Request
             // Only send the email if the parent has view access
             const growthPrediction = req.body as GrowthPrediction;
             
-            await sendEmail(
-              process.env.SENDGRID_API_KEY || '',
-              {
+            await sendEmail({
                 to: parent.email,
                 from: 'notifications@gridironlegacy.com',
                 subject: `Growth Prediction Update for ${athlete.firstName} ${athlete.lastName}`,
@@ -150,7 +150,8 @@ growthPredictionRouter.get("/:athleteId/height-prediction/report", async (req: R
       const isParent = req.session.userType === "parent";
       
       if (isParent) {
-        const relationships = await storage.getParentAthleteRelationships();
+        // Get all parent-athlete relationships
+        const relationships = await storage.getAll('parentAthleteRelationships');
         const hasAccess = relationships.some((relationship: any) => 
           relationship.parentId === req.session.userId && 
           relationship.athleteId === athleteId && 
