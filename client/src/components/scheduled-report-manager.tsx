@@ -179,9 +179,7 @@ export function ScheduledReportManager() {
   // Mutation to delete report
   const deleteReport = useMutation({
     mutationFn: (id: number) => {
-      return apiRequest(`/api/athlete/${athlete?.id}/scheduled-reports/${id}`, {
-        method: 'DELETE'
-      });
+      return apiRequest('DELETE', `/api/athlete/${athlete?.id}/scheduled-reports/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
