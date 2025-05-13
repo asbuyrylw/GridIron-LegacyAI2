@@ -13,8 +13,11 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
-import { EmailNotificationType } from '../../shared/parent-access';
 import { useForm } from 'react-hook-form';
+import { EmailNotificationType } from '../../shared/parent-access';
+
+// Using the correct enum values from parent-access.ts
+const EMAIL_TYPES = EmailNotificationType;
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Send, Info, Award, Utensils, BookOpen, Dumbbell, Sparkles } from 'lucide-react';
@@ -31,7 +34,7 @@ const parentNotificationSchema = z.object({
 type ParentNotificationFormValues = z.infer<typeof parentNotificationSchema>;
 
 export default function ParentNotificationTester() {
-  const [activeTab, setActiveTab] = useState<EmailNotificationType>(EmailNotificationType.PARENT_INVITE);
+  const [activeTab, setActiveTab] = useState<EmailNotificationType>(EmailNotificationType.INVITE);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{success: boolean, message: string} | null>(null);
 
@@ -82,13 +85,14 @@ export default function ParentNotificationTester() {
   // Get a user-friendly name for notification type
   const getNotificationTypeName = (type: EmailNotificationType): string => {
     const notificationNames: Record<EmailNotificationType, string> = {
-      [EmailNotificationType.PARENT_INVITE]: 'Parent Invitation',
+      [EmailNotificationType.INVITE]: 'Parent Invitation',
       [EmailNotificationType.PERFORMANCE_UPDATE]: 'Performance Update',
       [EmailNotificationType.NUTRITION_SHOPPING_LIST]: 'Nutrition Shopping List',
       [EmailNotificationType.ACHIEVEMENT_NOTIFICATION]: 'Achievement Notification',
       [EmailNotificationType.WEEKLY_SUMMARY]: 'Weekly Summary',
       [EmailNotificationType.TRAINING_PROGRESS]: 'Training Progress',
       [EmailNotificationType.ACADEMIC_UPDATE]: 'Academic Update',
+      [EmailNotificationType.EVENT_REMINDER]: 'Event Reminder',
     };
     
     return notificationNames[type] || 'Notification';
@@ -97,7 +101,7 @@ export default function ParentNotificationTester() {
   // Get icon for each notification type
   const getNotificationIcon = (type: EmailNotificationType) => {
     switch (type) {
-      case EmailNotificationType.PARENT_INVITE:
+      case EmailNotificationType.INVITE:
         return <Info className="h-5 w-5" />;
       case EmailNotificationType.PERFORMANCE_UPDATE:
         return <Sparkles className="h-5 w-5" />;
@@ -111,6 +115,8 @@ export default function ParentNotificationTester() {
         return <Dumbbell className="h-5 w-5" />;
       case EmailNotificationType.ACADEMIC_UPDATE:
         return <BookOpen className="h-5 w-5" />;
+      case EmailNotificationType.EVENT_REMINDER:
+        return <Send className="h-5 w-5" />;
       default:
         return <Send className="h-5 w-5" />;
     }
@@ -119,7 +125,7 @@ export default function ParentNotificationTester() {
   // Generate example data for each notification type
   const getNotificationDescription = (type: EmailNotificationType): string => {
     switch (type) {
-      case EmailNotificationType.PARENT_INVITE:
+      case EmailNotificationType.INVITE:
         return 'Invitation email sent to parents to receive updates about their athlete';
       case EmailNotificationType.PERFORMANCE_UPDATE:
         return 'Performance metrics and insights for the athlete';
@@ -133,6 +139,8 @@ export default function ParentNotificationTester() {
         return 'Updates about the athlete\'s training progress and programs';
       case EmailNotificationType.ACADEMIC_UPDATE:
         return 'Updates about the athlete\'s academic performance';
+      case EmailNotificationType.EVENT_REMINDER:
+        return 'Reminder about upcoming team events or games';
       default:
         return 'Email notification';
     }
@@ -166,8 +174,8 @@ export default function ParentNotificationTester() {
               onValueChange={(value) => setActiveTab(value as EmailNotificationType)}
               className="w-full"
             >
-              <TabsList className="grid grid-cols-4 md:grid-cols-7 mb-4">
-                <TabsTrigger value={EmailNotificationType.PARENT_INVITE}>
+              <TabsList className="grid grid-cols-4 md:grid-cols-8 mb-4">
+                <TabsTrigger value={EmailNotificationType.INVITE}>
                   <span className="hidden md:inline mr-2">Invite</span>
                   <Info className="h-4 w-4 md:hidden" />
                 </TabsTrigger>
@@ -194,6 +202,10 @@ export default function ParentNotificationTester() {
                 <TabsTrigger value={EmailNotificationType.ACADEMIC_UPDATE}>
                   <span className="hidden md:inline mr-2">Academic</span>
                   <BookOpen className="h-4 w-4 md:hidden" />
+                </TabsTrigger>
+                <TabsTrigger value={EmailNotificationType.EVENT_REMINDER}>
+                  <span className="hidden md:inline mr-2">Event</span>
+                  <Send className="h-4 w-4 md:hidden" />
                 </TabsTrigger>
               </TabsList>
               
