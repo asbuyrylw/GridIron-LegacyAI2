@@ -4,6 +4,7 @@ import { Achievement } from "@/lib/achievement-badges";
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from '@/hooks/use-toast';
+import { notifyParentsOfNewAchievements } from '@/lib/parent-notification-service';
 
 export interface AchievementProgress {
   achievementId: string;
@@ -69,6 +70,25 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
           description: `You've unlocked a new achievement.`,
           variant: "default",
         });
+        
+        // If there's an athlete ID, notify parents of the achievement
+        if (user?.athlete?.id) {
+          try {
+            // Send notification to parents
+            notifyParentsOfNewAchievements(user.athlete.id, [data.achievementId])
+              .then(result => {
+                if (result && result.successfulSends && result.successfulSends.length > 0) {
+                  console.log(`Successfully notified ${result.successfulSends.length} parents about the new achievement.`);
+                }
+              })
+              .catch(err => {
+                console.error('Error notifying parents of achievement:', err);
+              });
+          } catch (error) {
+            // Log error but don't block progress or show error to user
+            console.error('Failed to notify parents of achievement:', error);
+          }
+        }
       }
     },
     onError: (error) => {

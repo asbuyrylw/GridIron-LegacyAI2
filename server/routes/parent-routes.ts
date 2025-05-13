@@ -588,6 +588,140 @@ router.get('/api/athlete/:athleteId/nutrition/recommendations', async (req: Requ
   }
 });
 
+// Route to send achievement notifications to parents
+router.post('/api/athlete/:athleteId/achievement-notification', async (req: Request, res: Response) => {
+  try {
+    const athleteId = parseInt(req.params.athleteId);
+    
+    if (!(await validateAthleteAccess(req, athleteId))) {
+      return res.status(403).json({ message: 'Not authorized to send notifications for this athlete' });
+    }
+    
+    // Validate request body
+    const achievementSchema = z.object({
+      achievementIds: z.array(z.string()),
+      parentIds: z.array(z.number()).optional(),
+      sendToAll: z.boolean().default(false)
+    });
+    
+    const validationResult = achievementSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        message: 'Invalid achievement notification data', 
+        errors: validationResult.error.errors 
+      });
+    }
+    
+    const { achievementIds, parentIds, sendToAll } = validationResult.data;
+    
+    if (achievementIds.length === 0) {
+      return res.status(400).json({ message: 'No achievements specified' });
+    }
+    
+    // Fetch athlete data
+    const athlete = await storage.getAthlete(athleteId);
+    if (!athlete) {
+      return res.status(404).json({ message: 'Athlete not found' });
+    }
+    
+    // Get user for full name
+    const user = await storage.getUser(athlete.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    const athleteName = `${athlete.firstName} ${athlete.lastName}`;
+    
+    // Get achievement details
+    const achievements = [];
+    for (const achievementId of achievementIds) {
+      // Get the athlete achievement from our storage
+      const athleteAchievement = await storage.getAthleteAchievementByStringId(athleteId, achievementId);
+      if (athleteAchievement) {
+        // Include the achievement details
+        achievements.push(athleteAchievement);
+      }
+    }
+    
+    if (achievements.length === 0) {
+      return res.status(404).json({ message: 'No valid achievements found' });
+    }
+    
+    // Get parent accesses to send notifications to
+    let targetParentAccesses = [];
+    if (sendToAll) {
+      // Send to all parents with active access
+      targetParentAccesses = await parentAccessService.getParentAccessesByAthleteId(athleteId);
+    } else if (parentIds && parentIds.length > 0) {
+      // Send only to specified parents
+      const allParentAccesses = await parentAccessService.getParentAccessesByAthleteId(athleteId);
+      targetParentAccesses = allParentAccesses.filter(access => 
+        parentIds.includes(access.id) && access.active && access.receiveUpdates
+      );
+    } else {
+      // Default: send to all parents with update permission
+      const allParentAccesses = await parentAccessService.getParentAccessesByAthleteId(athleteId);
+      targetParentAccesses = allParentAccesses.filter(access => 
+        access.active && access.receiveUpdates
+      );
+    }
+    
+    if (targetParentAccesses.length === 0) {
+      return res.status(400).json({ message: 'No eligible parents to receive notifications' });
+    }
+    
+    // Send notifications
+    const successfulSends = [];
+    const failedSends = [];
+    
+    for (const parentAccess of targetParentAccesses) {
+      try {
+        const success = await parentAccessService.sendEmail(
+          parentAccess,
+          EmailNotificationType.ACHIEVEMENT_NOTIFICATION,
+          { achievements }
+        );
+        
+        if (success) {
+          successfulSends.push({
+            parentId: parentAccess.id,
+            email: parentAccess.email,
+            name: parentAccess.name
+          });
+        } else {
+          failedSends.push({
+            parentId: parentAccess.id,
+            email: parentAccess.email,
+            reason: "Email delivery failed"
+          });
+        }
+      } catch (error) {
+        console.error(`Error sending achievement notification to parent ${parentAccess.id}:`, error);
+        failedSends.push({
+          parentId: parentAccess.id,
+          email: parentAccess.email,
+          reason: "Error processing notification"
+        });
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: `Achievement notifications sent to ${successfulSends.length} parents`,
+      successfulSends,
+      failedSends,
+      notifiedAchievements: achievements.map(a => ({
+        id: a.achievementId,
+        name: a.name,
+        level: a.level
+      }))
+    });
+  } catch (error) {
+    console.error('Error sending achievement notifications:', error);
+    res.status(500).json({ message: 'Failed to send achievement notifications' });
+  }
+});
+
 // Note: Parent dashboard token access endpoint has been removed.
 // Parents now receive all updates exclusively via email, eliminating the need
 // for a dashboard login or token-based access.
