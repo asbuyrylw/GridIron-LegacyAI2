@@ -1,340 +1,34 @@
-import { Request, Response, Router } from 'express';
-import { emailService } from '../email-service';
-import { EmailNotificationType } from '../../shared/parent-access';
-import { z } from 'zod';
+import { Router, Request, Response } from "express";
+import { emailService } from "../email-service";
+import { EmailNotificationType } from "../../shared/parent-access";
 
 export const emailNotificationTestRouter = Router();
 
-// Schema for parent notification test
-const notificationTestSchema = z.object({
-  parentEmail: z.string().email(),
-  parentName: z.string(),
-  athleteName: z.string(),
-  notificationType: z.nativeEnum(EmailNotificationType),
-});
-
-// Generate sample data for each notification type
-function generateSampleData(notificationType: EmailNotificationType) {
-  switch (notificationType) {
-    case EmailNotificationType.PERFORMANCE_UPDATE:
-      return {
-        stats: {
-          metrics: {
-            speed: {
-              fortyYard: 4.65,
-              tenYardSplit: 1.55,
-              shuttle: 4.1,
-              threeCone: 7.0
-            },
-            strength: {
-              benchPress: 225,
-              benchPressReps: 15,
-              squatMax: 345,
-              powerClean: 215
-            },
-            explosiveness: {
-              verticalJump: 34.5,
-              broadJump: 115
-            }
-          },
-          insights: [
-            "40-yard dash has improved by 0.2 seconds since last measurement",
-            "Vertical jump has shown consistent improvement over the last 3 months",
-            "Bench press is now at 115% of body weight"
-          ],
-          recommendations: [
-            "Continue focusing on shuttle run technique",
-            "Add plyometric exercises to training program twice weekly",
-            "Maintain current lifting progression for lower body"
-          ]
-        }
-      };
-    
-    case EmailNotificationType.NUTRITION_SHOPPING_LIST:
-      return {
-        items: [
-          {
-            category: "Proteins",
-            name: "Lean Chicken Breast",
-            quantity: "3 lbs"
-          },
-          {
-            category: "Proteins",
-            name: "Grass-fed Lean Ground Beef",
-            quantity: "2 lbs"
-          },
-          {
-            category: "Proteins",
-            name: "Wild Caught Salmon",
-            quantity: "1 lb"
-          },
-          {
-            category: "Proteins",
-            name: "Eggs",
-            quantity: "2 dozen"
-          },
-          {
-            category: "Carbohydrates",
-            name: "Brown Rice",
-            quantity: "2 lbs"
-          },
-          {
-            category: "Carbohydrates",
-            name: "Sweet Potatoes",
-            quantity: "4 medium"
-          },
-          {
-            category: "Carbohydrates",
-            name: "Quinoa",
-            quantity: "1 lb"
-          },
-          {
-            category: "Carbohydrates",
-            name: "Oats",
-            quantity: "1 container"
-          },
-          {
-            category: "Fruits & Vegetables",
-            name: "Spinach",
-            quantity: "2 bags"
-          },
-          {
-            category: "Fruits & Vegetables",
-            name: "Broccoli",
-            quantity: "2 bunches"
-          },
-          {
-            category: "Fruits & Vegetables",
-            name: "Bananas",
-            quantity: "2 bunches"
-          },
-          {
-            category: "Fruits & Vegetables",
-            name: "Blueberries",
-            quantity: "2 containers"
-          },
-          {
-            category: "Healthy Fats",
-            name: "Avocados",
-            quantity: "3 medium"
-          },
-          {
-            category: "Healthy Fats",
-            name: "Extra Virgin Olive Oil",
-            quantity: "1 bottle"
-          },
-          {
-            category: "Healthy Fats",
-            name: "Natural Peanut Butter",
-            quantity: "1 jar"
-          },
-          {
-            category: "Recovery & Hydration",
-            name: "Whey Protein Powder",
-            quantity: "1 container"
-          },
-          {
-            category: "Recovery & Hydration",
-            name: "Electrolyte Drink Mix",
-            quantity: "1 pack"
-          }
-        ]
-      };
-    
-    case EmailNotificationType.ACHIEVEMENT_NOTIFICATION:
-      return {
-        achievements: [
-          {
-            name: "Speed Demon",
-            description: "Improved 40-yard dash time by at least 0.2 seconds",
-            level: "gold",
-            pointValue: 250,
-            dateEarned: new Date().toISOString(),
-            category: "performance"
-          },
-          {
-            name: "Consistent Trainer",
-            description: "Completed 15 consecutive scheduled workouts",
-            level: "silver",
-            pointValue: 150,
-            dateEarned: new Date().toISOString(),
-            category: "training"
-          },
-          {
-            name: "Nutrition Master",
-            description: "Followed nutrition plan for 30 consecutive days",
-            level: "bronze",
-            pointValue: 100,
-            dateEarned: new Date().toISOString(),
-            category: "nutrition"
-          }
-        ]
-      };
-    
-    case EmailNotificationType.WEEKLY_SUMMARY:
-      return {
-        weekOf: new Date().toISOString(),
-        sections: {
-          training: {
-            workoutsCompleted: 5,
-            totalWorkoutTime: "7.5 hours",
-            focusAreas: ["Speed", "Agility", "Strength"],
-            highlights: [
-              "Personal record in bench press: 225 lbs",
-              "Improved shuttle run time by 0.15 seconds"
-            ]
-          },
-          nutrition: {
-            adherenceRate: "92%",
-            waterIntake: "Good",
-            proteinGoals: "Consistently met",
-            notes: "Consider increasing carbohydrate intake on heavy training days"
-          },
-          achievements: {
-            pointsEarned: 350,
-            newRank: "Rising Star",
-            newAchievements: 3
-          },
-          upcoming: {
-            events: [
-              "Team practice: Tuesday & Thursday at 3:30pm",
-              "Speed training workshop: Saturday at 10:00am"
-            ],
-            goals: [
-              "Reduce 40-yard dash time by 0.05 seconds",
-              "Increase squat max by 15 lbs"
-            ]
-          }
-        }
-      };
-    
-    case EmailNotificationType.TRAINING_PROGRESS:
-      return {
-        trainingData: {
-          period: {
-            start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-            end: new Date().toISOString()
-          },
-          overallAdherence: "88%",
-          metrics: {
-            workoutsPlanned: 20,
-            workoutsCompleted: 18,
-            totalHours: 27.5,
-            averageIntensity: "7.8/10",
-          },
-          strengthProgress: {
-            benchPress: {
-              start: 185,
-              current: 225,
-              change: "+40 lbs"
-            },
-            squat: {
-              start: 275,
-              current: 315,
-              change: "+40 lbs"
-            },
-            deadlift: {
-              start: 315,
-              current: 365,
-              change: "+50 lbs"
-            }
-          },
-          speedProgress: {
-            fortyYard: {
-              start: 4.85,
-              current: 4.65,
-              change: "-0.2 sec"
-            },
-            tenYard: {
-              start: 1.65,
-              current: 1.55,
-              change: "-0.1 sec"
-            }
-          },
-          focusAreas: ["Explosiveness", "Lateral Movement", "Core Strength"],
-          coachNotes: "Excellent progress in strength development. Should continue focusing on sprint technique to see further improvements in speed."
-        }
-      };
-    
-    case EmailNotificationType.ACADEMIC_UPDATE:
-      return {
-        academicData: {
-          term: "Spring 2025",
-          gpa: 3.7,
-          lastReported: new Date().toISOString(),
-          classes: [
-            {
-              name: "Advanced Mathematics",
-              grade: "A-",
-              comments: "Strong conceptual understanding, consistent homework completion"
-            },
-            {
-              name: "English Literature",
-              grade: "B+",
-              comments: "Good analysis in essays, could participate more in discussions"
-            },
-            {
-              name: "Physics",
-              grade: "A",
-              comments: "Excellent lab work and test performance"
-            },
-            {
-              name: "History",
-              grade: "A",
-              comments: "Outstanding research project and consistent participation"
-            }
-          ],
-          attendance: {
-            daysPresent: 58,
-            daysAbsent: 2,
-            daysExcused: 2
-          },
-          standardizedTests: {
-            actScore: 28,
-            satScore: null,
-            nextTestDate: "October 2025"
-          },
-          academicStanding: "Excellent - On track for Honor Roll",
-          notes: "Maintained good academic performance while balancing athletic commitments. College eligibility requirements are being met with substantial margin."
-        }
-      };
-      
-    case EmailNotificationType.PARENT_INVITE:
-      // Parent invite doesn't need extra data besides recipient info
-      return { accessToken: "sample-token-123456" };
-    
-    default:
-      return {};
-  }
-}
-
-// Route to handle email notification testing
+// Route to test parent email notifications
 emailNotificationTestRouter.post('/notification-test', async (req: Request, res: Response) => {
   try {
-    // Check for SENDGRID_API_KEY and notify if not present
-    if (!process.env.SENDGRID_API_KEY) {
-      console.warn('SENDGRID_API_KEY not set. Email will be simulated but not sent.');
-    }
-    
-    // Validate request body
-    const validationResult = notificationTestSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid request data',
-        errors: validationResult.error.errors
+    const { 
+      notificationType, 
+      parentEmail, 
+      parentName, 
+      athleteName, 
+      data 
+    } = req.body;
+
+    if (!notificationType || !parentEmail || !parentName || !athleteName) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Missing required fields: notificationType, parentEmail, parentName, and athleteName are required" 
       });
     }
-    
-    const { parentEmail, parentName, athleteName, notificationType } = validationResult.data;
-    
+
     // Generate sample data for the requested notification type
     const sampleData = generateSampleData(notificationType);
 
     // Send the appropriate type of notification
     let success = false;
     switch (notificationType) {
-      case EmailNotificationType.PARENT_INVITE:
+      case EmailNotificationType.INVITE:
         success = await emailService.sendParentInvite(
           athleteName,
           parentEmail,
@@ -357,7 +51,7 @@ emailNotificationTestRouter.post('/notification-test', async (req: Request, res:
           parentEmail,
           parentName,
           athleteName,
-          sampleData.items
+          data?.items || sampleData.items || []
         );
         break;
 
@@ -366,7 +60,18 @@ emailNotificationTestRouter.post('/notification-test', async (req: Request, res:
           parentEmail,
           parentName,
           athleteName,
-          sampleData.achievements
+          data?.achievements || sampleData.achievements || []
+        );
+        break;
+
+      case EmailNotificationType.EVENT_REMINDER:
+        // Use the custom event notification method with data provided or sample data
+        success = await emailService.sendNotification(
+          EmailNotificationType.EVENT_REMINDER,
+          parentEmail,
+          parentName,
+          athleteName,
+          data?.eventDetails || sampleData.eventDetails
         );
         break;
 
@@ -375,7 +80,7 @@ emailNotificationTestRouter.post('/notification-test', async (req: Request, res:
           parentEmail,
           parentName,
           athleteName,
-          sampleData
+          data?.summaryData || sampleData.summaryData
         );
         break;
 
@@ -384,7 +89,7 @@ emailNotificationTestRouter.post('/notification-test', async (req: Request, res:
           parentEmail,
           parentName,
           athleteName,
-          sampleData.trainingData
+          data?.trainingData || sampleData.trainingData
         );
         break;
 
@@ -393,42 +98,172 @@ emailNotificationTestRouter.post('/notification-test', async (req: Request, res:
           parentEmail,
           parentName,
           athleteName,
-          sampleData.academicData
+          data?.academicData || sampleData.academicData
         );
         break;
 
       default:
-        // Use the generic sendNotification method
-        success = await emailService.sendNotification(
-          notificationType,
-          parentEmail,
-          parentName,
-          athleteName,
-          sampleData
-        );
+        return res.status(400).json({ 
+          success: false, 
+          message: `Unknown notification type: ${notificationType}` 
+        });
     }
 
     if (success) {
-      const isProdMode = !!process.env.SENDGRID_API_KEY;
-      return res.status(200).json({
-        success: true,
-        message: isProdMode 
-          ? `${notificationType} notification sent successfully to ${parentEmail}` 
-          : `[DEVELOPMENT MODE] ${notificationType} notification simulation successful for ${parentEmail}`
+      return res.status(200).json({ 
+        success: true, 
+        message: `${notificationType} email sent successfully to ${parentEmail}` 
       });
     } else {
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to send notification',
-        details: 'Check server logs for more information'
+      return res.status(500).json({ 
+        success: false, 
+        message: `Failed to send ${notificationType} email` 
       });
     }
   } catch (error) {
-    console.error('Error sending notification test:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'An error occurred while sending the notification',
-      error: error instanceof Error ? error.message : String(error)
+    console.error('Email notification test error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Error sending notification email", 
+      error: error instanceof Error ? error.message : "Unknown error" 
     });
   }
 });
+
+/**
+ * Generate appropriate sample data for each notification type
+ */
+function generateSampleData(notificationType: EmailNotificationType) {
+  switch (notificationType) {
+    case EmailNotificationType.PERFORMANCE_UPDATE:
+      return {
+        stats: {
+          combineDrillScores: [
+            { name: "40 Yard Dash", value: "4.67s", improvement: "+0.13s" },
+            { name: "Vertical Jump", value: "30 inches", improvement: "+1.5 inches" },
+            { name: "Bench Press", value: "15 reps", improvement: "+2 reps" },
+          ],
+          gamePerformance: {
+            passingYards: 230,
+            rushingYards: 45,
+            totalTouchdowns: 3,
+            completionPercentage: 68.5
+          },
+          trend: "improving",
+          notes: "Showing great improvement in speed and agility this month."
+        }
+      };
+      
+    case EmailNotificationType.NUTRITION_SHOPPING_LIST:
+      return {
+        items: [
+          { category: "Protein", name: "Chicken Breast", quantity: "2 lbs" },
+          { category: "Vegetables", name: "Broccoli", quantity: "1 bunch" },
+          { category: "Carbohydrates", name: "Brown Rice", quantity: "2 lbs" },
+          { category: "Healthy Fats", name: "Avocados", quantity: "3 medium" },
+          { category: "Fruits", name: "Bananas", quantity: "1 bunch" },
+          { category: "Snacks", name: "Greek Yogurt", quantity: "32 oz" },
+          { category: "Supplements", name: "Whey Protein", quantity: "1 container" }
+        ]
+      };
+      
+    case EmailNotificationType.ACHIEVEMENT_NOTIFICATION:
+      return {
+        achievements: [
+          {
+            name: "Speed Demon",
+            description: "Improved 40-yard dash time by over 0.1 seconds",
+            level: "Silver",
+            pointValue: 150,
+            dateEarned: "2023-05-12",
+            category: "Performance"
+          },
+          {
+            name: "Perfect Attendance",
+            description: "Attended all team practices and training sessions for 30 days",
+            level: "Gold",
+            pointValue: 250,
+            dateEarned: "2023-05-11",
+            category: "Engagement"
+          }
+        ]
+      };
+      
+    case EmailNotificationType.EVENT_REMINDER:
+      return {
+        eventDetails: {
+          eventName: "Summer Football Camp",
+          eventDate: "2023-06-15",
+          startTime: "8:00 AM",
+          endTime: "4:00 PM",
+          location: "Central High School Stadium",
+          description: "Intensive one-day camp focusing on position-specific skills and college recruiting exposure.",
+          requiredItems: ["Cleats", "Water bottle", "Athletic clothes", "Mouthguard"],
+          coachContact: "Coach Johnson, 555-123-4567"
+        }
+      };
+      
+    case EmailNotificationType.WEEKLY_SUMMARY:
+      return {
+        summaryData: {
+          weekOf: "May 8 - May 14, 2023",
+          trainingSessionsCompleted: 4,
+          totalTrainingHours: 8.5,
+          nutritionPlanAdherence: 85,
+          weightChange: "+0.5 lbs",
+          sleepAverage: "7.2 hours",
+          hydrationAverage: "Good",
+          topAchievements: ["Improved vertical jump", "Perfect attendance"],
+          upcomingEvents: ["Team scrimmage on May 18", "Speed training on May 16"],
+          focusAreas: ["Improve route running", "Increase protein intake"]
+        }
+      };
+      
+    case EmailNotificationType.TRAINING_PROGRESS:
+      return {
+        trainingData: {
+          period: "Last 30 Days",
+          strengthProgress: [
+            { exercise: "Bench Press", before: "185 lbs", after: "200 lbs", improvement: "+15 lbs" },
+            { exercise: "Squat", before: "275 lbs", after: "315 lbs", improvement: "+40 lbs" },
+            { exercise: "Power Clean", before: "155 lbs", after: "175 lbs", improvement: "+20 lbs" }
+          ],
+          speedAgility: [
+            { metric: "40 Yard Dash", before: "4.8s", after: "4.67s", improvement: "+0.13s" },
+            { metric: "Pro Agility", before: "4.35s", after: "4.21s", improvement: "+0.14s" }
+          ],
+          conditioningLevel: "Excellent",
+          consistencyScore: 92,
+          nextMilestones: ["325 lb squat", "4.5s 40-yard dash"]
+        }
+      };
+      
+    case EmailNotificationType.ACADEMIC_UPDATE:
+      return {
+        academicData: {
+          gradeReport: [
+            { subject: "Mathematics", currentGrade: "B+", previousGrade: "B", trend: "Improving" },
+            { subject: "English", currentGrade: "A-", previousGrade: "B+", trend: "Improving" },
+            { subject: "Science", currentGrade: "B", previousGrade: "B", trend: "Stable" },
+            { subject: "History", currentGrade: "A", previousGrade: "A", trend: "Stable" }
+          ],
+          gpa: {
+            current: 3.6,
+            previous: 3.4,
+            trend: "Increasing"
+          },
+          attendance: "Excellent",
+          academicStanding: "Good",
+          ncaaEligibility: "On Track",
+          notes: "Maintained good academic performance while balancing athletic commitments. College eligibility requirements are being met with substantial margin."
+        }
+      };
+      
+    case EmailNotificationType.INVITE:
+      // Parent invite doesn't need extra data besides recipient info
+      return { accessToken: "sample-token-123456" };
+    
+    default:
+      return {};
+  }
+}

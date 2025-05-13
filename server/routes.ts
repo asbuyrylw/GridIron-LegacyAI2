@@ -92,6 +92,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Email testing routes
   app.use('/api/email', emailTestRouter);
   
+  // Email notification testing routes
+  app.use('/api', emailNotificationTestRouter);
+  
   // Growth prediction routes
   app.use('/api/athlete', growthPredictionRouter);
   
