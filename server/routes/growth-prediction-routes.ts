@@ -151,7 +151,7 @@ growthPredictionRouter.get("/:athleteId/height-prediction/report", async (req: R
       
       if (isParent) {
         // Get all parent-athlete relationships
-        const relationships = await storage.getAll('parentAthleteRelationships');
+        const relationships = await storage.query('parentAthleteRelationships');
         const hasAccess = relationships.some((relationship: any) => 
           relationship.parentId === req.session.userId && 
           relationship.athleteId === athleteId && 
