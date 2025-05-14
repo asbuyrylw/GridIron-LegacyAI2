@@ -88,43 +88,70 @@ const FootballIqPage: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('');
 
   // Fetch athlete's progress
-  const { data: progressData, isLoading: progressLoading } = useQuery({
+  const { data: progressData, isLoading: progressLoading, isError: progressError } = useQuery({
     queryKey: ['/api/athlete', athlete?.id, 'football-iq/progress'],
     queryFn: async () => {
-      if (!athlete?.id) return [];
-      const response = await fetch(`/api/athlete/${athlete.id}/football-iq/progress`);
-      if (!response.ok) throw new Error('Failed to fetch progress');
-      return response.json();
+      try {
+        if (!athlete?.id) return [];
+        const response = await fetch(`/api/athlete/${athlete.id}/football-iq/progress`);
+        if (!response.ok) {
+          console.error('Error response from progress API:', response.status, response.statusText);
+          throw new Error('Failed to fetch progress');
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Error fetching football IQ progress:', error);
+        throw error;
+      }
     },
     enabled: !!athlete?.id,
+    retries: 2,
   });
 
   // Fetch quizzes for the library
-  const { data: quizzes, isLoading: quizzesLoading } = useQuery({
+  const { data: quizzes, isLoading: quizzesLoading, isError: quizzesError } = useQuery({
     queryKey: ['/api/football-iq/quizzes', positionFilter, difficultyFilter, categoryFilter],
     queryFn: async () => {
-      let url = '/api/football-iq/quizzes?';
-      if (positionFilter) url += `position=${encodeURIComponent(positionFilter)}&`;
-      if (difficultyFilter) url += `difficulty=${encodeURIComponent(difficultyFilter)}&`;
-      if (categoryFilter) url += `category=${encodeURIComponent(categoryFilter)}&`;
-      url += 'isActive=true';
-      
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch quizzes');
-      return response.json();
+      try {
+        let url = '/api/football-iq/quizzes?';
+        if (positionFilter) url += `position=${encodeURIComponent(positionFilter)}&`;
+        if (difficultyFilter) url += `difficulty=${encodeURIComponent(difficultyFilter)}&`;
+        if (categoryFilter) url += `category=${encodeURIComponent(categoryFilter)}&`;
+        url += 'isActive=true';
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+          console.error('Error response from quizzes API:', response.status, response.statusText);
+          throw new Error('Failed to fetch quizzes');
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Error fetching football IQ quizzes:', error);
+        throw error;
+      }
     },
+    retries: 2,
   });
 
   // Fetch recent quiz attempts
-  const { data: attempts, isLoading: attemptsLoading } = useQuery({
+  const { data: attempts, isLoading: attemptsLoading, isError: attemptsError } = useQuery({
     queryKey: ['/api/athlete', athlete?.id, 'football-iq/attempts'],
     queryFn: async () => {
-      if (!athlete?.id) return [];
-      const response = await fetch(`/api/athlete/${athlete.id}/football-iq/attempts?limit=5`);
-      if (!response.ok) throw new Error('Failed to fetch attempts');
-      return response.json();
+      try {
+        if (!athlete?.id) return [];
+        const response = await fetch(`/api/athlete/${athlete.id}/football-iq/attempts?limit=5`);
+        if (!response.ok) {
+          console.error('Error response from attempts API:', response.status, response.statusText);
+          throw new Error('Failed to fetch attempts');
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Error fetching football IQ attempts:', error);
+        throw error;
+      }
     },
     enabled: !!athlete?.id,
+    retries: 2,
   });
 
   // Function to start a quiz attempt

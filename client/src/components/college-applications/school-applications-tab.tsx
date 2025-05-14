@@ -51,6 +51,14 @@ export default function SchoolApplicationsTab({ athleteId }: SchoolApplicationsT
 
   const { data: applications, isLoading, isError } = useQuery({
     queryKey: ['/api/college-applications/applications', athleteId],
+    queryFn: async () => {
+      try {
+        return await apiRequest('GET', `/api/college-applications/applications/${athleteId}`);
+      } catch (error) {
+        console.error('Error fetching school applications:', error);
+        throw new Error('Failed to load school applications');
+      }
+    },
     enabled: !!athleteId,
   });
 
