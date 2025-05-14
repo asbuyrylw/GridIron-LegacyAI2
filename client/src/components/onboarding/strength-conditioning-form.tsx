@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -25,7 +26,9 @@ import {
   TRAINING_FOCUS_OPTIONS, 
   AREAS_TO_IMPROVE_OPTIONS, 
   GYM_ACCESS_OPTIONS, 
-  RECOVERY_METHOD_OPTIONS 
+  RECOVERY_METHOD_OPTIONS,
+  PERSONAL_TRAINER_OPTIONS,
+  ENERGY_LEVEL_OPTIONS
 } from "@/lib/constants";
 import { InjuryTrackingForm } from "./injury-tracking-form";
 import { Separator } from "@/components/ui/separator";
@@ -53,6 +56,10 @@ export default function StrengthConditioningForm({
       gymAccess: "",
       sleepHours: undefined,
       recoveryMethods: [],
+      personalTrainer: "",
+      structuredTrainingPlan: false,
+      postPracticeRecovery: "",
+      energyLevels: "",
       injuriesSurgeries: "",
       currentInjuries: [],
       pastSurgeries: [],
@@ -283,6 +290,101 @@ export default function StrengthConditioningForm({
               ))}
             </div>
             <FormMessage />
+          </div>
+          
+          <Separator className="my-4" />
+          
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold">Training Structure</h3>
+            
+            <FormField
+              control={form.control}
+              name="personalTrainer"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Do you work with a personal trainer or strength coach?</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your answer" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {PERSONAL_TRAINER_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="structuredTrainingPlan"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Structured Training Plan</FormLabel>
+                    <FormDescription>
+                      Are you currently following a structured training plan?
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="postPracticeRecovery"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>What do you do to recover after practice?</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="I foam roll for 10 minutes, stretch, and take an ice bath once a week..."
+                      className="resize-none"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="energyLevels"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>How would you describe your energy levels throughout the day?</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your energy levels" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {ENERGY_LEVEL_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
 
           {/* Injury Tracking */}
