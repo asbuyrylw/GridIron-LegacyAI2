@@ -30,6 +30,9 @@ export async function apiRequest<T = any>(
     ...options.headers,
   };
 
+  // Ensure credentials are included to send cookies
+  options.credentials = 'include';
+
   // Parse body as JSON if it's an object
   if (options.body && typeof options.body === 'object') {
     options.body = JSON.stringify(options.body);
