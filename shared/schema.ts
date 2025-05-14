@@ -106,6 +106,22 @@ export const achievementLevelEnum = pgEnum('achievement_level', [
   'platinum'
 ]);
 
+// Skill categories and levels
+export const skillCategoryEnum = pgEnum('skill_category', [
+  'athleticism',
+  'technique',
+  'gameIQ',
+  'leadership',
+  'positionSpecific'
+]);
+
+export const skillLevelEnum = pgEnum('skill_level', [
+  'beginner',
+  'intermediate',
+  'advanced',
+  'elite'
+]);
+
 export const userTypeEnum = pgEnum('user_type', [
   'athlete',
   'parent',
@@ -579,6 +595,43 @@ export const leaderboardEntries = pgTable("leaderboard_entries", {
   rank: integer("rank"), // Calculated rank, can be null until processed
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Skills
+export const skills = pgTable("skills", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  category: skillCategoryEnum("category").notNull(),
+  icon: text("icon").notNull(),
+  positionTags: json("position_tags").default('[]').notNull(), // Positions this skill applies to
+  milestones: json("milestones").notNull(), // Array of milestone objects with requirements
+  exerciseRecommendations: json("exercise_recommendations").default('[]'), // Exercises that improve this skill
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Athlete Skill Progression
+export const athleteSkills = pgTable("athlete_skills", {
+  id: serial("id").primaryKey(),
+  athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
+  skillId: integer("skill_id").references(() => skills.id).notNull(),
+  level: skillLevelEnum("level").default("beginner").notNull(),
+  xp: integer("xp").default(0).notNull(), // Experience points accumulated for this skill
+  currentMilestone: integer("current_milestone").default(0).notNull(), // Current milestone index
+  nextMilestoneXP: integer("next_milestone_xp").default(100).notNull(), // XP needed for next milestone
+  lastUpdated: timestamp("last_updated").defaultNow().notNull(),
+  unlockDate: timestamp("unlock_date").defaultNow().notNull(), // When the athlete started training this skill
+});
+
+// Skill Activity Logs
+export const skillActivityLogs = pgTable("skill_activity_logs", {
+  id: serial("id").primaryKey(),
+  athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
+  skillId: integer("skill_id").references(() => skills.id).notNull(),
+  activityType: text("activity_type").notNull(), // e.g., 'practice', 'game', 'drill', 'workout'
+  xpGained: integer("xp_gained").notNull(),
+  description: text("description").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Recruiting analytics to track profile views, interest, and activities
@@ -1263,3 +1316,23 @@ export type InsertCounselor = z.infer<typeof insertCounselorSchema>;
 
 export type AthleteCounselor = typeof athleteCounselors.$inferSelect;
 export type InsertAthleteCounselor = z.infer<typeof insertAthleteCounselorSchema>;
+
+// Insert schemas for skills
+export const insertSkillSchema = createInsertSchema(skills)
+  .omit({ id: true, createdAt: true });
+
+export const insertAthleteSkillSchema = createInsertSchema(athleteSkills)
+  .omit({ id: true, lastUpdated: true, unlockDate: true });
+
+export const insertSkillActivityLogSchema = createInsertSchema(skillActivityLogs)
+  .omit({ id: true, createdAt: true });
+
+// Types for skills
+export type Skill = typeof skills.$inferSelect;
+export type InsertSkill = z.infer<typeof insertSkillSchema>;
+
+export type AthleteSkill = typeof athleteSkills.$inferSelect;
+export type InsertAthleteSkill = z.infer<typeof insertAthleteSkillSchema>;
+
+export type SkillActivityLog = typeof skillActivityLogs.$inferSelect;
+export type InsertSkillActivityLog = z.infer<typeof insertSkillActivityLogSchema>;
