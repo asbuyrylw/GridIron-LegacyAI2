@@ -1,0 +1,110 @@
+✅ Milestone 1: Athlete Onboarding & Profiling
+#onboarding
+🔹 Functional Goals:
+•	Collect complete personal, athletic, academic, and growth data to initialize athlete profiles
+•	Capture behavioral and contextual data for AI model accuracy
+🔸 Tasks:
+•	Build multi-step onboarding form (Chakra UI modal or route-based wizard)
+•	Collect:
+•	1. Athletic Baseline & Combine Metrics
+•	Goal: Quantify physical readiness and establish a benchmark.
+•	What is your current height (in inches or cm)?
+•	What is your current weight (in lbs or kg)?
+•	Do you know your body fat percentage? (optional)
+•	What is your most recent 40-yard dash time?
+•	What is your best vertical jump height?
+•	What is your best shuttle drill time?
+•	How many reps can you bench press 185 or 225 lbs?
+•	What is your max squat? (optional)
+•	What is your max deadlift? (optional)
+•	________________________________________
+•	🧬 2. Growth Projection Inputs
+•	Goal: Support long-term potential modeling (e.g., Khamis-Roche).
+•	What is your age (in years)?
+•	What is your gender?
+•	How tall is your biological mother? (in inches/cm)
+•	How tall is your biological father? (in inches/cm)
+•	Have you hit a major growth spurt in the past year? (Yes/No)
+•	Do you expect more growth based on your family history? (Yes/No/I don’t know)
+•	________________________________________
+•	🧠 3. Football Experience & Positioning
+•	Goal: Understand playing history, development stage, and role-specific needs.
+•	What is your primary football position?
+•	What is your secondary football position?
+•	How many years have you played tackle football?
+•	What level are you currently playing at? (JV, Varsity, Club, None)
+•	How many years of varsity experience do you have?
+•	Do you currently start at your position? (Yes/No/Split reps)
+•	What areas of your position do you feel strongest in?
+•	What areas do you need the most help with?
+•	________________________________________
+•	📅 4. Current Training Routine
+•	Goal: Tailor plans based on actual habits and access.
+•	How many days a week do you currently train (gym, field, etc.)?
+•	What type of workouts are you currently doing? (e.g., weightlifting, speed drills, football-specific)
+•	Do you currently work with a personal trainer or coach outside your school team? (Yes/No)
+•	What equipment or facilities do you have access to regularly?
+•	Do you follow a structured training plan now? (Yes/No)
+•	________________________________________
+•	🍎 5. Nutrition & Recovery
+•	Goal: Personalize intake, supplementation, and recovery needs.
+•	Do you have any dietary restrictions? (e.g., vegetarian, allergies)
+•	How many meals do you typically eat per day?
+•	Do you currently use protein supplements? (Yes/No)
+•	How would you rate your hydration during the day? (Poor/Average/Good/Excellent)
+•	How many hours of sleep do you get on average per night?
+•	Do you feel recovered and energized after practices/games? (Yes/No)
+•	________________________________________
+•	🎓 6. Academic Profile
+•	Goal: Inform college matcher and eligibility checks.
+•	What is your current GPA?
+•	Have you taken the SAT or ACT? (Yes/No)
+•	If yes, what was your score?
+•	Are you enrolled in any AP, IB, or Honors courses?
+•	What major(s) or career paths are you interested in?
+•	Have you registered with the NCAA Eligibility Center? (Yes/No)
+•	________________________________________
+•	🗺 7. College Football Aspirations
+•	Goal: Set targets for recruiting and long-term development.
+•	What level of college football are you aiming for? (Power 5, D1, D2, D3, NAIA, JUCO, Not Sure)
+•	Are there any specific schools you’re interested in?
+•	Have you attended any college camps or combines in the past year? (Yes/No)
+•	Have you been contacted by any college recruiters? (Yes/No)
+•	What is your top goal for this upcoming season?
+•	________________________________________
+•	🧭 8. Character & Motivation (Coach Feedback & Culture Fit)
+•	Goal: Support the "intangibles" that recruiters care about.
+•	How would your coach describe your work ethic?
+•	What leadership roles (if any) do you currently hold on your team?
+•	What motivates you to improve every day?
+•	Do you participate in any volunteer work, extracurriculars, or church groups?
+•	Would you like daily motivational messages in your feed? (Yes: General / Yes: Christian / No)
+•	Store profile as Draft until onboarding is completed
+•	Trigger creation of empty training plan, nutrition placeholder, and dashboard shell
+
+________________________________________
+🧠 Milestone 2: AI Training & Nutrition Plan Generator
+#AIplan
+🔹 Functional Goals:
+•	Create individualized training and nutrition plans mapped to athlete goals and projected needs
+•	Adapt training over time through feedback and stat changes
+🔸 Tasks:
+•	Generate baseline comparison chart:
+o	Athlete vs. D1, D2, D3 positional benchmarks (e.g., DL: 5.0s 40yd, 20 reps @ 225)
+•	Build AI model for workout plan generation:
+o	Input: position, age, stat gaps, training history
+o	Output: weekly/monthly workout plans
+•	Training plan architecture:
+o	Core, upper body, lower body, mobility, speed/agility
+o	Flag drills requiring equipment vs. bodyweight
+•	Build plan tracking backend:
+o	Log completion per day
+o	Capture athlete feedback per week
+o	Enable coaches to view/adapt plan
+•	Nutrition engine:
+o	Base calorie/macronutrient recommendation
+o	Adjust based on weight goals and growth status
+o	Sample meal plans or suggested foods
+•	Build plan milestone logic:
+o	Every 3 months, define checkpoint goals
+o	Add notification triggers for milestone reviews
