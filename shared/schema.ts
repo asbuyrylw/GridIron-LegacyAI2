@@ -937,6 +937,10 @@ export const personalInfoSchema = z.object({
   // Height prediction data points
   fatherHeight: z.number().optional().describe("Father's height in inches for growth prediction"),
   motherHeight: z.number().optional().describe("Mother's height in inches for growth prediction"),
+  
+  // Growth projection information
+  recentGrowthSpurt: z.string().optional().describe("Recent growth spurt status"),
+  expectedGrowth: z.string().optional().describe("Expected additional growth"),
 });
 
 // Football Information Form

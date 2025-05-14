@@ -197,6 +197,81 @@ export const DAYS_OF_WEEK = [
   { value: "sunday", label: "Sunday" },
 ];
 
+// Position strengths
+export const POSITION_STRENGTHS = [
+  { value: "arm_strength", label: "Arm Strength" },
+  { value: "accuracy", label: "Accuracy" },
+  { value: "route_running", label: "Route Running" },
+  { value: "catching", label: "Catching Ability" },
+  { value: "blocking", label: "Blocking" },
+  { value: "footwork", label: "Footwork" },
+  { value: "vision", label: "Field Vision" },
+  { value: "tackling", label: "Tackling" },
+  { value: "coverage", label: "Coverage" },
+  { value: "playmaking", label: "Playmaking" },
+  { value: "reading_defense", label: "Reading Defense" },
+  { value: "reading_offense", label: "Reading Offense" },
+  { value: "elusiveness", label: "Elusiveness" },
+  { value: "physicality", label: "Physicality" },
+  { value: "leadership", label: "Leadership" },
+];
+
+// Position weaknesses (using the same list for simplicity)
+export const POSITION_WEAKNESSES = POSITION_STRENGTHS;
+
+// Personal trainer options
+export const PERSONAL_TRAINER_OPTIONS = [
+  { value: "none", label: "No personal trainer/coach" },
+  { value: "school_coach", label: "School strength coach" },
+  { value: "private_trainer", label: "Private strength coach/trainer" },
+  { value: "team_training", label: "Team training program" },
+  { value: "online_program", label: "Online training program" },
+];
+
+// Growth spurt options
+export const GROWTH_SPURT_OPTIONS = [
+  { value: "no_spurt", label: "No recent growth spurt" },
+  { value: "recent_spurt", label: "Had a growth spurt in the last year" },
+  { value: "steady_growth", label: "Growing steadily" },
+  { value: "early_growth", label: "Grew early, now stable" },
+  { value: "late_growth", label: "Late bloomer, expecting more growth" },
+];
+
+// Recovery/energy levels
+export const ENERGY_LEVEL_OPTIONS = [
+  { value: "excellent", label: "Excellent - Full energy the next day" },
+  { value: "good", label: "Good - Slightly tired but ready to go" },
+  { value: "average", label: "Average - Some fatigue but manageable" },
+  { value: "below_average", label: "Below Average - Significant fatigue" },
+  { value: "poor", label: "Poor - Very fatigued, impacts next day performance" },
+];
+
+// Motivation factors
+export const MOTIVATION_OPTIONS = [
+  { value: "college_scholarship", label: "Earning a college scholarship" },
+  { value: "playing_professionally", label: "Playing professionally" },
+  { value: "team_success", label: "Team success/championships" },
+  { value: "personal_improvement", label: "Personal improvement" },
+  { value: "enjoyment", label: "Love of the game" },
+  { value: "parental_expectations", label: "Living up to expectations" },
+  { value: "proving_doubters", label: "Proving doubters wrong" },
+  { value: "fitness", label: "Fitness and health" },
+  { value: "social", label: "Social aspects/friendships" },
+];
+
+// Season goals
+export const SEASON_GOAL_OPTIONS = [
+  { value: "college_recruiting", label: "Get noticed by college recruiters" },
+  { value: "starting_position", label: "Earn/maintain starting position" },
+  { value: "stats_improvement", label: "Improve specific stats" },
+  { value: "leadership_role", label: "Take on leadership role" },
+  { value: "championship", label: "Win championship" },
+  { value: "all_conference", label: "Make all-conference/all-region team" },
+  { value: "technique", label: "Improve technique/skills" },
+  { value: "athleticism", label: "Improve athleticism" },
+  { value: "playing_time", label: "Increase playing time" },
+];
+
 // Workout frequency options
 export const WORKOUT_FREQUENCY = [
   { value: "1_2", label: "1-2 days per week" },
