@@ -422,10 +422,10 @@ export function extendMemStorageWithSkillProgression(memStoragePrototype: any) {
     await this.createSkill({
       name: "Speed & Acceleration",
       description: "The ability to move quickly from a standstill position and maintain speed.",
-      category: "athleticism" as SkillCategory,
+      category: "athleticism",
       icon: "running",
-      positionTags: ["Quarterback (QB)", "Running Back (RB)", "Wide Receiver (WR)", "Cornerback (CB)", "Safety (S)"] as unknown as Json,
-      milestones: defaultMilestones as unknown as Json,
+      positionTags: ["Quarterback (QB)", "Running Back (RB)", "Wide Receiver (WR)", "Cornerback (CB)", "Safety (S)"] as any,
+      milestones: defaultMilestones as any,
       exerciseRecommendations: [
         { id: 1, name: "Shuttle Runs", sets: 5, reps: "20 yards" },
         { id: 2, name: "Box Jumps", sets: 3, reps: 10 },
