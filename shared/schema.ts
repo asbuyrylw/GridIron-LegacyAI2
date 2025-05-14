@@ -1036,6 +1036,100 @@ export const onboardingSchema = z.object({
   recruitingGoals: recruitingGoalsSchema,
 });
 
+// Coach Evaluations - Position-specific evaluation templates
+export const coachEvaluations = pgTable("coach_evaluations", {
+  id: serial("id").primaryKey(),
+  athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
+  coachId: integer("coach_id").references(() => coaches.id).notNull(),
+  position: text("position").notNull(), // QB, OL, DB, etc.
+  evaluationDate: timestamp("evaluation_date").defaultNow().notNull(),
+  season: text("season").notNull(), // "Fall 2025", "Spring 2026", etc.
+  isShared: boolean("is_shared").default(false), // Whether evaluation is shared with athlete
+  notes: text("notes"),
+  
+  // Common metrics for all positions (1-10 scale)
+  athleticism: integer("athleticism"),
+  technique: integer("technique"),
+  football_iq: integer("football_iq"),
+  leadership: integer("leadership"),
+  coachability: integer("coachability"),
+  work_ethic: integer("work_ethic"),
+  competitiveness: integer("competitiveness"),
+  
+  // Position-specific metrics stored as JSON to handle different positions
+  position_metrics: json("position_metrics").default('{}'),
+  
+  // Overall evaluation score (calculated average)
+  overall_rating: real("overall_rating"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Position-specific evaluation templates
+export const evaluationTemplates = pgTable("evaluation_templates", {
+  id: serial("id").primaryKey(),
+  position: text("position").notNull().unique(), // QB, OL, DB, etc.
+  metrics: json("metrics").notNull(), // Array of metrics specific to the position
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Depth Chart - Track player positions within team hierarchy
+export const depthCharts = pgTable("depth_charts", {
+  id: serial("id").primaryKey(),
+  teamId: integer("team_id").references(() => teams.id).notNull(),
+  name: text("name").notNull(), // e.g. "Fall 2025 Depth Chart", "Offense Depth Chart"
+  createdBy: integer("created_by").references(() => coaches.id).notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Depth Chart Positions - Individual position entries within a depth chart
+export const depthChartPositions = pgTable("depth_chart_positions", {
+  id: serial("id").primaryKey(),
+  depthChartId: integer("depth_chart_id").references(() => depthCharts.id).notNull(),
+  positionName: text("position_name").notNull(), // e.g. "QB", "Left Tackle", "Free Safety"
+  positionGroup: text("position_group").notNull(), // e.g. "Offense", "Defense", "Special Teams"
+  order: integer("order").notNull(), // Order of display
+});
+
+// Depth Chart Entries - Individual player entries within positions
+export const depthChartEntries = pgTable("depth_chart_entries", {
+  id: serial("id").primaryKey(),
+  positionId: integer("position_id").references(() => depthChartPositions.id).notNull(),
+  athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
+  depth: integer("depth").notNull(), // 1 = starter, 2 = backup, etc.
+  status: text("status").default("active"), // active, injured, developmental, etc.
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Create Zod schemas for inserting data
+export const insertCoachEvaluationSchema = createInsertSchema(coachEvaluations).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertEvaluationTemplateSchema = createInsertSchema(evaluationTemplates).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertDepthChartSchema = createInsertSchema(depthCharts).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertDepthChartPositionSchema = createInsertSchema(depthChartPositions).omit({ id: true });
+export const insertDepthChartEntrySchema = createInsertSchema(depthChartEntries).omit({ id: true, createdAt: true, updatedAt: true });
+
+// Define types
+export type CoachEvaluation = typeof coachEvaluations.$inferSelect;
+export type InsertCoachEvaluation = z.infer<typeof insertCoachEvaluationSchema>;
+
+export type EvaluationTemplate = typeof evaluationTemplates.$inferSelect;
+export type InsertEvaluationTemplate = z.infer<typeof insertEvaluationTemplateSchema>;
+
+export type DepthChart = typeof depthCharts.$inferSelect;
+export type InsertDepthChart = z.infer<typeof insertDepthChartSchema>;
+
+export type DepthChartPosition = typeof depthChartPositions.$inferSelect;
+export type InsertDepthChartPosition = z.infer<typeof insertDepthChartPositionSchema>;
+
+export type DepthChartEntry = typeof depthChartEntries.$inferSelect;
+export type InsertDepthChartEntry = z.infer<typeof insertDepthChartEntrySchema>;
+
 export type PersonalInfo = z.infer<typeof personalInfoSchema>;
 export type FootballInfo = z.infer<typeof footballInfoSchema>;
 export type AthleticMetrics = z.infer<typeof athleticMetricsSchema>;
