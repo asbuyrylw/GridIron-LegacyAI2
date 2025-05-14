@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription } from '@/components/ui/dialog';
 import { useWindowSize } from 'react-use';
 import Confetti from 'react-confetti';
 import { Achievement } from '@/lib/achievement-badges';
@@ -39,7 +39,10 @@ export function AchievementEarnedAnimation({
       {confettiActive && <Confetti width={width} height={height} recycle={false} />}
       
       <Dialog open={visible} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-md text-center p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-md text-center p-0 overflow-hidden" aria-describedby="achievement-description">
+          <DialogDescription id="achievement-description" className="sr-only">
+            Achievement unlocked details
+          </DialogDescription>
           <div className="absolute top-2 right-2 z-10">
             <Button 
               variant="ghost" 
