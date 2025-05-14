@@ -122,6 +122,51 @@ export interface IStorage {
   updateDepthChartEntry(id: number, updates: Partial<InsertDepthChartEntry>): Promise<DepthChartEntry | undefined>;
   deleteDepthChartEntry(id: number): Promise<boolean>;
   
+  // College Application Hub Methods
+  // Application Checklist
+  getApplicationChecklist(athleteId: number): Promise<ApplicationChecklist[]>;
+  getApplicationChecklistItem(id: number): Promise<ApplicationChecklist | undefined>;
+  createApplicationChecklistItem(item: InsertApplicationChecklist): Promise<ApplicationChecklist>;
+  updateApplicationChecklistItem(id: number, updates: Partial<InsertApplicationChecklist>): Promise<ApplicationChecklist | undefined>;
+  deleteApplicationChecklistItem(id: number): Promise<boolean>;
+  markChecklistItemComplete(id: number, completed: boolean): Promise<ApplicationChecklist | undefined>;
+  getUpcomingDeadlines(athleteId: number, days: number): Promise<ApplicationChecklist[]>;
+  
+  // Document Uploads
+  getApplicationDocuments(athleteId: number, fileType?: string): Promise<ApplicationDocument[]>;
+  getApplicationDocument(id: number): Promise<ApplicationDocument | undefined>;
+  createApplicationDocument(document: InsertApplicationDocument): Promise<ApplicationDocument>;
+  updateApplicationDocument(id: number, updates: Partial<InsertApplicationDocument>): Promise<ApplicationDocument | undefined>;
+  deleteApplicationDocument(id: number): Promise<boolean>;
+  
+  // School Applications
+  getSchoolApplications(athleteId: number): Promise<SchoolApplication[]>;
+  getSchoolApplication(id: number): Promise<SchoolApplication | undefined>;
+  createSchoolApplication(application: InsertSchoolApplication): Promise<SchoolApplication>;
+  updateSchoolApplication(id: number, updates: Partial<InsertSchoolApplication>): Promise<SchoolApplication | undefined>;
+  deleteSchoolApplication(id: number): Promise<boolean>;
+  
+  // Academic Achievements
+  getAcademicAchievements(athleteId: number): Promise<AcademicAchievement[]>;
+  getPublicAcademicAchievements(athleteId: number): Promise<AcademicAchievement[]>;
+  getAcademicAchievement(id: number): Promise<AcademicAchievement | undefined>;
+  createAcademicAchievement(achievement: InsertAcademicAchievement): Promise<AcademicAchievement>;
+  updateAcademicAchievement(id: number, updates: Partial<InsertAcademicAchievement>): Promise<AcademicAchievement | undefined>;
+  deleteAcademicAchievement(id: number): Promise<boolean>;
+  
+  // Counselor Methods
+  getCounselors(): Promise<Counselor[]>;
+  getCounselor(id: number): Promise<Counselor | undefined>;
+  getCounselorByUserId(userId: number): Promise<Counselor | undefined>;
+  createCounselor(counselor: InsertCounselor): Promise<Counselor>;
+  
+  // Athlete-Counselor Relationship
+  getAthleteCounselors(athleteId: number): Promise<AthleteCounselor[]>;
+  getCounselorAthletes(counselorId: number): Promise<AthleteCounselor[]>;
+  createAthleteCounselor(relationship: InsertAthleteCounselor): Promise<AthleteCounselor>;
+  updateAthleteCounselor(id: number, updates: Partial<InsertAthleteCounselor>): Promise<AthleteCounselor | undefined>;
+  deleteAthleteCounselor(id: number): Promise<boolean>;
+  
   // Football IQ Methods
   getFootballIqQuizzes(filters?: {
     position?: string;
@@ -574,6 +619,25 @@ export class MemStorage implements IStorage {
   private teamEventsMap: Map<number, TeamEvent>;
   private teamEventAttendanceMap: Map<number, TeamEventAttendance>;
   private teamAnnouncementsMap: Map<number, TeamAnnouncement>;
+  
+  // College Application Hub Maps
+  private readonly applicationChecklistMap = new Map<number, ApplicationChecklist>();
+  private applicationChecklistId = 1;
+  
+  private readonly applicationDocumentMap = new Map<number, ApplicationDocument>();
+  private applicationDocumentId = 1;
+  
+  private readonly schoolApplicationMap = new Map<number, SchoolApplication>();
+  private schoolApplicationId = 1;
+  
+  private readonly academicAchievementMap = new Map<number, AcademicAchievement>();
+  private academicAchievementId = 1;
+  
+  private readonly counselorMap = new Map<number, Counselor>();
+  private counselorId = 1;
+  
+  private readonly athleteCounselorMap = new Map<number, AthleteCounselor>();
+  private athleteCounselorId = 1;
   
   currentUserId: number = 0;
   currentAthleteId: number = 0;
@@ -2273,6 +2337,298 @@ export class MemStorage implements IStorage {
     };
     this.recruitingMessagesMap.set(id, updated);
     return updated;
+  }
+
+  // College Application Hub Methods
+  // Application Checklist Methods
+  async getApplicationChecklist(athleteId: number): Promise<ApplicationChecklist[]> {
+    const checklist: ApplicationChecklist[] = [];
+    for (const item of this.applicationChecklistMap.values()) {
+      if (item.athleteId === athleteId) {
+        checklist.push(item);
+      }
+    }
+    return checklist;
+  }
+
+  async getApplicationChecklistItem(id: number): Promise<ApplicationChecklist | undefined> {
+    return this.applicationChecklistMap.get(id);
+  }
+
+  async createApplicationChecklistItem(item: InsertApplicationChecklist): Promise<ApplicationChecklist> {
+    const newItem: ApplicationChecklist = {
+      ...item,
+      id: this.applicationChecklistId++,
+      createdAt: new Date(),
+      completed: item.completed || false
+    };
+    this.applicationChecklistMap.set(newItem.id, newItem);
+    return newItem;
+  }
+
+  async updateApplicationChecklistItem(id: number, updates: Partial<InsertApplicationChecklist>): Promise<ApplicationChecklist | undefined> {
+    const item = this.applicationChecklistMap.get(id);
+    if (!item) return undefined;
+
+    const updatedItem: ApplicationChecklist = {
+      ...item,
+      ...updates
+    };
+    this.applicationChecklistMap.set(id, updatedItem);
+    return updatedItem;
+  }
+
+  async deleteApplicationChecklistItem(id: number): Promise<boolean> {
+    return this.applicationChecklistMap.delete(id);
+  }
+
+  async markChecklistItemComplete(id: number, completed: boolean): Promise<ApplicationChecklist | undefined> {
+    const item = this.applicationChecklistMap.get(id);
+    if (!item) return undefined;
+
+    const updatedItem: ApplicationChecklist = {
+      ...item,
+      completed,
+      completedAt: completed ? new Date() : null
+    };
+    this.applicationChecklistMap.set(id, updatedItem);
+    return updatedItem;
+  }
+
+  async getUpcomingDeadlines(athleteId: number, days: number): Promise<ApplicationChecklist[]> {
+    const now = new Date();
+    const futureDate = new Date();
+    futureDate.setDate(now.getDate() + days);
+    
+    const upcomingDeadlines: ApplicationChecklist[] = [];
+    for (const item of this.applicationChecklistMap.values()) {
+      if (
+        item.athleteId === athleteId && 
+        !item.completed && 
+        item.dueDate && 
+        new Date(item.dueDate) <= futureDate && 
+        new Date(item.dueDate) >= now
+      ) {
+        upcomingDeadlines.push(item);
+      }
+    }
+    
+    // Sort by due date (ascending)
+    return upcomingDeadlines.sort((a, b) => {
+      if (!a.dueDate || !b.dueDate) return 0;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    });
+  }
+
+  // Document Uploads Methods
+  async getApplicationDocuments(athleteId: number, fileType?: string): Promise<ApplicationDocument[]> {
+    const documents: ApplicationDocument[] = [];
+    for (const doc of this.applicationDocumentMap.values()) {
+      if (doc.athleteId === athleteId && (!fileType || doc.fileType === fileType)) {
+        documents.push(doc);
+      }
+    }
+    return documents;
+  }
+
+  async getApplicationDocument(id: number): Promise<ApplicationDocument | undefined> {
+    return this.applicationDocumentMap.get(id);
+  }
+
+  async createApplicationDocument(document: InsertApplicationDocument): Promise<ApplicationDocument> {
+    const newDocument: ApplicationDocument = {
+      ...document,
+      id: this.applicationDocumentId++,
+      uploadedAt: new Date()
+    };
+    this.applicationDocumentMap.set(newDocument.id, newDocument);
+    return newDocument;
+  }
+
+  async updateApplicationDocument(id: number, updates: Partial<InsertApplicationDocument>): Promise<ApplicationDocument | undefined> {
+    const document = this.applicationDocumentMap.get(id);
+    if (!document) return undefined;
+
+    const updatedDocument: ApplicationDocument = {
+      ...document,
+      ...updates
+    };
+    this.applicationDocumentMap.set(id, updatedDocument);
+    return updatedDocument;
+  }
+
+  async deleteApplicationDocument(id: number): Promise<boolean> {
+    return this.applicationDocumentMap.delete(id);
+  }
+
+  // School Applications Methods
+  async getSchoolApplications(athleteId: number): Promise<SchoolApplication[]> {
+    const applications: SchoolApplication[] = [];
+    for (const app of this.schoolApplicationMap.values()) {
+      if (app.athleteId === athleteId) {
+        applications.push(app);
+      }
+    }
+    return applications;
+  }
+
+  async getSchoolApplication(id: number): Promise<SchoolApplication | undefined> {
+    return this.schoolApplicationMap.get(id);
+  }
+
+  async createSchoolApplication(application: InsertSchoolApplication): Promise<SchoolApplication> {
+    const newApplication: SchoolApplication = {
+      ...application,
+      id: this.schoolApplicationId++,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.schoolApplicationMap.set(newApplication.id, newApplication);
+    return newApplication;
+  }
+
+  async updateSchoolApplication(id: number, updates: Partial<InsertSchoolApplication>): Promise<SchoolApplication | undefined> {
+    const application = this.schoolApplicationMap.get(id);
+    if (!application) return undefined;
+
+    const updatedApplication: SchoolApplication = {
+      ...application,
+      ...updates,
+      updatedAt: new Date()
+    };
+    this.schoolApplicationMap.set(id, updatedApplication);
+    return updatedApplication;
+  }
+
+  async deleteSchoolApplication(id: number): Promise<boolean> {
+    return this.schoolApplicationMap.delete(id);
+  }
+
+  // Academic Achievements Methods
+  async getAcademicAchievements(athleteId: number): Promise<AcademicAchievement[]> {
+    const achievements: AcademicAchievement[] = [];
+    for (const achievement of this.academicAchievementMap.values()) {
+      if (achievement.athleteId === athleteId) {
+        achievements.push(achievement);
+      }
+    }
+    return achievements;
+  }
+
+  async getPublicAcademicAchievements(athleteId: number): Promise<AcademicAchievement[]> {
+    const achievements: AcademicAchievement[] = [];
+    for (const achievement of this.academicAchievementMap.values()) {
+      if (achievement.athleteId === athleteId && achievement.isPublic) {
+        achievements.push(achievement);
+      }
+    }
+    return achievements;
+  }
+
+  async getAcademicAchievement(id: number): Promise<AcademicAchievement | undefined> {
+    return this.academicAchievementMap.get(id);
+  }
+
+  async createAcademicAchievement(achievement: InsertAcademicAchievement): Promise<AcademicAchievement> {
+    const newAchievement: AcademicAchievement = {
+      ...achievement,
+      id: this.academicAchievementId++,
+      createdAt: new Date(),
+      isPublic: achievement.isPublic || false
+    };
+    this.academicAchievementMap.set(newAchievement.id, newAchievement);
+    return newAchievement;
+  }
+
+  async updateAcademicAchievement(id: number, updates: Partial<InsertAcademicAchievement>): Promise<AcademicAchievement | undefined> {
+    const achievement = this.academicAchievementMap.get(id);
+    if (!achievement) return undefined;
+
+    const updatedAchievement: AcademicAchievement = {
+      ...achievement,
+      ...updates
+    };
+    this.academicAchievementMap.set(id, updatedAchievement);
+    return updatedAchievement;
+  }
+
+  async deleteAcademicAchievement(id: number): Promise<boolean> {
+    return this.academicAchievementMap.delete(id);
+  }
+
+  // Counselor Methods
+  async getCounselors(): Promise<Counselor[]> {
+    return Array.from(this.counselorMap.values());
+  }
+
+  async getCounselor(id: number): Promise<Counselor | undefined> {
+    return this.counselorMap.get(id);
+  }
+
+  async getCounselorByUserId(userId: number): Promise<Counselor | undefined> {
+    for (const counselor of this.counselorMap.values()) {
+      if (counselor.userId === userId) {
+        return counselor;
+      }
+    }
+    return undefined;
+  }
+
+  async createCounselor(counselor: InsertCounselor): Promise<Counselor> {
+    const newCounselor: Counselor = {
+      ...counselor,
+      id: this.counselorId++,
+      createdAt: new Date()
+    };
+    this.counselorMap.set(newCounselor.id, newCounselor);
+    return newCounselor;
+  }
+
+  // Athlete-Counselor Relationship Methods
+  async getAthleteCounselors(athleteId: number): Promise<AthleteCounselor[]> {
+    const relationships: AthleteCounselor[] = [];
+    for (const relationship of this.athleteCounselorMap.values()) {
+      if (relationship.athleteId === athleteId) {
+        relationships.push(relationship);
+      }
+    }
+    return relationships;
+  }
+
+  async getCounselorAthletes(counselorId: number): Promise<AthleteCounselor[]> {
+    const relationships: AthleteCounselor[] = [];
+    for (const relationship of this.athleteCounselorMap.values()) {
+      if (relationship.counselorId === counselorId) {
+        relationships.push(relationship);
+      }
+    }
+    return relationships;
+  }
+
+  async createAthleteCounselor(relationship: InsertAthleteCounselor): Promise<AthleteCounselor> {
+    const newRelationship: AthleteCounselor = {
+      ...relationship,
+      id: this.athleteCounselorId++,
+      createdAt: new Date()
+    };
+    this.athleteCounselorMap.set(newRelationship.id, newRelationship);
+    return newRelationship;
+  }
+
+  async updateAthleteCounselor(id: number, updates: Partial<InsertAthleteCounselor>): Promise<AthleteCounselor | undefined> {
+    const relationship = this.athleteCounselorMap.get(id);
+    if (!relationship) return undefined;
+
+    const updatedRelationship: AthleteCounselor = {
+      ...relationship,
+      ...updates
+    };
+    this.athleteCounselorMap.set(id, updatedRelationship);
+    return updatedRelationship;
+  }
+
+  async deleteAthleteCounselor(id: number): Promise<boolean> {
+    return this.athleteCounselorMap.delete(id);
   }
 }
 
