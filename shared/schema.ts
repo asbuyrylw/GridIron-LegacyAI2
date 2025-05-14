@@ -273,6 +273,10 @@ export const recruitingPreferences = pgTable("recruiting_preferences", {
   preferredTrainingDays: json("preferred_training_days"), // Array of days
   recruitingGoals: text("recruiting_goals"),
   collegePreferences: json("college_preferences"), // Academic programs, locations, school size
+  collegeRecruiterContacts: json("college_recruiter_contacts").default('[]'), // Array of recruiter contacts
+  topSeasonGoal: text("top_season_goal"),
+  preferMotivationalMessages: boolean("prefer_motivational_messages").default(false),
+  motivationalMessageTypes: json("motivational_message_types").default('[]'), // Array of motivation types
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
