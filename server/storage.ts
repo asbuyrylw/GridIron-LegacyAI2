@@ -2765,4 +2765,7 @@ MemStorage.prototype.addTeamMember = async function(teamMember: InsertTeamMember
   return newTeamMember;
 };
 
+// Initialize skill progression system
+extendMemStorageWithSkillProgression(MemStorage.prototype);
+
 export const storage = new MemStorage();
