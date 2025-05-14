@@ -1,13 +1,16 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useEffect, ErrorInfo, ComponentType } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AchievementProvider } from "@/components/achievements/achievement-provider";
+import { useToast } from "@/hooks/use-toast";
 import { SideNav } from "@/components/layout/side-nav";
 import { PageContainer } from "@/components/layout/page-container";
 import HomePage from "@/pages/home-page";
@@ -149,13 +152,90 @@ function Router() {
   );
 }
 
+// Error boundary component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Something went wrong</h2>
+            <p className="text-gray-600 mb-4">
+              {this.state.error?.message || "An unexpected error occurred"}
+            </p>
+            <Button
+              onClick={() => {
+                this.setState({ hasError: false, error: null });
+                window.location.href = "/";
+              }}
+            >
+              Go back to home
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Global error handler component
+function GlobalErrorHandler() {
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    // Handle unhandled promise rejections
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      event.preventDefault();
+      console.error('Unhandled promise rejection:', event.reason);
+      
+      toast({
+        title: "Error",
+        description: event.reason?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    };
+    
+    // Add event listener
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, [toast]);
+  
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AchievementProvider>
-          <Router />
-          <Toaster />
+          <ErrorBoundary>
+            <GlobalErrorHandler />
+            <Router />
+            <Toaster />
+          </ErrorBoundary>
         </AchievementProvider>
       </AuthProvider>
     </QueryClientProvider>
