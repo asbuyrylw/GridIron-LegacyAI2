@@ -16,6 +16,7 @@ import { growthPredictionRouter } from "./routes/growth-prediction-routes";
 import { registerExternalIntegrationsRoutes } from "./routes/external-integrations-routes";
 import footballIqRoutes from "./routes/football-iq-routes";
 import playerBrandingRoutes from "./routes/player-branding-routes";
+import coachEvaluationRoutes from "./routes/coach-evaluation-routes";
 import { Router } from "express";
 
 // Extend the Express Session type to include our onboarding progress
@@ -105,6 +106,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Player Branding Toolkit routes
   app.use(playerBrandingRoutes);
+  
+  // Coach Evaluations & Depth Chart routes
+  app.use('/api/coach', coachEvaluationRoutes);
   
   // External Integrations routes (Twitter, Hudl, MaxPreps)
   registerExternalIntegrationsRoutes(app);

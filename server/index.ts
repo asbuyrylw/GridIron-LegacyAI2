@@ -7,6 +7,7 @@ import { seedAchievements } from "./seed-achievements";
 import { seedLeaderboards } from "./leaderboard-storage";
 import { storage } from "./storage";
 import { extendMemStorageWithFootballIq } from "./football-iq-storage";
+import { extendMemStorageWithCoachEvaluations, seedEvaluationTemplates } from "./coach-evaluation-storage";
 
 const app = express();
 app.use(express.json());
@@ -66,6 +67,11 @@ app.use((req, res, next) => {
   // Initialize Football IQ storage methods
   extendMemStorageWithFootballIq(storage);
   console.log('Football IQ assessment system initialized');
+  
+  // Initialize Coach Evaluations storage methods
+  extendMemStorageWithCoachEvaluations(storage);
+  await seedEvaluationTemplates(storage);
+  console.log('Coach Evaluations system initialized');
   
   // Initialize external integration services
   try {
