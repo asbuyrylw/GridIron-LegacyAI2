@@ -13,16 +13,11 @@ export function YearlyGoals() {
       { name: "Vertical Jump", target: "36 inches" },
       { name: "GPA", target: "3.5+" },
     ],
-    trainingFocus: "Speed and explosive power development while maintaining strength gains.",
-    details: {
-      training: "5 days/week structured training",
-      nutrition: "3,500 calories with 180g protein",
-      recruiting: "Highlight reel updates quarterly",
-    }
+    trainingFocus: "Speed and explosive power development while maintaining strength gains."
   };
 
   return (
-    <Card className="h-full">
+    <Card>
       <CardHeader className="pb-2">
         <CardTitle className="flex justify-between items-center text-lg">
           <div className="flex items-center gap-2">
@@ -48,21 +43,6 @@ export function YearlyGoals() {
           <div>
             <h3 className="text-sm font-medium mb-1">Training Focus</h3>
             <p className="text-xs text-muted-foreground">{goals.trainingFocus}</p>
-          </div>
-          
-          <div className="text-xs space-y-1.5">
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-blue-500"></span>
-              <span><strong>Training:</strong> {goals.details.training}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-green-500"></span>
-              <span><strong>Nutrition:</strong> {goals.details.nutrition}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-              <span><strong>Recruiting:</strong> {goals.details.recruiting}</span>
-            </div>
           </div>
           
           <Link href="/plan">

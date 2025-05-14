@@ -62,10 +62,10 @@ export function DailyQuote() {
   if (!quote) return null;
   
   return (
-    <Card className="bg-primary/5 border-primary/10">
+    <Card className="bg-blue-50 border-blue-100">
       <CardContent className="pt-6 pb-5">
         <div className="flex items-start gap-3">
-          <Quote className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+          <Quote className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm italic leading-relaxed">{quote.text}</p>
             <p className="text-xs text-muted-foreground mt-1.5">— {quote.author}</p>
