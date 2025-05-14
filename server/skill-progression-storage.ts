@@ -6,6 +6,11 @@ import {
   skillCategoryEnum, skillLevelEnum
 } from "@shared/schema";
 
+// Define helper type for Json fields
+type Json = any;
+// Define SkillCategory type
+type SkillCategory = "athleticism" | "technique" | "gameIQ" | "leadership" | "positionSpecific";
+
 
 /**
  * Extends the MemStorage class with methods for handling skill progression
@@ -21,6 +26,11 @@ export function extendMemStorageWithSkillProgression(memStoragePrototype: any) {
     this.nextSkillId = this.nextSkillId || 1;
     this.nextAthleteSkillId = this.nextAthleteSkillId || 1;
     this.nextSkillActivityLogId = this.nextSkillActivityLogId || 1;
+    
+    // Add the _initializeDefaultSkills method to the MemStorage prototype if not already there
+    if (!this._initializeDefaultSkills) {
+      MemStorage.prototype._initializeDefaultSkills = _initializeDefaultSkills;
+    }
     
     // Auto-initialize with some example skills if no skills exist
     if (this.skillsMap.size === 0) {

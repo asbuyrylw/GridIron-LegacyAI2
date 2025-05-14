@@ -426,6 +426,20 @@ export interface IStorage {
   toggleSocialCommentLike(commentId: number, userId: number): Promise<boolean>;
   deleteSocialComment(id: number): Promise<boolean>;
 
+  // Skill Progression Methods
+  getSkills(filters?: { category?: string; position?: string }): Promise<Skill[]>;
+  getSkillById(id: number): Promise<Skill | undefined>;
+  createSkill(skill: InsertSkill): Promise<Skill>;
+  updateSkill(id: number, updates: Partial<InsertSkill>): Promise<Skill | undefined>;
+  deleteSkill(id: number): Promise<boolean>;
+  getAthleteSkills(athleteId: number): Promise<{ skill: Skill; progression: AthleteSkill }[]>;
+  getAthleteSkill(athleteId: number, skillId: number): Promise<AthleteSkill | undefined>;
+  unlockAthleteSkill(athleteId: number, skillId: number): Promise<AthleteSkill>;
+  addSkillXP(athleteId: number, skillId: number, xp: number, activityType: string, description: string): Promise<AthleteSkill>;
+  getSkillActivityLogs(athleteId: number, skillId?: number, limit?: number): Promise<SkillActivityLog[]>;
+  createSkillActivityLog(log: InsertSkillActivityLog): Promise<SkillActivityLog>;
+  getAthleteSkillSummary(athleteId: number): Promise<any>;
+
   // These duplicate methods are already defined earlier in the interface
 
   // Leaderboard Methods
@@ -581,6 +595,16 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  // Skill progression maps and counters
+  skillsMap: Map<number, Skill> = new Map();
+  athleteSkillsMap: Map<number, AthleteSkill> = new Map();
+  skillActivityLogsMap: Map<number, SkillActivityLog> = new Map();
+  nextSkillId: number = 1;
+  nextAthleteSkillId: number = 1;
+  nextSkillActivityLogId: number = 1;
+  
+  // Declare _initializeDefaultSkills for TypeScript
+  _initializeDefaultSkills?: () => Promise<void>;
   private usersMap: Map<number, User>;
   
   // Import gamification methods
