@@ -190,12 +190,23 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
+    console.log("GET /api/user - Session:", {
+      id: req.sessionID,
+      authenticated: req.isAuthenticated(),
+      cookie: req.session?.cookie,
+      user: req.user ? `ID: ${req.user.id}, Type: ${req.user.userType}` : 'None'
+    });
+    
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });
     }
     
     // Don't send password back to client
     const { password, ...userWithoutPassword } = req.user;
+    
+    // Refresh the session to extend its lifetime
+    req.session.touch();
+    
     res.json(userWithoutPassword);
   });
 }

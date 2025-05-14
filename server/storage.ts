@@ -90,7 +90,7 @@ const MemoryStore = createMemoryStore(session);
 
 export interface IStorage {
   // Session Store
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using 'any' to work with MemoryStore implementation
   
   // User Methods
   getUser(id: number): Promise<User | undefined>;
@@ -537,8 +537,7 @@ export interface IStorage {
   createRecruitingMessage(message: InsertRecruitingMessage): Promise<RecruitingMessage>;
   markRecruitingMessageAsRead(id: number): Promise<RecruitingMessage | undefined>;
 
-  // Session Store
-  sessionStore: any; // Use any for session store to avoid type issues
+  // This property is already defined above, removed duplicate
   
   // Saved Colleges Methods
   getSavedColleges(userId: number): Promise<any[]>; // Return college details, not just saved college records
