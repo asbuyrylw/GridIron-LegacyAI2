@@ -730,6 +730,11 @@ export class MemStorage implements IStorage {
   sessionStore: any;
 
   constructor() {
+    // Initialize session store
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000, // 24 hours
+    });
+    
     this.usersMap = new Map();
     this.athletesMap = new Map();
     this.parentsMap = new Map();

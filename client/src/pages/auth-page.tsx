@@ -158,8 +158,8 @@ function LoginForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (dat
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "testuser", // Pre-fill with test credentials for debugging
-      password: "password123"
+      username: "testcoach", // Pre-fill with coach test credentials
+      password: "coach123"
     }
   });
   
