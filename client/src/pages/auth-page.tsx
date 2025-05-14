@@ -27,10 +27,14 @@ export default function AuthPage() {
     console.log("AuthPage - Authentication state:", { user, isLoading, isPending: loginMutation.isPending });
   }, [user, isLoading, loginMutation.isPending]);
   
-  // Redirect to home if already logged in
+  // Redirect to appropriate location based on user type
   if (user) {
-    console.log("AuthPage - User is authenticated, redirecting to home");
-    return <Redirect to="/" />;
+    console.log("AuthPage - User is authenticated, redirecting");
+    if (user.userType === "coach") {
+      return <Redirect to="/coach-dashboard" />;
+    } else {
+      return <Redirect to="/" />;
+    }
   }
   
   return (
