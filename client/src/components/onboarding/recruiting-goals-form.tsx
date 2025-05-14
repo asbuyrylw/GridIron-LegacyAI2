@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DIVISION_OPTIONS, DAYS_OF_WEEK } from "@/lib/constants";
+import { DIVISION_OPTIONS, DAYS_OF_WEEK, MOTIVATION_OPTIONS, SEASON_GOAL_OPTIONS } from "@/lib/constants";
 import { Switch } from "@/components/ui/switch";
 
 // This would be fetched from an API in a real application
@@ -66,6 +67,10 @@ export default function RecruitingGoalsForm({
       footballSeasonStart: undefined,
       footballSeasonEnd: undefined,
       preferredTrainingDays: [],
+      collegeRecruiterContacts: [],
+      topSeasonGoal: "",
+      preferMotivationalMessages: false,
+      motivationalMessageTypes: [],
     },
   });
 
@@ -309,7 +314,235 @@ export default function RecruitingGoalsForm({
             <FormMessage />
           </div>
 
-          <div className="flex justify-between">
+          <div className="space-y-6 mt-6">
+            <h3 className="text-lg font-semibold">College Recruiter Contacts</h3>
+            <p className="text-sm text-muted-foreground">
+              Add college recruiting contacts you've already communicated with
+            </p>
+            
+            <div className="space-y-4">
+              {form.watch("collegeRecruiterContacts")?.map((_, index) => (
+                <div key={index} className="border p-4 rounded-md">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-medium">Contact #{index + 1}</h4>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        const currentContacts = form.getValues("collegeRecruiterContacts") || [];
+                        const newContacts = [
+                          ...currentContacts.slice(0, index),
+                          ...currentContacts.slice(index + 1)
+                        ];
+                        form.setValue("collegeRecruiterContacts", newContacts);
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                  
+                  <div className="grid gap-4 grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name={`collegeRecruiterContacts.${index}.name`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Recruiter name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name={`collegeRecruiterContacts.${index}.school`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>School</FormLabel>
+                          <FormControl>
+                            <Input placeholder="College name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name={`collegeRecruiterContacts.${index}.role`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Role</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Position/Role" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name={`collegeRecruiterContacts.${index}.email`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email (optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Email address" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name={`collegeRecruiterContacts.${index}.phone`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone (optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Phone number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name={`collegeRecruiterContacts.${index}.notes`}
+                      render={({ field }) => (
+                        <FormItem className="col-span-2">
+                          <FormLabel>Notes (optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Additional notes" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              ))}
+              
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const currentContacts = form.getValues("collegeRecruiterContacts") || [];
+                  form.setValue("collegeRecruiterContacts", [
+                    ...currentContacts,
+                    {
+                      name: "",
+                      school: "",
+                      role: "",
+                      email: "",
+                      phone: "",
+                      notes: "",
+                    }
+                  ]);
+                }}
+              >
+                + Add Recruiter Contact
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-6 mt-6">
+            <h3 className="text-lg font-semibold">Goals and Motivation</h3>
+            
+            <FormField
+              control={form.control}
+              name="topSeasonGoal"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Top Goal for This Season</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your top goal" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {SEASON_GOAL_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <div className="space-y-3">
+              <FormLabel>What motivates you? (Select all that apply)</FormLabel>
+              <div className="grid grid-cols-2 gap-2">
+                {MOTIVATION_OPTIONS.map((option) => (
+                  <FormField
+                    key={option.value}
+                    control={form.control}
+                    name="motivationalMessageTypes"
+                    render={({ field }) => {
+                      return (
+                        <FormItem
+                          key={option.value}
+                          className="flex flex-row items-start space-x-3 space-y-0"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(option.value)}
+                              onCheckedChange={(checked) => {
+                                const updatedValues = checked
+                                  ? [...(field.value || []), option.value]
+                                  : field.value?.filter(
+                                      (value) => value !== option.value
+                                    ) || [];
+                                field.onChange(updatedValues);
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm font-normal">
+                            {option.label}
+                          </FormLabel>
+                        </FormItem>
+                      );
+                    }}
+                  />
+                ))}
+              </div>
+              <FormMessage />
+            </div>
+            
+            <FormField
+              control={form.control}
+              name="preferMotivationalMessages"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Motivational Messages</FormLabel>
+                    <FormDescription>
+                      Would you like to receive motivational messages?
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="flex justify-between mt-6">
             <Button type="button" variant="outline" onClick={prevStep}>
               Previous
             </Button>
