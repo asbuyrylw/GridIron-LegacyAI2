@@ -65,6 +65,14 @@ import {
 } from "./gamification-storage";
 
 import {
+  Skill, InsertSkill,
+  AthleteSkill, InsertAthleteSkill,
+  SkillActivityLog, InsertSkillActivityLog
+} from "@shared/schema";
+
+import { extendMemStorageWithSkillProgression } from "./skill-progression-storage";
+
+import {
   getLeaderboards,
   getLeaderboardById,
   createLeaderboard,
@@ -545,6 +553,30 @@ export interface IStorage {
   getLeaderboards(active?: boolean): Promise<Leaderboard[]>;
   getLeaderboardById(id: number): Promise<Leaderboard | undefined>;
   getLeaderboard(timeframe: string, scope: string): Promise<any[]>;
+
+  // Skill Progression Methods
+  getSkills(filters?: { category?: string; position?: string }): Promise<Skill[]>;
+  getSkillById(id: number): Promise<Skill | undefined>;
+  createSkill(skill: InsertSkill): Promise<Skill>;
+  updateSkill(id: number, updates: Partial<InsertSkill>): Promise<Skill | undefined>;
+  deleteSkill(id: number): Promise<boolean>;
+  getAthleteSkills(athleteId: number): Promise<{skill: Skill, progression: AthleteSkill}[]>;
+  getAthleteSkill(athleteId: number, skillId: number): Promise<AthleteSkill | undefined>;
+  unlockAthleteSkill(athleteId: number, skillId: number): Promise<AthleteSkill>;
+  addSkillXP(athleteId: number, skillId: number, xpToAdd: number, activityType: string, description: string): Promise<{
+    athleteSkill: AthleteSkill;
+    leveledUp: boolean;
+    milestonePassed: boolean;
+  }>;
+  getSkillActivityLogs(athleteId: number, skillId?: number, limit?: number): Promise<SkillActivityLog[]>;
+  createSkillActivityLog(log: InsertSkillActivityLog): Promise<SkillActivityLog>;
+  getAthleteSkillSummary(athleteId: number): Promise<{
+    totalSkills: number;
+    totalXP: number;
+    skillsByLevel: Record<string, number>;
+    recentActivity: SkillActivityLog[];
+    topSkills: { skill: Skill, progression: AthleteSkill }[];
+  }>;
   // Additional methods for future implementation
 }
 
