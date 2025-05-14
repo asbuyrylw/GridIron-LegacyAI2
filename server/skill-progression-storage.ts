@@ -1,4 +1,4 @@
-import { type MemStorage } from "./storage";
+import { MemStorage } from "./storage";
 import {
   Skill, InsertSkill,
   AthleteSkill, InsertAthleteSkill,
@@ -28,12 +28,10 @@ export function extendMemStorageWithSkillProgression(memStoragePrototype: any) {
     this.nextSkillActivityLogId = this.nextSkillActivityLogId || 1;
     
     // Add the _initializeDefaultSkills method to the MemStorage prototype if not already there
-    if (!this._initializeDefaultSkills) {
-      MemStorage.prototype._initializeDefaultSkills = _initializeDefaultSkills;
-    }
+    MemStorage.prototype._initializeDefaultSkills = _initializeDefaultSkills;
     
     // Auto-initialize with some example skills if no skills exist
-    if (this.skillsMap.size === 0) {
+    if (this.skillsMap.size === 0 && this._initializeDefaultSkills) {
       this._initializeDefaultSkills();
     }
   };
@@ -155,7 +153,7 @@ export function extendMemStorageWithSkillProgression(memStoragePrototype: any) {
     });
     
     // Filter out any entries where the skill might have been deleted
-    return result.filter(entry => entry.skill !== undefined);
+    return result.filter((entry): entry is {skill: Skill, progression: AthleteSkill} => entry.skill !== undefined);
   };
   
   // Get a specific athlete skill
@@ -387,7 +385,7 @@ export function extendMemStorageWithSkillProgression(memStoragePrototype: any) {
     
     // Calculate total skills and XP
     const totalSkills = athleteSkills.length;
-    const totalXP = athleteSkills.reduce((total, { progression }) => total + progression.xp, 0);
+    const totalXP = athleteSkills.reduce((total: number, { progression }: {progression: AthleteSkill}) => total + progression.xp, 0);
     
     // Count skills by level
     const skillsByLevel: Record<string, number> = {
