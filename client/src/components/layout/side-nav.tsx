@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation, Link } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 import { 
   Home, 
   Dumbbell, 
@@ -34,8 +35,13 @@ export function SideNav() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const { user } = useAuth();
   
-  const navItems = [
+  const isCoach = user?.userType === "coach";
+  const isAthlete = user?.userType === "athlete";
+  const isParent = user?.userType === "parent";
+  
+  const athleteNavItems = [
     {
       label: "Home",
       href: "/",
@@ -91,12 +97,6 @@ export function SideNav() {
       active: location === "/player-branding"
     },
     {
-      label: "Coach Evaluations",
-      href: "/coach-evaluations",
-      icon: ClipboardCheck,
-      active: location === "/coach-evaluations"
-    },
-    {
       label: "College Applications",
       href: "/college-application-hub",
       icon: GraduationCap,
@@ -119,6 +119,39 @@ export function SideNav() {
       href: "/teams",
       icon: Users,
       active: location.includes("/teams")
+    },
+    {
+      label: "Profile",
+      href: "/profile",
+      icon: User,
+      active: location === "/profile"
+    },
+    {
+      label: "Settings",
+      href: "/settings",
+      icon: Settings,
+      active: location === "/settings"
+    }
+  ];
+  
+  const coachNavItems = [
+    {
+      label: "Dashboard",
+      href: "/coach-dashboard",
+      icon: Home,
+      active: location === "/coach-dashboard"
+    },
+    {
+      label: "Team Management",
+      href: "/teams",
+      icon: Users,
+      active: location.includes("/teams")
+    },
+    {
+      label: "Coach Evaluations",
+      href: "/coach-evaluations",
+      icon: ClipboardCheck,
+      active: location === "/coach-evaluations"
     },
     {
       label: "Parent Reports",
@@ -146,6 +179,9 @@ export function SideNav() {
     }
   ];
   
+  // Select the correct navigation items based on user type
+  const navItems = isCoach ? coachNavItems : athleteNavItems;
+  
   // For mobile, use a Sheet component
   const MobileNav = () => (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -163,7 +199,7 @@ export function SideNav() {
           <div className="py-4 px-3 border-b">
             <h2 className="text-xl font-bold">GridIron Legacy</h2>
           </div>
-          <nav className="flex-1 py-2">
+          <nav className="flex-1 py-2 overflow-y-auto">
             <ul className="space-y-1 px-2">
               {navItems.map((item) => (
                 <li key={item.href}>
@@ -210,7 +246,7 @@ export function SideNav() {
             {isCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
           </Button>
         </div>
-        <nav className="flex-1 py-4">
+        <nav className="flex-1 py-4 overflow-y-auto">
           <ul className="space-y-1 px-2">
             {navItems.map((item) => (
               <li key={item.href}>
