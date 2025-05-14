@@ -7,14 +7,17 @@ import { CombineMetric } from "@shared/schema";
 import { Redirect } from "wouter";
 import { useEffect } from "react";
 import { useLoginStreakUpdate } from "@/hooks/use-login-streak";
-import { LoginStreakCard } from "@/components/gamification/login-streak-card";
 
-// New Dashboard Components
+// Dashboard Components
 import { MilestoneTrackers } from "@/components/dashboard/milestone-trackers";
 import { YearlyGoals } from "@/components/dashboard/yearly-goals";
 import { DailyPlans } from "@/components/dashboard/daily-plans";
 import { DailyQuote } from "@/components/dashboard/daily-quote";
-import { AchievementSummary } from "@/components/achievements/achievement-summary";
+import { PlanCalendar } from "@/components/dashboard/plan-calendar";
+import { ProfileSummary } from "@/components/dashboard/profile-summary";
+import { FootballIqSummary } from "@/components/dashboard/football-iq-summary";
+import { LoginStreak } from "@/components/dashboard/login-streak";
+import { AchievementsSummary } from "@/components/dashboard/achievements-summary";
 import { BellRing, CalendarClock } from "lucide-react";
 
 export default function HomePage() {
@@ -72,28 +75,52 @@ export default function HomePage() {
       <Header />
       
       <main className="container mx-auto px-4 pt-4 pb-20">
-        {/* Top Section: Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Left Column - 2/3 width */}
-          <div className="lg:col-span-2">
-            {/* Welcome & Name */}
-            <h1 className="text-2xl font-bold mb-3">Welcome back, {user?.firstName || 'Athlete'}!</h1>
+        {/* Top Section: Welcome with Profile Summary */}
+        <div className="mb-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+            <h1 className="text-2xl font-bold">Welcome back, {user?.firstName || 'Athlete'}!</h1>
+          </div>
+          
+          <div className="mb-4">
+            <ProfileSummary />
+          </div>
+        </div>
+        
+        {/* Main Content: Three Column Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* Yearly Goals */}
+            <YearlyGoals />
             
-            {/* Daily Quote */}
-            <div className="mb-4">
-              <DailyQuote />
+            {/* Football IQ Summary */}
+            <FootballIqSummary />
+            
+            {/* Achievement & Login Streak Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Login Streak */}
+              <LoginStreak />
+              
+              {/* Achievements */}
+              <AchievementsSummary />
             </div>
+          </div>
+          
+          {/* Middle Column */}
+          <div className="space-y-6">
+            {/* Daily Quote */}
+            <DailyQuote />
             
-            {/* Reminders (Smaller, under daily quote) */}
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-4">
+            {/* Reminders */}
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-2">
                 <BellRing className="h-4 w-4 text-primary" />
                 <h2 className="text-sm font-semibold">Reminders</h2>
               </div>
               
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col gap-2">
                 {reminders.map(reminder => (
-                  <div key={reminder.id} className="flex items-center gap-2 p-2 bg-white rounded-lg border border-blue-100 flex-1">
+                  <div key={reminder.id} className="flex items-center gap-2 p-2 bg-white rounded-lg border border-blue-100">
                     <div className="h-8 w-8 flex items-center justify-center rounded-full bg-primary/10 text-primary">
                       {reminder.icon}
                     </div>
@@ -106,44 +133,25 @@ export default function HomePage() {
               </div>
             </div>
             
-            {/* Milestone Trackers */}
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold mb-3">Performance Milestones</h2>
-              <MilestoneTrackers metrics={latestMetrics} />
-            </div>
-            
-            {/* Daily Plans - Moved up directly under milestones */}
+            {/* Today's Plans */}
             <div>
               <h2 className="text-lg font-semibold mb-3">Today's Plans</h2>
               <DailyPlans />
             </div>
           </div>
           
-          {/* Right Column - 1/3 width */}
+          {/* Right Column */}
           <div className="space-y-6">
-            {/* Yearly Goals Section - Moved up to top */}
-            <YearlyGoals />
+            {/* Training Calendar */}
+            <PlanCalendar />
             
-            {/* Login Streak Card */}
-            <LoginStreakCard />
-            
-            {/* Achievements */}
-            <AchievementSummary />
-            
-            {/* Upgrade Plan Button (only for free trial users) */}
-            {user?.athlete?.subscriptionTier === 'free' && (
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
-                <h3 className="font-semibold mb-2">Upgrade Your Plan</h3>
-                <p className="text-sm mb-3 text-white/90">Get access to advanced features, AI recruiting insights, and more.</p>
-                <button className="w-full bg-white text-blue-600 font-medium py-2 rounded-md">
-                  View Plans
-                </button>
-              </div>
-            )}
+            {/* Performance Milestones */}
+            <div>
+              <h2 className="text-lg font-semibold mb-3">Performance</h2>
+              <MilestoneTrackers metrics={latestMetrics} />
+            </div>
           </div>
         </div>
-        
-        <SubscriptionInfo />
       </main>
     </div>
   );

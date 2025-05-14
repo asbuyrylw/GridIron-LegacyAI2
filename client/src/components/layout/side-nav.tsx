@@ -85,12 +85,6 @@ export function SideNav() {
       active: location === "/growth-prediction"
     },
     {
-      label: "Football IQ",
-      href: "/football-iq",
-      icon: Brain,
-      active: location.includes("/football-iq")
-    },
-    {
       label: "Player Branding",
       href: "/player-branding",
       icon: Camera,
