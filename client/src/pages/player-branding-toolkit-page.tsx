@@ -64,39 +64,66 @@ const PlayerBrandingToolkitPage: React.FC = () => {
   const [showAcademics, setShowAcademics] = useState(true);
   
   // Fetch athlete data including stats, achievements, etc.
-  const { data: athleteData, isLoading: isLoadingAthlete } = useQuery({
+  const { data: athleteData, isLoading: isLoadingAthlete, isError: isAthleteError } = useQuery({
     queryKey: ['/api/athletes', athlete?.id],
     queryFn: async () => {
-      if (!athlete?.id) return null;
-      const response = await fetch(`/api/athletes/${athlete.id}`);
-      if (!response.ok) throw new Error('Failed to fetch athlete data');
-      return response.json();
+      try {
+        if (!athlete?.id) return null;
+        const response = await fetch(`/api/athletes/${athlete.id}`);
+        if (!response.ok) {
+          console.error('Error fetching athlete data:', response.status, response.statusText);
+          throw new Error('Failed to fetch athlete data');
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Error in athlete data fetch:', error);
+        throw error;
+      }
     },
     enabled: !!athlete?.id,
+    retries: 2,
   });
   
   // Fetch athlete's combine metrics
-  const { data: metricsData, isLoading: isLoadingMetrics } = useQuery({
+  const { data: metricsData, isLoading: isLoadingMetrics, isError: isMetricsError } = useQuery({
     queryKey: ['/api/athletes', athlete?.id, 'metrics'],
     queryFn: async () => {
-      if (!athlete?.id) return null;
-      const response = await fetch(`/api/athletes/${athlete.id}/metrics`);
-      if (!response.ok) throw new Error('Failed to fetch metrics');
-      return response.json();
+      try {
+        if (!athlete?.id) return null;
+        const response = await fetch(`/api/athletes/${athlete.id}/metrics`);
+        if (!response.ok) {
+          console.error('Error fetching metrics data:', response.status, response.statusText);
+          throw new Error('Failed to fetch metrics');
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Error in metrics data fetch:', error);
+        throw error;
+      }
     },
     enabled: !!athlete?.id,
+    retries: 2,
   });
   
   // Fetch athlete's achievements
-  const { data: achievements, isLoading: isLoadingAchievements } = useQuery({
+  const { data: achievements, isLoading: isLoadingAchievements, isError: isAchievementsError } = useQuery({
     queryKey: ['/api/athletes', athlete?.id, 'achievements'],
     queryFn: async () => {
-      if (!athlete?.id) return [];
-      const response = await fetch(`/api/athletes/${athlete.id}/achievements`);
-      if (!response.ok) throw new Error('Failed to fetch achievements');
-      return response.json();
+      try {
+        if (!athlete?.id) return [];
+        const response = await fetch(`/api/athletes/${athlete.id}/achievements`);
+        if (!response.ok) {
+          console.error('Error fetching achievements data:', response.status, response.statusText);
+          throw new Error('Failed to fetch achievements');
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Error in achievements fetch:', error);
+        throw error;
+      }
     },
     enabled: !!athlete?.id,
+    retries: 2,
   });
 
   // Generate athlete bio based on profile data
