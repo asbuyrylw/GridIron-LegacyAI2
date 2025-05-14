@@ -162,9 +162,15 @@ export function setupAuth(app: Express) {
         req.login(user, (err) => {
           if (err) return next(err);
           
-          // Don't send password back to client
-          const { password, ...userWithoutPassword } = user;
-          res.status(200).json(userWithoutPassword);
+          // Save the session explicitly to ensure it's stored before responding
+          req.session.save((err) => {
+            if (err) return next(err);
+            
+            // Don't send password back to client
+            const { password, ...userWithoutPassword } = user;
+            console.log("User authenticated, session saved:", req.sessionID);
+            res.status(200).json(userWithoutPassword);
+          });
         });
       })(req, res, next);
     } catch (error) {

@@ -28,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
+    refetch: refetchUser
   } = useQuery<User | null, Error>({
     queryKey: ["/api/user"],
     queryFn: async () => {
@@ -45,8 +46,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
     },
-    retry: 0, // Don't retry on error
-    refetchOnWindowFocus: false,
+    retry: 1, // Retry once on error
+    retryDelay: 1000, // Wait 1 second before retrying
+    refetchOnWindowFocus: true, // Refetch when window gets focus
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
@@ -69,14 +71,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Login successful",
         description: `Welcome back, ${userData.athlete?.firstName || userData.username}!`,
       });
-      // Immediately refetch user data to ensure it's up to date
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      // Immediately refetch user data using our reference
+      refetchUser();
+      
       // Navigate to the appropriate dashboard based on user type
-      if (userData.userType === "coach") {
-        navigate("/coach-dashboard");
-      } else {
-        navigate("/");
-      }
+      setTimeout(() => {
+        if (userData.userType === "coach") {
+          navigate("/coach-dashboard");
+        } else {
+          navigate("/");
+        }
+      }, 500); // Short delay to ensure session is established
     },
     onError: (error: Error) => {
       console.error("Login mutation error:", error);
