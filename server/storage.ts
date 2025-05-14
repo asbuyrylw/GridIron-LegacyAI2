@@ -29,7 +29,13 @@ import {
   teamMembers, type TeamMember, type InsertTeamMember,
   teamEvents, type TeamEvent, type InsertTeamEvent,
   teamEventAttendance, type TeamEventAttendance, type InsertTeamEventAttendance,
-  teamAnnouncements, type TeamAnnouncement, type InsertTeamAnnouncement
+  teamAnnouncements, type TeamAnnouncement, type InsertTeamAnnouncement,
+  // Coach Evaluations & Depth Chart schemas
+  coachEvaluations, type CoachEvaluation, type InsertCoachEvaluation,
+  evaluationTemplates, type EvaluationTemplate, type InsertEvaluationTemplate,
+  depthCharts, type DepthChart, type InsertDepthChart,
+  depthChartPositions, type DepthChartPosition, type InsertDepthChartPosition,
+  depthChartEntries, type DepthChartEntry, type InsertDepthChartEntry
 } from "@shared/schema";
 import { savedColleges, type SavedCollege, type InsertSavedCollege } from "@shared/saved-colleges-schema";
 
@@ -76,6 +82,38 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
+  
+  // Coach Evaluation Methods
+  getEvaluationTemplates(): Promise<EvaluationTemplate[]>;
+  getEvaluationTemplateByPosition(position: string): Promise<EvaluationTemplate | undefined>;
+  createEvaluationTemplate(template: InsertEvaluationTemplate): Promise<EvaluationTemplate>;
+  updateEvaluationTemplate(id: number, updates: Partial<InsertEvaluationTemplate>): Promise<EvaluationTemplate | undefined>;
+  
+  getCoachEvaluations(filters?: { athleteId?: number; coachId?: number; season?: string; position?: string }): Promise<CoachEvaluation[]>;
+  getCoachEvaluationById(id: number): Promise<CoachEvaluation | undefined>;
+  createCoachEvaluation(evaluation: InsertCoachEvaluation): Promise<CoachEvaluation>;
+  updateCoachEvaluation(id: number, updates: Partial<InsertCoachEvaluation>): Promise<CoachEvaluation | undefined>;
+  deleteCoachEvaluation(id: number): Promise<boolean>;
+  
+  // Depth Chart Methods
+  getDepthCharts(filters?: { teamId?: number; createdBy?: number; isActive?: boolean }): Promise<DepthChart[]>;
+  getDepthChartById(id: number): Promise<DepthChart | undefined>;
+  createDepthChart(chart: InsertDepthChart): Promise<DepthChart>;
+  updateDepthChart(id: number, updates: Partial<InsertDepthChart>): Promise<DepthChart | undefined>;
+  deleteDepthChart(id: number): Promise<boolean>;
+  
+  getDepthChartPositions(depthChartId: number): Promise<DepthChartPosition[]>;
+  getDepthChartPositionById(id: number): Promise<DepthChartPosition | undefined>;
+  createDepthChartPosition(position: InsertDepthChartPosition): Promise<DepthChartPosition>;
+  updateDepthChartPosition(id: number, updates: Partial<InsertDepthChartPosition>): Promise<DepthChartPosition | undefined>;
+  deleteDepthChartPosition(id: number): Promise<boolean>;
+  
+  getDepthChartEntries(positionId: number): Promise<DepthChartEntry[]>;
+  getDepthChartEntriesByAthlete(athleteId: number): Promise<DepthChartEntry[]>;
+  getDepthChartEntryById(id: number): Promise<DepthChartEntry | undefined>;
+  createDepthChartEntry(entry: InsertDepthChartEntry): Promise<DepthChartEntry>;
+  updateDepthChartEntry(id: number, updates: Partial<InsertDepthChartEntry>): Promise<DepthChartEntry | undefined>;
+  deleteDepthChartEntry(id: number): Promise<boolean>;
   
   // Football IQ Methods
   getFootballIqQuizzes(filters?: {
@@ -499,6 +537,22 @@ export class MemStorage implements IStorage {
   
   private readonly twitterPostsMap = new Map<number, TwitterPost>();
   private twitterPostId = 1;
+  
+  // Coach Evaluations & Depth Charts
+  private readonly coachEvaluationMap = new Map<number, CoachEvaluation>();
+  private coachEvaluationId = 1;
+  
+  private readonly evaluationTemplateMap = new Map<number, EvaluationTemplate>();
+  private evaluationTemplateId = 1;
+  
+  private readonly depthChartMap = new Map<number, DepthChart>();
+  private depthChartId = 1;
+  
+  private readonly depthChartPositionMap = new Map<number, DepthChartPosition>();
+  private depthChartPositionId = 1;
+  
+  private readonly depthChartEntryMap = new Map<number, DepthChartEntry>();
+  private depthChartEntryId = 1;
   private socialConnectionsMap: Map<number, SocialConnection>;
   private socialPostsMap: Map<number, SocialPost>;
   private socialCommentsMap: Map<number, any>;
