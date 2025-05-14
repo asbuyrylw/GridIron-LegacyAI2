@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, ChefHat } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Loader2, ChefHat, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -30,17 +31,28 @@ export function MealSuggestions({ athleteId, nutritionPlan }: MealSuggestionsPro
     }
   }, [nutritionPlan?.restrictions]);
 
-  const { data: suggestions, isLoading } = useQuery({
+  const { data: suggestions, isLoading, error } = useQuery({
     queryKey: ["/api/athlete", athleteId, "meal-suggestions", mealType, goal],
-    queryFn: ({ signal }) => 
-      fetch(`/api/athlete/${athleteId}/meal-suggestions?mealType=${mealType}&goal=${goal}`, { signal })
-      .then(res => {
-        if (!res.ok) {
-          if (res.status === 404) return [];
-          throw new Error("Failed to fetch meal suggestions");
+    queryFn: async ({ signal }) => {
+      try {
+        const response = await fetch(`/api/athlete/${athleteId}/meal-suggestions?mealType=${mealType}&goal=${goal}`, { signal });
+        
+        if (!response.ok) {
+          if (response.status === 404) return [];
+          // Try to parse error response
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.message || "Failed to fetch meal suggestions");
         }
-        return res.json();
-      }),
+        
+        return await response.json();
+      } catch (err) {
+        console.error("Error fetching meal suggestions:", err);
+        if (err instanceof Error) {
+          throw err;
+        }
+        throw new Error("An unexpected error occurred while fetching meal suggestions");
+      }
+    },
     enabled: !!athleteId && !!nutritionPlan
   });
 

@@ -54,6 +54,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+} from "@/components/ui/alert";
 import { SocialComments } from "@/components/social/social-comments";
 
 export function SocialFeed() {
@@ -68,43 +73,61 @@ export function SocialFeed() {
   const [commentsDialogOpen, setCommentsDialogOpen] = useState(false);
   
   // Query posts with selected tab filter
-  const { data: posts, isLoading } = useQuery({
+  const { data: posts, isLoading, error } = useQuery({
     queryKey: ["/api/social/feed", activeTab],
     queryFn: async () => {
-      const queryParams = activeTab !== "all" ? `?filter=${activeTab}` : "";
-      const res = await fetch(`/api/social/feed${queryParams}`);
-      
-      if (!res.ok) {
-        throw new Error("Failed to fetch posts");
+      try {
+        const queryParams = activeTab !== "all" ? `?filter=${activeTab}` : "";
+        const res = await fetch(`/api/social/feed${queryParams}`);
+        
+        if (!res.ok) {
+          // Try to parse error response
+          const errorData = await res.json().catch(() => null);
+          throw new Error(errorData?.message || "Failed to fetch posts");
+        }
+        
+        return await res.json();
+      } catch (err) {
+        console.error("Error fetching social feed:", err);
+        if (err instanceof Error) {
+          throw err;
+        }
+        throw new Error("An unexpected error occurred while fetching the social feed");
       }
-      
-      return res.json();
     }
   });
   
   // Create post mutation
   const createPostMutation = useMutation({
     mutationFn: async () => {
-      // Create FormData to support file uploads
-      const formData = new FormData();
-      formData.append("content", newPostText);
-      
-      if (selectedPostMedia) {
-        formData.append("media", selectedPostMedia);
-        formData.append("mediaType", mediaType || "image");
+      try {
+        // Create FormData to support file uploads
+        const formData = new FormData();
+        formData.append("content", newPostText);
+        
+        if (selectedPostMedia) {
+          formData.append("media", selectedPostMedia);
+          formData.append("mediaType", mediaType || "image");
+        }
+        
+        const res = await fetch("/api/social/posts", {
+          method: "POST",
+          body: formData
+        });
+        
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ message: "Failed to create post" }));
+          throw new Error(errorData.message || "Failed to create post");
+        }
+        
+        return await res.json();
+      } catch (err) {
+        console.error("Error creating post:", err);
+        if (err instanceof Error) {
+          throw err;
+        }
+        throw new Error("An unexpected error occurred while creating the post");
       }
-      
-      const res = await fetch("/api/social/posts", {
-        method: "POST",
-        body: formData
-      });
-      
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to create post");
-      }
-      
-      return res.json();
     },
     onSuccess: () => {
       // Reset form
@@ -201,6 +224,17 @@ export function SocialFeed() {
   
   return (
     <div className="space-y-6">
+      {/* Error display */}
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : "An error occurred loading the social feed"}
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {/* Create Post Card */}
       <Card>
         <CardHeader className="pb-3">
