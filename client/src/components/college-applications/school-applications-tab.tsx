@@ -60,12 +60,12 @@ export default function SchoolApplicationsTab({ athleteId }: SchoolApplicationsT
       }
     },
     enabled: !!athleteId,
+    retries: 2,
   });
 
   const createApplicationMutation = useMutation({
     mutationFn: (values: z.infer<typeof applicationSchema>) => 
-      apiRequest('/api/college-applications/applications', {
-        method: 'POST',
+      apiRequest('POST', '/api/college-applications/applications', {
         body: {
           ...values,
           athleteId,
@@ -90,8 +90,7 @@ export default function SchoolApplicationsTab({ athleteId }: SchoolApplicationsT
 
   const updateApplicationMutation = useMutation({
     mutationFn: (values: SchoolApplication) => 
-      apiRequest(`/api/college-applications/applications/${values.id}`, {
-        method: 'PATCH',
+      apiRequest('PATCH', `/api/college-applications/applications/${values.id}`, {
         body: values,
       }),
     onSuccess: () => {
@@ -114,9 +113,7 @@ export default function SchoolApplicationsTab({ athleteId }: SchoolApplicationsT
 
   const deleteApplicationMutation = useMutation({
     mutationFn: (id: number) => 
-      apiRequest(`/api/college-applications/applications/${id}`, {
-        method: 'DELETE',
-      }),
+      apiRequest('DELETE', `/api/college-applications/applications/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/college-applications/applications', athleteId] });
       toast({
