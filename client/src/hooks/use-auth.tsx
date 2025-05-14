@@ -5,7 +5,7 @@ import {
   UseMutationResult,
 } from "@tanstack/react-query";
 import { LoginData, AthleteRegistration, User } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/query-client";
 import { useToast } from "@/hooks/use-toast";
 
 export type AuthContextType = {
@@ -28,13 +28,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
   } = useQuery<User | null, Error>({
     queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async () => {
+      try {
+        return await apiRequest("GET", "/api/user");
+      } catch (error) {
+        if ((error as any).message?.includes("401")) {
+          return null;
+        }
+        throw error;
+      }
+    }
   });
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+      return await apiRequest("POST", "/api/login", { body: credentials });
     },
     onSuccess: (userData: User) => {
       queryClient.setQueryData(["/api/user"], userData);
@@ -54,8 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: AthleteRegistration) => {
-      const res = await apiRequest("POST", "/api/register", credentials);
-      return await res.json();
+      return await apiRequest("POST", "/api/register", { body: credentials });
     },
     onSuccess: (userData: User) => {
       queryClient.setQueryData(["/api/user"], userData);

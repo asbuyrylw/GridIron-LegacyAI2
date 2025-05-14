@@ -18,9 +18,12 @@ export const queryClient = new QueryClient({
  * Also automatically parses JSON responses.
  */
 export async function apiRequest<T = any>(
+  method: string,
   url: string,
   options: RequestInit = {}
 ): Promise<T> {
+  // Set method
+  options.method = method;
   // Set default headers
   options.headers = {
     'Content-Type': 'application/json',
