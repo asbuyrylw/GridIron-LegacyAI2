@@ -18,6 +18,7 @@ import {
   FileText,
   Ruler,
   Mail,
+  GraduationCap,
   Camera,
   ClipboardCheck
 } from "lucide-react";
