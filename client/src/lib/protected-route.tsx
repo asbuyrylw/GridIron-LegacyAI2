@@ -35,7 +35,8 @@ export function ProtectedRoute({
   return (
     <Route path={path}>
       <PageContainer>
-        {Component ? <Component /> : children}
+        {Component && <Component />}
+        {children}
       </PageContainer>
     </Route>
   );

@@ -77,6 +77,11 @@ export default function CoachDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
+  
+  // Role-based access control - only coaches can access this page
+  if (user && user.userType !== "coach") {
+    return <Redirect to="/" />;
+  }
   const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
   const [showAddEventDialog, setShowAddEventDialog] = useState(false);
   const [selectedAthlete, setSelectedAthlete] = useState<number | null>(null);
