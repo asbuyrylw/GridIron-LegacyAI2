@@ -1,3 +1,8 @@
+import session from "express-session";
+import createMemoryStore from "memorystore";
+
+const MemoryStore = createMemoryStore(session);
+
 import { 
   users, type User, type InsertUser, 
   athletes, type Athlete, type InsertAthlete,
@@ -53,8 +58,6 @@ import {
   maxPrepsStats, type MaxPrepsStats, type InsertMaxPrepsStats,
   twitterPosts, type TwitterPost, type InsertTwitterPost
 } from "@shared/external-integrations";
-import session from "express-session";
-import createMemoryStore from "memorystore";
 import { 
   getAthleteAchievements,
   getAthleteAchievementByStringId,
@@ -85,8 +88,6 @@ import {
   deleteLeaderboardEntry,
   seedLeaderboards
 } from "./leaderboard-storage";
-
-const MemoryStore = createMemoryStore(session);
 
 export interface IStorage {
   // Session Store
