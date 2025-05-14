@@ -5,7 +5,7 @@ import {
   SkillActivityLog, InsertSkillActivityLog,
   skillCategoryEnum, skillLevelEnum
 } from "@shared/schema";
-import { json } from "drizzle-orm/pg-core";
+
 
 /**
  * Extends the MemStorage class with methods for handling skill progression
@@ -81,8 +81,8 @@ export function extendMemStorageWithSkillProgression(memStoragePrototype: any) {
       createdAt,
       ...skill,
       // Ensure we have default values for optional properties
-      positionTags: skill.positionTags || [] as unknown as Json,
-      exerciseRecommendations: skill.exerciseRecommendations || [] as unknown as Json,
+      positionTags: skill.positionTags || [] as unknown,
+      exerciseRecommendations: skill.exerciseRecommendations || [] as unknown,
     };
     
     this.skillsMap.set(id, newSkill);
@@ -278,7 +278,7 @@ export function extendMemStorageWithSkillProgression(memStoragePrototype: any) {
         
         // Update the milestone
         athleteSkill.currentMilestone = newMilestoneIndex;
-        athleteSkill.level = newLevel as SkillLevel;
+        athleteSkill.level = newLevel;
         
         // Set the next milestone XP
         if (newMilestoneIndex < milestones.length - 1) {
