@@ -743,8 +743,8 @@ const PlayerBrandingToolkitPage: React.FC = () => {
             <div className="border rounded-lg p-4">
               <div 
                 id="athlete-card" 
-                className="bg-white p-6 rounded-lg border shadow-sm max-w-md mx-auto"
-                style={{ minHeight: '400px' }}
+                className="bg-white p-6 rounded-lg border shadow-sm max-w-md mx-auto overflow-hidden"
+                style={{ minHeight: '400px', maxHeight: '600px', overflowY: 'auto' }}
               >
                 <div className="text-center mb-4">
                   <h2 className="text-2xl font-bold">{athlete?.firstName} {athlete?.lastName}</h2>
@@ -754,22 +754,22 @@ const PlayerBrandingToolkitPage: React.FC = () => {
                 {showPersonalInfo && (
                   <div className="mb-4">
                     <h3 className="text-sm font-medium mb-2">Personal Info</h3>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">School:</span>
-                        <p>{athlete?.school || 'N/A'}</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                      <div className="flex flex-col">
+                        <span className="text-muted-foreground text-xs">School:</span>
+                        <p className="font-medium">{athlete?.school || 'N/A'}</p>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">Grad Year:</span>
-                        <p>{athlete?.graduationYear || 'N/A'}</p>
+                      <div className="flex flex-col">
+                        <span className="text-muted-foreground text-xs">Grad Year:</span>
+                        <p className="font-medium">{athlete?.graduationYear || 'N/A'}</p>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">Height:</span>
-                        <p>{athlete?.height ? `${Math.floor(athlete.height / 12)}'${athlete.height % 12}"` : 'N/A'}</p>
+                      <div className="flex flex-col">
+                        <span className="text-muted-foreground text-xs">Height:</span>
+                        <p className="font-medium">{athlete?.height ? `${Math.floor(athlete.height / 12)}'${athlete.height % 12}"` : 'N/A'}</p>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">Weight:</span>
-                        <p>{athlete?.weight ? `${athlete.weight} lbs` : 'N/A'}</p>
+                      <div className="flex flex-col">
+                        <span className="text-muted-foreground text-xs">Weight:</span>
+                        <p className="font-medium">{athlete?.weight ? `${athlete.weight} lbs` : 'N/A'}</p>
                       </div>
                     </div>
                   </div>
@@ -778,29 +778,29 @@ const PlayerBrandingToolkitPage: React.FC = () => {
                 {showStats && metricsData && (
                   <div className="mb-4">
                     <h3 className="text-sm font-medium mb-2">Performance Metrics</h3>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                       {metricsData.fortyYard && (
-                        <div>
-                          <span className="text-muted-foreground">40-Yard:</span>
-                          <p>{metricsData.fortyYard}s</p>
+                        <div className="flex flex-col">
+                          <span className="text-muted-foreground text-xs">40-Yard:</span>
+                          <p className="font-medium">{metricsData.fortyYard}s</p>
                         </div>
                       )}
                       {metricsData.verticalJump && (
-                        <div>
-                          <span className="text-muted-foreground">Vertical:</span>
-                          <p>{metricsData.verticalJump}"</p>
+                        <div className="flex flex-col">
+                          <span className="text-muted-foreground text-xs">Vertical:</span>
+                          <p className="font-medium">{metricsData.verticalJump}"</p>
                         </div>
                       )}
                       {metricsData.benchPress && (
-                        <div>
-                          <span className="text-muted-foreground">Bench:</span>
-                          <p>{metricsData.benchPress} lbs</p>
+                        <div className="flex flex-col">
+                          <span className="text-muted-foreground text-xs">Bench:</span>
+                          <p className="font-medium">{metricsData.benchPress} lbs</p>
                         </div>
                       )}
                       {metricsData.squatMax && (
-                        <div>
-                          <span className="text-muted-foreground">Squat:</span>
-                          <p>{metricsData.squatMax} lbs</p>
+                        <div className="flex flex-col">
+                          <span className="text-muted-foreground text-xs">Squat:</span>
+                          <p className="font-medium">{metricsData.squatMax} lbs</p>
                         </div>
                       )}
                     </div>
@@ -810,14 +810,14 @@ const PlayerBrandingToolkitPage: React.FC = () => {
                 {showAcademics && (
                   <div className="mb-4">
                     <h3 className="text-sm font-medium mb-2">Academic Profile</h3>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">GPA:</span>
-                        <p>{athlete?.gpa || 'N/A'}</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                      <div className="flex flex-col">
+                        <span className="text-muted-foreground text-xs">GPA:</span>
+                        <p className="font-medium">{athlete?.gpa || 'N/A'}</p>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">ACT:</span>
-                        <p>{athlete?.actScore || 'N/A'}</p>
+                      <div className="flex flex-col">
+                        <span className="text-muted-foreground text-xs">ACT:</span>
+                        <p className="font-medium">{athlete?.actScore || 'N/A'}</p>
                       </div>
                     </div>
                   </div>
