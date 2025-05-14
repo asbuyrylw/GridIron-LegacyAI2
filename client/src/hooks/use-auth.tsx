@@ -7,6 +7,7 @@ import {
 import { LoginData, AthleteRegistration, User } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/query-client";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 export type AuthContextType = {
   user: User | null;
@@ -22,6 +23,7 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const {
     data: user,
     error,
@@ -50,6 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Login successful",
         description: `Welcome back, ${userData.athlete?.firstName || userData.username}!`,
       });
+      // Navigate to the dashboard after successful login
+      navigate("/");
     },
     onError: (error: Error) => {
       toast({
@@ -70,6 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Registration successful",
         description: `Welcome to GridIron LegacyAI, ${userData.athlete?.firstName || userData.username}!`,
       });
+      // Navigate to the dashboard after successful registration
+      navigate("/");
     },
     onError: (error: Error) => {
       toast({
