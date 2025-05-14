@@ -44,18 +44,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      return await apiRequest("POST", "/api/login", { body: credentials });
+      console.log("Attempting login with:", credentials.username);
+      try {
+        const result = await apiRequest("POST", "/api/login", { body: credentials });
+        console.log("Login API response success:", result);
+        return result;
+      } catch (error) {
+        console.error("Login API error:", error);
+        throw error;
+      }
     },
     onSuccess: (userData: User) => {
+      console.log("Login successful, user data:", userData);
       queryClient.setQueryData(["/api/user"], userData);
       toast({
         title: "Login successful",
         description: `Welcome back, ${userData.athlete?.firstName || userData.username}!`,
       });
+      // Immediately refetch user data to ensure it's up to date
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       // Navigate to the dashboard after successful login
       navigate("/");
     },
     onError: (error: Error) => {
+      console.error("Login mutation error:", error);
       toast({
         title: "Login failed",
         description: error.message,
