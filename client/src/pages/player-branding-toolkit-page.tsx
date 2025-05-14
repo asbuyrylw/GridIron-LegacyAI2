@@ -140,16 +140,12 @@ const PlayerBrandingToolkitPage: React.FC = () => {
     setIsGeneratingBio(true);
     
     try {
-      const response = await apiRequest('/api/player-branding/generate-bio', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await apiRequest('POST', '/api/player-branding/generate-bio', {
+        body: {
           athleteId: athlete.id,
           length: bioLength,
           focus: bioFocus,
-        }),
+        }
       });
       
       if (!response.ok) {
@@ -198,15 +194,11 @@ const PlayerBrandingToolkitPage: React.FC = () => {
     setIsScanning(true);
     
     try {
-      const response = await apiRequest('/api/player-branding/scan-profile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await apiRequest('POST', '/api/player-branding/scan-profile', {
+        body: {
           athleteId: athlete?.id,
           profileUrl: socialMediaProfile,
-        }),
+        }
       });
       
       if (!response.ok) {
@@ -244,16 +236,12 @@ const PlayerBrandingToolkitPage: React.FC = () => {
     }
     
     try {
-      const response = await apiRequest('/api/player-branding/generate-caption', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await apiRequest('POST', '/api/player-branding/generate-caption', {
+        body: {
           athleteId: athlete.id,
           templateType: selectedTemplate,
           customHashtags: customHashtags.split(',').map(tag => tag.trim()),
-        }),
+        }
       });
       
       if (!response.ok) {
