@@ -108,6 +108,16 @@ export function MealSuggestions({ athleteId, nutritionPlan }: MealSuggestionsPro
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Error display */}
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {error instanceof Error ? error.message : "An error occurred loading meal suggestions"}
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="flex flex-col md:flex-row md:items-end gap-4 mb-6">
           <div className="space-y-2 w-full md:w-1/3">
             <label className="text-sm font-medium">Meal Type</label>
