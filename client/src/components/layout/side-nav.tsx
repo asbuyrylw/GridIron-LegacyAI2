@@ -96,6 +96,12 @@ export function SideNav() {
       active: location === "/coach-evaluations"
     },
     {
+      label: "College Applications",
+      href: "/college-application-hub",
+      icon: GraduationCap,
+      active: location === "/college-application-hub"
+    },
+    {
       label: "Social",
       href: "/social-feed",
       icon: Share2,

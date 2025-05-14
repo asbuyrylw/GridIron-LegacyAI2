@@ -46,6 +46,7 @@ import FootballIqResultsPage from "@/pages/football-iq-results-page";
 import FootballIqAdminPage from "@/pages/football-iq-admin-page";
 import PlayerBrandingToolkitPage from "@/pages/player-branding-toolkit-page";
 import CoachEvaluationsPage from "@/pages/coach-evaluations-page";
+import CollegeApplicationHubPage from "@/pages/college-application-hub-page";
 
 // Landing Pages
 import LandingIndex from "@/pages/landing/index";
@@ -119,6 +120,7 @@ function Router() {
         <ProtectedRoute path="/football-iq/admin" component={FootballIqAdminPage} />
         <ProtectedRoute path="/player-branding" component={PlayerBrandingToolkitPage} />
         <ProtectedRoute path="/coach-evaluations" component={CoachEvaluationsPage} />
+        <ProtectedRoute path="/college-application-hub" component={CollegeApplicationHubPage} />
         {/* Removed parent-dashboard as we're using email-only approach */}
         <ProtectedRoute path="/coach-dashboard" component={CoachDashboard} />
         <ProtectedRoute path="/parent-reports" component={ParentReportsPage} />

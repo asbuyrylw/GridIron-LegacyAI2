@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useUser } from '@/hooks/use-user';
+import { useAuth } from '@/hooks/use-auth';
 import {
   Tabs,
   TabsContent,
@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/tabs';
 import { EmptyPlaceholder } from '@/components/empty-placeholder';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, FileText, Calendar, Award, School } from 'lucide-react';
+import { Loader2, PlusCircle, FileText, Calendar, Award, School, GraduationCap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -20,7 +20,7 @@ import SchoolApplicationsTab from '@/components/college-applications/school-appl
 import AcademicAchievementsTab from '@/components/college-applications/academic-achievements-tab';
 
 export default function CollegeApplicationHubPage() {
-  const { user, isLoading: userLoading } = useUser();
+  const { user, isLoading: userLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('checklist');
   const { toast } = useToast();
 
