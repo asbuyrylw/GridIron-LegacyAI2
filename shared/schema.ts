@@ -950,6 +950,13 @@ export const footballInfoSchema = z.object({
   secondaryPositions: z.array(z.string()).optional(),
   teamLevel: z.string().min(1, "Current team level is required"),
   captainLeadershipRoles: z.string().optional(),
+  varsityExperience: z.number().int().min(0).optional(),
+  starterStatus: z.boolean().optional(),
+  positionStrengths: z.array(z.string()).optional(),
+  positionWeaknesses: z.array(z.string()).optional(),
+  coachDescription: z.string().optional(),
+  motivationFactors: z.array(z.string()).optional(),
+  seasonGoals: z.array(z.string()).optional(),
 });
 
 // Athletic Metrics Form
@@ -1029,6 +1036,14 @@ export const strengthConditioningSchema = z.object({
   sleepHours: z.number().int().min(0).max(24).optional(),
   recoveryMethods: z.array(z.string()).optional(),
   
+  // Personal trainer and structured training plan
+  personalTrainer: z.string().optional(),
+  structuredTrainingPlan: z.boolean().optional(),
+  
+  // Recovery and energy metrics
+  postPracticeRecovery: z.string().optional(),
+  energyLevels: z.string().optional(),
+  
   // Basic injuries field (to maintain compatibility with existing data)
   injuriesSurgeries: z.string().optional(),
   
@@ -1078,6 +1093,17 @@ export const recruitingGoalsSchema = z.object({
   footballSeasonStart: z.date().optional(),
   footballSeasonEnd: z.date().optional(),
   preferredTrainingDays: z.array(z.string()).optional(),
+  collegeRecruiterContacts: z.array(z.object({
+    name: z.string(),
+    school: z.string(),
+    role: z.string(),
+    email: z.string().email().optional(),
+    phone: z.string().optional(),
+    notes: z.string().optional(),
+  })).optional().default([]),
+  topSeasonGoal: z.string().optional(),
+  preferMotivationalMessages: z.boolean().optional(),
+  motivationalMessageTypes: z.array(z.string()).optional(),
 });
 
 // Height prediction schema already defined at the top of the file

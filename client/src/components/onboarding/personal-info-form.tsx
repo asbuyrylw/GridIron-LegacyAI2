@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { GRADUATION_YEARS, US_STATES } from "@/lib/constants";
+import { GRADUATION_YEARS, US_STATES, GROWTH_SPURT_OPTIONS } from "@/lib/constants";
 import { useState } from "react";
 
 interface PersonalInfoFormProps {
@@ -57,6 +57,9 @@ export default function PersonalInfoForm({
       parentGuardianRelationship: "",
       fatherHeight: undefined,
       motherHeight: undefined,
+      recentGrowthSpurt: undefined,
+      growthSpurtTiming: undefined,
+      growthRate: undefined,
     },
   });
 
@@ -414,6 +417,89 @@ export default function PersonalInfoForm({
                         onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <FormField
+                control={form.control}
+                name="recentGrowthSpurt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Have you experienced a recent growth spurt?</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select option" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                        <SelectItem value="unsure">Not sure</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="growthSpurtTiming"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>When did you last notice significant growth?</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select timing" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {GROWTH_SPURT_OPTIONS.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="growthRate"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>How would you describe your growth rate?</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select growth rate" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="rapid">Rapid - Growing much faster than peers</SelectItem>
+                        <SelectItem value="steady">Steady - Consistent with my age group</SelectItem>
+                        <SelectItem value="slow">Slow - Growing more slowly than peers</SelectItem>
+                        <SelectItem value="stalled">Stalled - Haven't grown much recently</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
