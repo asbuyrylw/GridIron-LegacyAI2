@@ -17,6 +17,7 @@ import { registerExternalIntegrationsRoutes } from "./routes/external-integratio
 import footballIqRoutes from "./routes/football-iq-routes";
 import playerBrandingRoutes from "./routes/player-branding-routes";
 import coachEvaluationRoutes from "./routes/coach-evaluation-routes";
+import collegeApplicationRoutes from "./routes/college-application-routes";
 import { Router } from "express";
 
 // Extend the Express Session type to include our onboarding progress
@@ -112,6 +113,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // External Integrations routes (Twitter, Hudl, MaxPreps)
   registerExternalIntegrationsRoutes(app);
+  
+  // College Application Hub routes
+  app.use('/api/college-applications', collegeApplicationRoutes);
   
   // Achievement and Gamification routes
   app.get("/api/athlete/:id/achievements", async (req, res, next) => {
