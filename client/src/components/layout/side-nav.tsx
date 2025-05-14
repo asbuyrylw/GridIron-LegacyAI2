@@ -18,7 +18,8 @@ import {
   FileText,
   Ruler,
   Mail,
-  Camera
+  Camera,
+  ClipboardCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,12 @@ export function SideNav() {
       href: "/player-branding",
       icon: Camera,
       active: location === "/player-branding"
+    },
+    {
+      label: "Coach Evaluations",
+      href: "/coach-evaluations",
+      icon: ClipboardCheck,
+      active: location === "/coach-evaluations"
     },
     {
       label: "Social",
