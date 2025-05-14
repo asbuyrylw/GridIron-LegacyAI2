@@ -35,7 +35,14 @@ import {
   evaluationTemplates, type EvaluationTemplate, type InsertEvaluationTemplate,
   depthCharts, type DepthChart, type InsertDepthChart,
   depthChartPositions, type DepthChartPosition, type InsertDepthChartPosition,
-  depthChartEntries, type DepthChartEntry, type InsertDepthChartEntry
+  depthChartEntries, type DepthChartEntry, type InsertDepthChartEntry,
+  // College Application Hub schemas
+  applicationChecklist, type ApplicationChecklist, type InsertApplicationChecklist,
+  applicationDocuments, type ApplicationDocument, type InsertApplicationDocument, 
+  schoolApplications, type SchoolApplication, type InsertSchoolApplication,
+  academicAchievements, type AcademicAchievement, type InsertAcademicAchievement,
+  counselors, type Counselor, type InsertCounselor,
+  athleteCounselors, type AthleteCounselor, type InsertAthleteCounselor
 } from "@shared/schema";
 import { savedColleges, type SavedCollege, type InsertSavedCollege } from "@shared/saved-colleges-schema";
 

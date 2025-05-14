@@ -1138,3 +1138,128 @@ export type StrengthConditioningForm = z.infer<typeof strengthConditioningSchema
 export type NutritionForm = z.infer<typeof nutritionFormSchema>;
 export type RecruitingGoals = z.infer<typeof recruitingGoalsSchema>;
 export type OnboardingData = z.infer<typeof onboardingSchema>;
+
+// College Application Hub schema
+
+// Application Checklist Items
+export const applicationChecklist = pgTable('application_checklist', {
+  id: serial('id').primaryKey(),
+  athleteId: integer('athlete_id').notNull().references(() => athletes.id),
+  name: text('name').notNull(),
+  category: text('category').notNull(), // 'FAFSA', 'NCAA', 'Common App', 'School Specific', 'Custom'
+  description: text('description'),
+  dueDate: timestamp('due_date'),
+  completed: boolean('completed').default(false),
+  completedAt: timestamp('completed_at'),
+  importance: text('importance').default('medium'), // 'high', 'medium', 'low'
+  notifyDaysBefore: integer('notify_days_before').default(7),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const insertApplicationChecklistSchema = createInsertSchema(applicationChecklist)
+  .omit({ id: true, createdAt: true, updatedAt: true, completedAt: true });
+
+// Document Uploads
+export const applicationDocuments = pgTable('application_documents', {
+  id: serial('id').primaryKey(),
+  athleteId: integer('athlete_id').notNull().references(() => athletes.id),
+  title: text('title').notNull(),
+  description: text('description'),
+  fileUrl: text('file_url').notNull(),
+  fileName: text('file_name').notNull(),
+  fileType: text('file_type').notNull(), // 'transcript', 'recommendation', 'test_score', 'essay', 'other'
+  uploadedAt: timestamp('uploaded_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+  isPublic: boolean('is_public').default(false), // Whether to include in recruiting profile
+  relatedSchoolId: integer('related_school_id'), // Optional related school
+});
+
+export const insertApplicationDocumentSchema = createInsertSchema(applicationDocuments)
+  .omit({ id: true, uploadedAt: true, updatedAt: true });
+
+// School Applications
+export const schoolApplications = pgTable('school_applications', {
+  id: serial('id').primaryKey(),
+  athleteId: integer('athlete_id').notNull().references(() => athletes.id),
+  schoolName: text('school_name').notNull(),
+  status: text('status').notNull().default('planning'), // 'planning', 'in_progress', 'submitted', 'accepted', 'rejected', 'waitlisted', 'deferred'
+  applicationDeadline: timestamp('application_deadline'),
+  appliedDate: timestamp('applied_date'),
+  decisionDate: timestamp('decision_date'),
+  notes: text('notes'),
+  isTopChoice: boolean('is_top_choice').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const insertSchoolApplicationSchema = createInsertSchema(schoolApplications)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+// Academic Achievements
+export const academicAchievements = pgTable('academic_achievements', {
+  id: serial('id').primaryKey(),
+  athleteId: integer('athlete_id').notNull().references(() => athletes.id),
+  title: text('title').notNull(),
+  description: text('description'),
+  achievementType: text('achievement_type').notNull(), // 'honor_roll', 'ap_class', 'certification', 'award', 'other'
+  date: timestamp('date'),
+  issuingOrganization: text('issuing_organization'),
+  isPublic: boolean('is_public').default(true), // Whether to include in recruiting profile
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+  proofDocumentId: integer('proof_document_id'), // Optional reference to upload
+});
+
+export const insertAcademicAchievementSchema = createInsertSchema(academicAchievements)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+// Counselor Accounts (if we implement this part)
+export const counselors = pgTable('counselors', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id).unique(),
+  firstName: text('first_name').notNull(),
+  lastName: text('last_name').notNull(),
+  title: text('title'),
+  organization: text('organization'),
+  email: text('email').notNull(),
+  phone: text('phone'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const insertCounselorSchema = createInsertSchema(counselors)
+  .omit({ id: true, createdAt: true });
+
+// Athlete-Counselor relationship
+export const athleteCounselors = pgTable('athlete_counselors', {
+  id: serial('id').primaryKey(),
+  athleteId: integer('athlete_id').notNull().references(() => athletes.id),
+  counselorId: integer('counselor_id').notNull().references(() => counselors.id),
+  canViewChecklist: boolean('can_view_checklist').default(true),
+  canViewAcademics: boolean('can_view_academics').default(true),
+  canUploadDocuments: boolean('can_upload_documents').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const insertAthleteCounselorSchema = createInsertSchema(athleteCounselors)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+// Types
+export type ApplicationChecklist = typeof applicationChecklist.$inferSelect;
+export type InsertApplicationChecklist = z.infer<typeof insertApplicationChecklistSchema>;
+
+export type ApplicationDocument = typeof applicationDocuments.$inferSelect;
+export type InsertApplicationDocument = z.infer<typeof insertApplicationDocumentSchema>;
+
+export type SchoolApplication = typeof schoolApplications.$inferSelect;
+export type InsertSchoolApplication = z.infer<typeof insertSchoolApplicationSchema>;
+
+export type AcademicAchievement = typeof academicAchievements.$inferSelect;
+export type InsertAcademicAchievement = z.infer<typeof insertAcademicAchievementSchema>;
+
+export type Counselor = typeof counselors.$inferSelect;
+export type InsertCounselor = z.infer<typeof insertCounselorSchema>;
+
+export type AthleteCounselor = typeof athleteCounselors.$inferSelect;
+export type InsertAthleteCounselor = z.infer<typeof insertAthleteCounselorSchema>;
