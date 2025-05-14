@@ -421,6 +421,9 @@ export function SocialFeed() {
         <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Comments</DialogTitle>
+            <DialogDescription>
+              View and respond to comments on this post
+            </DialogDescription>
           </DialogHeader>
           
           <div className="flex-1 overflow-y-auto -mx-6 px-6">

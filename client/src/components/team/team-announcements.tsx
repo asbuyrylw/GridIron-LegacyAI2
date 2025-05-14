@@ -480,6 +480,9 @@ export function TeamAnnouncements({ teamId, isAdmin }: TeamAnnouncementsProps) {
             <DialogHeader>
               <div className="flex items-center justify-between">
                 <DialogTitle>{selectedAnnouncement.title}</DialogTitle>
+                <DialogDescription className="sr-only">
+                  Announcement details
+                </DialogDescription>
                 
                 {selectedAnnouncement.isPinned && (
                   <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">

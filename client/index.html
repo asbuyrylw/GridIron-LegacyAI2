@@ -15,15 +15,30 @@
           fetch('/api/user')
             .then(response => {
               if (response.ok) {
-                // User is logged in, load the chat widget
-                const script = document.createElement('script');
-                script.type = 'text/javascript';
-                script.src = 'https://embed.chatnode.ai/9935e96a-42a5-4e07-88d7-35fde736371e/popup.js';
-                script.async = true;
-                document.body.appendChild(script);
+                return response.json()
+                  .then(userData => {
+                    // User is logged in, load the chat widget
+                    const script = document.createElement('script');
+                    script.type = 'text/javascript';
+                    script.src = 'https://embed.chatnode.ai/9935e96a-42a5-4e07-88d7-35fde736371e/popup.js';
+                    script.async = true;
+                    script.onerror = function(error) {
+                      console.log('Chat widget failed to load', error);
+                    };
+                    document.body.appendChild(script);
+                    return userData;
+                  })
+                  .catch(error => {
+                    console.log('Error parsing user data:', error);
+                    return null;
+                  });
               }
+              return null;
             })
-            .catch(err => console.log('Chat not loaded - user not logged in'));
+            .catch(err => {
+              console.log('Chat not loaded - user not logged in or error occurred');
+              return null;
+            });
         }
         
         // Check user status once the page is fully loaded
