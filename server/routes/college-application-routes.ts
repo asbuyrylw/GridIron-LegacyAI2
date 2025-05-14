@@ -70,7 +70,7 @@ router.put('/checklist/:id', isAuthenticated, isAthlete, async (req, res) => {
     }
     
     // Check if the user owns the checklist item
-    if (req.user.athlete?.id !== item.athleteId) {
+    if ((req.user as any)?.athlete?.id !== item.athleteId) {
       return res.status(403).json({ message: 'Unauthorized to update this item' });
     }
     
@@ -95,7 +95,7 @@ router.delete('/checklist/:id', isAuthenticated, isAthlete, async (req, res) => 
     }
     
     // Check if the user owns the checklist item
-    if (req.user.athlete?.id !== item.athleteId) {
+    if ((req.user as any)?.athlete?.id !== item.athleteId) {
       return res.status(403).json({ message: 'Unauthorized to delete this item' });
     }
     
@@ -120,7 +120,7 @@ router.patch('/checklist/:id/complete', isAuthenticated, isAthlete, async (req, 
     }
     
     // Check if the user owns the checklist item
-    if (req.user.athlete?.id !== item.athleteId) {
+    if ((req.user as any)?.athlete?.id !== item.athleteId) {
       return res.status(403).json({ message: 'Unauthorized to update this item' });
     }
     
@@ -187,7 +187,7 @@ router.put('/documents/:id', isAuthenticated, isAthlete, async (req, res) => {
     }
     
     // Check if the user owns the document
-    if (req.user.athlete?.id !== document.athleteId) {
+    if ((req.user as any)?.athlete?.id !== document.athleteId) {
       return res.status(403).json({ message: 'Unauthorized to update this document' });
     }
     
@@ -212,7 +212,7 @@ router.delete('/documents/:id', isAuthenticated, isAthlete, async (req, res) => 
     }
     
     // Check if the user owns the document
-    if (req.user.athlete?.id !== document.athleteId) {
+    if ((req.user as any)?.athlete?.id !== document.athleteId) {
       return res.status(403).json({ message: 'Unauthorized to delete this document' });
     }
     
@@ -248,7 +248,7 @@ router.get('/applications/details/:id', isAuthenticated, async (req, res) => {
     }
     
     // Check if the user owns the application
-    if (req.user.userType === 'athlete' && req.user.athlete?.id !== application.athleteId) {
+    if ((req.user as any)?.userType === 'athlete' && (req.user as any)?.athlete?.id !== application.athleteId) {
       return res.status(403).json({ message: 'Unauthorized to view this application' });
     }
     
@@ -281,7 +281,7 @@ router.put('/applications/:id', isAuthenticated, isAthlete, async (req, res) => 
     }
     
     // Check if the user owns the application
-    if (req.user.athlete?.id !== application.athleteId) {
+    if ((req.user as any)?.athlete?.id !== application.athleteId) {
       return res.status(403).json({ message: 'Unauthorized to update this application' });
     }
     
@@ -306,7 +306,7 @@ router.delete('/applications/:id', isAuthenticated, isAthlete, async (req, res) 
     }
     
     // Check if the user owns the application
-    if (req.user.athlete?.id !== application.athleteId) {
+    if ((req.user as any)?.athlete?.id !== application.athleteId) {
       return res.status(403).json({ message: 'Unauthorized to delete this application' });
     }
     
@@ -365,7 +365,7 @@ router.put('/achievements/:id', isAuthenticated, isAthlete, async (req, res) => 
     }
     
     // Check if the user owns the achievement
-    if (req.user.athlete?.id !== achievement.athleteId) {
+    if ((req.user as any)?.athlete?.id !== achievement.athleteId) {
       return res.status(403).json({ message: 'Unauthorized to update this achievement' });
     }
     
@@ -390,7 +390,7 @@ router.delete('/achievements/:id', isAuthenticated, isAthlete, async (req, res) 
     }
     
     // Check if the user owns the achievement
-    if (req.user.athlete?.id !== achievement.athleteId) {
+    if ((req.user as any)?.athlete?.id !== achievement.athleteId) {
       return res.status(403).json({ message: 'Unauthorized to delete this achievement' });
     }
     
@@ -430,7 +430,7 @@ router.post('/athlete-counselors', isAuthenticated, isAthlete, async (req, res) 
     const validatedData = insertAthleteCounselorSchema.parse(req.body);
     
     // Verify the athlete ID matches the current user
-    if (req.user.athlete?.id !== validatedData.athleteId) {
+    if ((req.user as any)?.athlete?.id !== validatedData.athleteId) {
       return res.status(403).json({ message: 'Unauthorized to create this relationship' });
     }
     
