@@ -23,8 +23,13 @@ export default function AuthPage() {
   const [authTab, setAuthTab] = useState<string>("login");
   const { user, isLoading, loginMutation, registerMutation } = useAuth();
   
+  useEffect(() => {
+    console.log("AuthPage - Authentication state:", { user, isLoading, isPending: loginMutation.isPending });
+  }, [user, isLoading, loginMutation.isPending]);
+  
   // Redirect to home if already logged in
   if (user) {
+    console.log("AuthPage - User is authenticated, redirecting to home");
     return <Redirect to="/" />;
   }
   
@@ -149,14 +154,23 @@ function LoginForm({ isLoading, onSubmit }: { isLoading: boolean, onSubmit: (dat
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
-      password: ""
+      username: "testuser", // Pre-fill with test credentials for debugging
+      password: "password123"
     }
   });
   
+  const handleSubmit = async (data: z.infer<typeof loginSchema>) => {
+    console.log("Login form submitted with:", data);
+    try {
+      onSubmit(data);
+    } catch (error) {
+      console.error("Error in login form submission:", error);
+    }
+  };
+  
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 mt-2">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5 mt-2">
         <FormField
           control={form.control}
           name="username"

@@ -22,8 +22,11 @@ export async function apiRequest<T = any>(
   url: string,
   options: RequestInit = {}
 ): Promise<T> {
+  console.log(`API Request: ${method} ${url}`, { options });
+  
   // Set method
   options.method = method;
+  
   // Set default headers
   options.headers = {
     'Content-Type': 'application/json',
@@ -38,25 +41,40 @@ export async function apiRequest<T = any>(
     options.body = JSON.stringify(options.body);
   }
 
-  // Make the request
-  const response = await fetch(url, options);
+  try {
+    // Make the request
+    const response = await fetch(url, options);
+    
+    console.log(`API Response: ${method} ${url} - Status: ${response.status}`, {
+      headers: Object.fromEntries([...response.headers.entries()]),
+      status: response.status,
+      statusText: response.statusText,
+    });
 
-  // Handle non-2xx responses
-  if (!response.ok) {
-    // Try to parse error JSON if possible
-    try {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `API error: ${response.status}`);
-    } catch (e) {
-      // If JSON parsing fails, throw generic error
-      throw new Error(`API error: ${response.status}`);
+    // Handle non-2xx responses
+    if (!response.ok) {
+      // Try to parse error JSON if possible
+      try {
+        const errorData = await response.json();
+        console.error(`API Error: ${method} ${url}`, errorData);
+        throw new Error(errorData.message || `API error: ${response.status}`);
+      } catch (e) {
+        // If JSON parsing fails, throw generic error
+        console.error(`API Generic Error: ${method} ${url}`, e);
+        throw new Error(`API error: ${response.status}`);
+      }
     }
-  }
 
-  // Return parsed JSON data or null for 204 responses
-  if (response.status === 204) {
-    return null as T;
-  }
+    // Return parsed JSON data or null for 204 responses
+    if (response.status === 204) {
+      return null as T;
+    }
 
-  return response.json();
+    const data = await response.json();
+    console.log(`API Data: ${method} ${url}`, data);
+    return data;
+  } catch (error) {
+    console.error(`API Request Failed: ${method} ${url}`, error);
+    throw error;
+  }
 }

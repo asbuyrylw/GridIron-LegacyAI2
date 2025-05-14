@@ -31,15 +31,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<User | null, Error>({
     queryKey: ["/api/user"],
     queryFn: async () => {
+      console.log("Fetching user data...");
       try {
-        return await apiRequest("GET", "/api/user");
+        const userData = await apiRequest("GET", "/api/user");
+        console.log("User data fetched successfully:", userData);
+        return userData;
       } catch (error) {
+        console.error("Error fetching user data:", error);
         if ((error as any).message?.includes("401")) {
+          console.log("Authentication error 401, returning null");
           return null;
         }
         throw error;
       }
-    }
+    },
+    retry: 0, // Don't retry on error
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const loginMutation = useMutation({
