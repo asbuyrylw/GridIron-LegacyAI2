@@ -118,6 +118,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // College Application Hub routes
   app.use('/api/college-applications', collegeApplicationRoutes);
   
+  // Skill Progression system routes
+  setupSkillProgressionRoutes(app);
+  
   // Achievement and Gamification routes
   app.get("/api/athlete/:id/achievements", async (req, res, next) => {
     try {

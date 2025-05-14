@@ -8,6 +8,7 @@ import { seedLeaderboards } from "./leaderboard-storage";
 import { storage } from "./storage";
 import { extendMemStorageWithFootballIq } from "./football-iq-storage";
 import { extendMemStorageWithCoachEvaluations, seedEvaluationTemplates } from "./coach-evaluation-storage";
+import { extendMemStorageWithSkillProgression } from "./skill-progression-storage";
 
 const app = express();
 app.use(express.json());
@@ -72,6 +73,10 @@ app.use((req, res, next) => {
   extendMemStorageWithCoachEvaluations(storage);
   await seedEvaluationTemplates(storage);
   console.log('Coach Evaluations system initialized');
+  
+  // Initialize Skill Progression system
+  extendMemStorageWithSkillProgression(storage);
+  console.log('Skill Progression system initialized');
   
   // Initialize external integration services
   try {

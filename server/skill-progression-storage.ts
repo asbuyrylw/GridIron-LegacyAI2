@@ -1,11 +1,11 @@
 import { type MemStorage } from "./storage";
 import {
   Skill, InsertSkill,
-  AthleteSkill, InsertAthleteSkill, SkillLevel,
+  AthleteSkill, InsertAthleteSkill,
   SkillActivityLog, InsertSkillActivityLog,
-  SkillCategory
+  skillCategoryEnum, skillLevelEnum
 } from "@shared/schema";
-import { Json } from "drizzle-orm";
+import { json } from "drizzle-orm/pg-core";
 
 /**
  * Extends the MemStorage class with methods for handling skill progression
@@ -187,7 +187,7 @@ export function extendMemStorageWithSkillProgression(memStoragePrototype: any) {
       id,
       athleteId,
       skillId,
-      level: 'beginner' as SkillLevel,
+      level: 'beginner',
       xp: 0,
       currentMilestone: 0,
       nextMilestoneXP: firstMilestone?.threshold || 100,
