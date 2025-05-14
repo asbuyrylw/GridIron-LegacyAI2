@@ -71,8 +71,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       // Immediately refetch user data to ensure it's up to date
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      // Navigate to the dashboard after successful login
-      navigate("/");
+      // Navigate to the appropriate dashboard based on user type
+      if (userData.userType === "coach") {
+        navigate("/coach-dashboard");
+      } else {
+        navigate("/");
+      }
     },
     onError: (error: Error) => {
       console.error("Login mutation error:", error);
@@ -94,8 +98,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Registration successful",
         description: `Welcome to GridIron LegacyAI, ${userData.athlete?.firstName || userData.username}!`,
       });
-      // Navigate to the dashboard after successful registration
-      navigate("/");
+      // Navigate to the appropriate dashboard based on user type
+      if (userData.userType === "coach") {
+        navigate("/coach-dashboard");
+      } else {
+        navigate("/");
+      }
     },
     onError: (error: Error) => {
       toast({
