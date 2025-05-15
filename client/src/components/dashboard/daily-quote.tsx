@@ -72,11 +72,11 @@ export function DailyQuote({ customClasses }: DailyQuoteProps = {}) {
   if (hasCustomBg) {
     return (
       <div className={customClasses}>
-        <div className="flex items-start gap-2">
-          <Quote className="h-4 w-4 flex-shrink-0 mt-0.5" />
+        <div className="flex items-center gap-2">
+          <Quote className="h-3.5 w-3.5 flex-shrink-0" />
           <div>
-            <p className="text-xs italic leading-relaxed">{quote.text}</p>
-            <p className="text-xs opacity-75 mt-1">— {quote.author}</p>
+            <p className="text-xs italic leading-snug inline mr-1">{quote.text}</p>
+            <span className="text-xs opacity-75 italic">— {quote.author}</span>
           </div>
         </div>
       </div>

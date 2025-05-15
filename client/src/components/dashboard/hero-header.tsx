@@ -71,8 +71,8 @@ export function HeroHeader({ backgroundImage = "/assets/bengals-stadium.jpg", re
             <div className="text-white mb-4 md:mb-0">
               <h1 className="text-2xl font-bold mb-2">Welcome back, {firstName}!</h1>
               
-              <div className="w-40">
-                <DailyQuote customClasses="bg-blue-100/90 text-black text-xs p-3 rounded-lg shadow-sm block" />
+              <div className="w-1/2 max-w-md">
+                <DailyQuote customClasses="bg-blue-100/90 text-black text-xs py-2 px-3 rounded-lg shadow-sm block" />
               </div>
             </div>
             
