@@ -1,53 +1,108 @@
-import { Express, Request, Response } from "express";
+/**
+ * Profile Image Routes
+ * Endpoints for uploading and managing profile and background images
+ */
+import { Request, Response, Express } from "express";
 import { z } from "zod";
 import { storage } from "../storage";
 
-// Validation schema for updating profile image
-const updateImageSchema = z.object({
-  imageUrl: z.string().url().optional(),
-  imageType: z.enum(["profile", "background"]),
+// Schema for image upload validation
+const imageUploadSchema = z.object({
+  imageUrl: z.string(),
+  imageType: z.enum(['background', 'profile'])
 });
 
-// Add file handling if we were using actual file uploads
+/**
+ * Register profile image routes
+ */
 export function setupProfileImageRoutes(app: Express) {
-  // Update profile or background image
+  
+  /**
+   * Upload/update profile or background image for athlete
+   */
   app.post("/api/athlete/image", async (req: Request, res: Response) => {
-    try {
-      // Validate request body
-      const { imageUrl, imageType } = updateImageSchema.parse(req.body);
-      
-      if (!req.isAuthenticated() || !req.user || !req.user.id) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
+    // Check authentication
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
 
-      // Get the user's athlete profile
-      const athlete = await storage.getAthleteByUserId(req.user.id);
+    try {
+      // Validate the request data
+      const validatedData = imageUploadSchema.parse(req.body);
+      const { imageUrl, imageType } = validatedData;
       
+      // Get current user
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Find the athlete associated with the user
+      const athlete = await storage.getAthleteByUserId(userId);
       if (!athlete) {
         return res.status(404).json({ message: "Athlete profile not found" });
       }
       
-      // Update the appropriate field based on image type
-      if (imageType === "profile") {
-        await storage.updateAthlete(athlete.id, { profileImage: imageUrl });
-      } else if (imageType === "background") {
+      // Update the appropriate image field
+      if (imageType === "background") {
         await storage.updateAthlete(athlete.id, { backgroundImage: imageUrl });
+      } else {
+        await storage.updateAthlete(athlete.id, { profileImage: imageUrl });
       }
       
-      // Get the updated athlete
-      const updatedAthlete = await storage.getAthlete(athlete.id);
-      
-      res.json({ 
-        success: true, 
-        message: `${imageType} image updated successfully`,
-        athlete: updatedAthlete
-      });
+      console.log(`Updated ${imageType} image for athlete ID ${athlete.id}`);
+      return res.json({ success: true });
     } catch (error) {
-      console.error("Error updating profile image:", error);
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid image data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update profile image" });
+      console.error("Error uploading image:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      return res.status(400).json({ 
+        message: "Invalid request data", 
+        error: errorMessage
+      });
     }
   });
+
+  /**
+   * Get athlete's profile or background image
+   */
+  app.get("/api/athlete/image/:type", async (req: Request, res: Response) => {
+    // Check authentication
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    try {
+      const imageType = req.params.type;
+      if (imageType !== "background" && imageType !== "profile") {
+        return res.status(400).json({ message: "Invalid image type" });
+      }
+      
+      // Get current user
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Find the athlete associated with the user
+      const athlete = await storage.getAthleteByUserId(userId);
+      if (!athlete) {
+        return res.status(404).json({ message: "Athlete profile not found" });
+      }
+      
+      // Return the requested image URL
+      const imageUrl = imageType === "background" ? 
+        athlete.backgroundImage : athlete.profileImage;
+        
+      return res.json({ imageUrl });
+    } catch (error) {
+      console.error(`Error getting ${req.params.type} image:`, error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      return res.status(500).json({ 
+        message: "Error retrieving image", 
+        error: errorMessage
+      });
+    }
+  });
+
+  console.log("Profile image routes registered");
 }
