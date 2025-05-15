@@ -28,7 +28,7 @@ import SocialSettingsPage from "@/pages/social-settings-page";
 import TeamsPage from "@/pages/teams-page";
 import TeamDetailsPage from "@/pages/team-details-page";
 import RecruitingPage from "@/pages/recruiting-page";
-import EnhancedCollegeMatcherPage from "@/pages/enhanced-college-matcher-fixed";
+import EnhancedCollegeMatcherPage from "@/pages/enhanced-college-matcher-page";
 import RecruitingProfileBuilderPage from "@/pages/recruiting-profile-builder-page";
 // Removing ParentDashboard import as we're using email-only approach
 import CoachDashboard from "@/pages/coach-dashboard";
