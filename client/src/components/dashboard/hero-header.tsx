@@ -71,8 +71,10 @@ export function HeroHeader({ backgroundImage = "/assets/bengals-stadium.jpg", re
             <div className="text-white mb-4 md:mb-0">
               <h1 className="text-3xl font-bold mb-4">Welcome back, {firstName}!</h1>
               
-              <div className="max-w-lg">
-                <DailyQuote customClasses="text-white" />
+              <div className="max-w-md">
+                <div className="bg-blue-100/90 backdrop-blur-sm p-3 rounded-lg shadow-sm max-w-xs">
+                  <DailyQuote customClasses="text-gray-800 text-sm" />
+                </div>
               </div>
             </div>
             
@@ -95,12 +97,12 @@ export function HeroHeader({ backgroundImage = "/assets/bengals-stadium.jpg", re
         {/* Edit/Upload button */}
         <Button 
           variant="secondary" 
-          size="sm"
-          className="absolute bottom-4 right-4 opacity-70 hover:opacity-100 transition-opacity"
+          size="xs"
+          className="absolute bottom-3 right-3 opacity-70 hover:opacity-100 transition-opacity text-xs py-1 px-2"
           onClick={() => setUploadDialogOpen(true)}
         >
-          <Edit className="h-4 w-4 mr-1" />
-          Change Background
+          <Edit className="h-3 w-3 mr-1" />
+          Change BG
         </Button>
       </div>
       
