@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fetch and Convert Image</title>
+</head>
+<body>
+  <h1>Image to Base64 Converter</h1>
+  <p>This utility helps download an image and convert it to base64 for embedding directly in the code.</p>
+  
+  <label for="imageUrl">Image URL:</label>
+  <input type="text" id="imageUrl" style="width: 500px;" value="https://www.stadiumsofprofootball.com/wp-content/uploads/2016/07/paul19_top.jpg">
+  <button onclick="fetchAndConvert()">Convert</button>
+  
+  <div id="result" style="margin-top: 20px;">
+    <img id="previewImage" style="max-width: 500px; display: none;">
+    <textarea id="base64Output" style="width: 100%; height: 150px; margin-top: 10px; display: none;"></textarea>
+    <button id="copyButton" style="display: none;" onclick="copyToClipboard()">Copy to Clipboard</button>
+  </div>
+  
+  <script>
+    async function fetchAndConvert() {
+      const imageUrl = document.getElementById('imageUrl').value;
+      if (!imageUrl) {
+        alert('Please enter an image URL');
+        return;
+      }
+      
+      try {
+        // Fetch the image
+        const response = await fetch('https://corsproxy.io/?' + encodeURIComponent(imageUrl));
+        const blob = await response.blob();
+        
+        // Convert to base64
+        const reader = new FileReader();
+        reader.onloadend = function() {
+          const base64data = reader.result;
+          
+          // Display the image and base64 data
+          const previewImage = document.getElementById('previewImage');
+          previewImage.src = base64data;
+          previewImage.style.display = 'block';
+          
+          const base64Output = document.getElementById('base64Output');
+          base64Output.value = base64data;
+          base64Output.style.display = 'block';
+          
+          document.getElementById('copyButton').style.display = 'block';
+        }
+        reader.readAsDataURL(blob);
+      } catch (error) {
+        alert('Error fetching image: ' + error.message);
+      }
+    }
+    
+    function copyToClipboard() {
+      const base64Output = document.getElementById('base64Output');
+      base64Output.select();
+      document.execCommand('copy');
+      alert('Copied to clipboard!');
+    }
+  </script>
+</body>
+</html>

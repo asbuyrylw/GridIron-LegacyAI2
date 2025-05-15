@@ -8,19 +8,17 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface HeroHeaderProps {
+  backgroundImage?: string;
   reminderItems?: { time: string; title: string; icon?: React.ReactNode }[];
   onImageChange?: (imageUrl: string) => void;
 }
 
-export function HeroHeader({ reminderItems = [], onImageChange }: HeroHeaderProps) {
+export function HeroHeader({ backgroundImage = "/assets/bengals-stadium.jpg", reminderItems = [], onImageChange }: HeroHeaderProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  // Using a default stadium image since the backgroundImage property is newly added to the schema
-  const [imageUrl, setImageUrl] = useState<string>("/assets/bengals-stadium.jpg");
   
-  // In a real implementation, we would upload this to a server/storage service
-  // For now we'll just handle it locally and use a predefined image or one from the user profile
+  // Handle image uploads by converting to base64 data URLs
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -34,23 +32,21 @@ export function HeroHeader({ reminderItems = [], onImageChange }: HeroHeaderProp
       return;
     }
     
-    // Create a temporary URL for the uploaded file
-    const tempUrl = URL.createObjectURL(file);
-    setImageUrl(tempUrl);
+    // Convert the file to a data URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      
+      // Close the dialog
+      setUploadDialogOpen(false);
+      
+      // Call parent handler if provided
+      if (onImageChange) {
+        onImageChange(dataUrl);
+      }
+    };
     
-    // Close the dialog
-    setUploadDialogOpen(false);
-    
-    // Call parent handler if provided
-    if (onImageChange) {
-      // In a real implementation, we would upload to server and get the real URL
-      onImageChange(tempUrl);
-    }
-    
-    toast({
-      title: "Background updated",
-      description: "Your stadium background has been updated",
-    });
+    reader.readAsDataURL(file);
   };
   
   const firstName = user?.athlete?.firstName || user?.firstName || "Athlete";
@@ -60,7 +56,7 @@ export function HeroHeader({ reminderItems = [], onImageChange }: HeroHeaderProp
       <div 
         className="w-full h-64 relative rounded-none overflow-hidden"
         style={{
-          backgroundImage: `url(${imageUrl})`,
+          backgroundImage: `url(${backgroundImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center'
         }}

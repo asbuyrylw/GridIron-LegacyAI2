@@ -7,7 +7,6 @@ import { Redirect } from "wouter";
 import { useEffect, useRef, useState } from "react";
 import { useLoginStreakUpdate } from "@/hooks/use-login-streak";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 
 // Dashboard Components
 import { MilestoneTrackers } from "@/components/dashboard/milestone-trackers";
@@ -32,9 +31,11 @@ import {
 
 export default function HomePage() {
   const { user, isLoading } = useAuth();
+  const { toast } = useToast();
   const athleteId = user?.athlete?.id;
   const updateLoginStreak = useLoginStreakUpdate();
   const hasUpdatedLoginStreak = useRef(false);
+  const [backgroundImage, setBackgroundImage] = useState<string>(user?.athlete?.backgroundImage || "/assets/bengals-stadium.jpg");
   
   // Update login streak when user logs in and reaches the home page - only once
   useEffect(() => {
@@ -43,6 +44,47 @@ export default function HomePage() {
       hasUpdatedLoginStreak.current = true;
     }
   }, [user, isLoading, updateLoginStreak]);
+  
+  // Set background image from user profile when available
+  useEffect(() => {
+    if (user?.athlete?.backgroundImage) {
+      setBackgroundImage(user.athlete.backgroundImage);
+    }
+  }, [user?.athlete?.backgroundImage]);
+  
+  // Handle background image change
+  const handleImageChange = async (imageUrl: string) => {
+    if (!athleteId) return;
+    
+    try {
+      // Update the UI immediately
+      setBackgroundImage(imageUrl);
+      
+      // Send the API request to update the athlete profile
+      await fetch('/api/athlete/image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          imageUrl,
+          imageType: 'background'
+        })
+      });
+      
+      toast({
+        title: "Background updated",
+        description: "Your stadium background has been saved successfully"
+      });
+    } catch (error) {
+      console.error('Error updating background image:', error);
+      toast({
+        title: "Update failed",
+        description: "Failed to save your background image. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
   
   const { data: metrics } = useQuery<CombineMetric[]>({
     queryKey: [`/api/athlete/${athleteId}/metrics`],
@@ -99,7 +141,11 @@ export default function HomePage() {
       <Header />
       
       {/* Full-width Hero Header with Stadium Background */}
-      <HeroHeader reminderItems={reminderItems} />
+      <HeroHeader 
+        backgroundImage={backgroundImage} 
+        reminderItems={reminderItems} 
+        onImageChange={handleImageChange} 
+      />
       
       <main className="container mx-auto px-4 pb-20">
         
