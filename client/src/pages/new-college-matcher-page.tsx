@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import { GraduationCap, BookOpen, MapPin, ChevronRight, Info, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,7 +15,6 @@ import { Separator } from "@/components/ui/separator";
 import { 
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -79,14 +77,12 @@ interface MatchedCollege {
   notes?: string;
 }
 
-export default function EnhancedCollegeMatcherPage() {
+export default function NewCollegeMatcherPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  // We're removing the tabs, so we don't need activeTab state anymore
   const [selectedCollege, setSelectedCollege] = useState<number | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
-  // State for showing/hiding filters
   const [showFilters, setShowFilters] = useState(false);
   
   // State for filters
@@ -539,233 +535,53 @@ export default function EnhancedCollegeMatcherPage() {
                 ))}
               </div>
             ) : (
-                  <div className="text-center py-12 border rounded-lg bg-muted/20">
-                    <GraduationCap className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium">No matching colleges</h3>
-                    <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-                      {filters.searchQuery 
-                        ? `No colleges match your search for "${filters.searchQuery}". Try a different search term or adjust your filters.`
-                        : "No colleges match your current filters. Try adjusting your criteria or clearing filters."}
-                    </p>
-                    <Button variant="outline" className="mt-4" onClick={clearFilters}>
-                      Clear All Filters
-                    </Button>
+              <div className="text-center py-12 border rounded-lg bg-muted/20">
+                <GraduationCap className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium">No matching colleges</h3>
+                <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+                  {filters.searchQuery 
+                    ? `No colleges match your search for "${filters.searchQuery}". Try a different search term or adjust your filters.`
+                    : "No colleges match your current filters. Try adjusting your criteria or clearing filters."}
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={clearFilters}
+                >
+                  Clear All Filters
+                </Button>
+              </div>
+            )}
+          </div>
+          
+          {/* Saved Colleges Section */}
+          {savedColleges && savedColleges.length > 0 && (
+            <div className="mt-12">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Your Saved Colleges</h2>
+                <Badge variant="outline" className="text-sm">
+                  {savedColleges.length} saved
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4">
+                {savedColleges.map((college) => (
+                  <div 
+                    key={college.id} 
+                    className="cursor-pointer transition-all hover:shadow-md"
+                    onClick={() => openCollegeDetails(college.id)}
+                  >
+                    <CollegeCard
+                      college={college}
+                      isSaved={true}
+                      fullWidth={true}
+                    />
                   </div>
-                )}
+                ))}
               </div>
             </div>
-          </TabsContent>
-          
-          {/* Insights & Recommendation Tab */}
-          <TabsContent value="insights">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Division Recommendation */}
-              <Card className="lg:col-span-1">
-                <CardHeader className="pb-3">
-                  <CardTitle>Your Division Fit</CardTitle>
-                  <CardDescription>
-                    Based on your athletic and academic profile
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col items-center">
-                    <Badge 
-                      className={`text-lg py-1.5 px-4 mb-4 ${getDivisionColor(collegeMatches.divisionRecommendation)}`}
-                    >
-                      {collegeMatches.divisionRecommendation}
-                    </Badge>
-                    
-                    <div className="w-full mb-4">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium">Match Score</span>
-                        <span className="text-sm font-semibold">{collegeMatches.matchScore}%</span>
-                      </div>
-                      <Progress value={collegeMatches.matchScore} className="h-2" />
-                    </div>
-                    
-                    {collegeMatches.athleteProfile && (
-                      <div className="w-full space-y-4">
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-medium">Academic Strength</span>
-                            <span className="text-sm font-semibold">{collegeMatches.athleteProfile.academicStrength}/10</span>
-                          </div>
-                          <Progress
-                            value={collegeMatches.athleteProfile.academicStrength * 10}
-                            className="h-2"
-                          />
-                        </div>
-                        
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-medium">Athletic Strength</span>
-                            <span className="text-sm font-semibold">{collegeMatches.athleteProfile.athleticStrength}/10</span>
-                          </div>
-                          <Progress
-                            value={collegeMatches.athleteProfile.athleticStrength * 10}
-                            className="h-2"
-                          />
-                        </div>
-                        
-                        {collegeMatches.athleteProfile.positionRanking && (
-                          <div className="flex flex-col items-center pt-4 pb-2">
-                            <span className="text-sm font-medium mb-1">Position Ranking</span>
-                            <span className="text-base font-semibold">
-                              {collegeMatches.athleteProfile.positionRanking}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              {/* Feedback and Insights */}
-              <Card className="lg:col-span-2">
-                <CardHeader className="pb-3">
-                  <CardTitle>Personalized Feedback</CardTitle>
-                  <CardDescription>
-                    College recruiting insights based on your profile
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {/* Feedback Section */}
-                    <div>
-                      <h3 className="text-base font-medium mb-3">Feedback</h3>
-                      <ul className="space-y-3">
-                        {collegeMatches.feedback.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <div className="rounded-full bg-primary/10 p-1 mt-0.5">
-                              <GraduationCap className="h-3.5 w-3.5 text-primary" />
-                            </div>
-                            <span className="text-sm">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    
-                    {/* AI Insights Section */}
-                    {collegeMatches.insights && collegeMatches.insights.length > 0 && (
-                      <div>
-                        <Separator className="my-4" />
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="bg-primary/10 p-1 rounded-md">
-                            <svg 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              viewBox="0 0 24 24" 
-                              fill="none" 
-                              stroke="currentColor" 
-                              strokeWidth="2" 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round" 
-                              className="h-5 w-5 text-primary"
-                            >
-                              <path d="M12 2a10 10 0 1 0 10 10 10 10 0 0 0-10-10Z"/>
-                              <path d="M12 7v5l3 3"/>
-                              <path d="m9 17 2.85-2.8a2.35 2.35 0 0 0 .66-1.2 2.35 2.35 0 0 0-1.3-2.4 2.33 2.33 0 0 0-2.54.4L7.5 12"/>
-                            </svg>
-                          </div>
-                          <h3 className="text-base font-medium">AI Recruiting Insights</h3>
-                        </div>
-                        <div className="space-y-3">
-                          {collegeMatches.insights.map((insight, i) => (
-                            <div key={i} className="p-3 bg-muted/50 rounded-md">
-                              <p className="text-sm">{insight}</p>
-                            </div>
-                          ))}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-3 italic">
-                          These insights are generated by AI and should be considered as suggestions.
-                          Always consult with your coaches and counselors for personalized advice.
-                        </p>
-                      </div>
-                    )}
-                    
-                    {/* Next steps */}
-                    <div className="mt-6">
-                      <h3 className="text-base font-medium mb-3">Recommended Next Steps</h3>
-                      <div className="space-y-2">
-                        <Button variant="outline" className="w-full justify-between" asChild>
-                          <a href="/recruiting-profile-builder">
-                            Complete your recruiting profile
-                            <ChevronRight className="h-4 w-4 ml-2" />
-                          </a>
-                        </Button>
-                        <Button variant="outline" className="w-full justify-between" asChild>
-                          <a href="/performance">
-                            Update your performance metrics
-                            <ChevronRight className="h-4 w-4 ml-2" />
-                          </a>
-                        </Button>
-                        <Button variant="outline" className="w-full justify-between" asChild>
-                          <a href="/stats">
-                            Add your latest stats
-                            <ChevronRight className="h-4 w-4 ml-2" />
-                          </a>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          {/* Saved Colleges Tab */}
-          <TabsContent value="saved">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>Saved Colleges</CardTitle>
-                <CardDescription>
-                  Colleges you've saved for future reference
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isSavedCollegesLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-                      <p className="text-sm text-muted-foreground">Loading saved colleges...</p>
-                    </div>
-                  </div>
-                ) : savedColleges?.length === 0 ? (
-                  <div className="text-center py-12">
-                    <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium">No saved colleges</h3>
-                    <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-                      You haven't saved any colleges yet. Click the bookmark icon on colleges you're interested in to save them for later comparison.
-                    </p>
-                    <Button 
-                      variant="outline" 
-                      className="mt-4"
-                      onClick={() => setActiveTab("matches")}
-                    >
-                      Browse College Matches
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {savedColleges?.map((college) => (
-                      <div 
-                        key={college.id} 
-                        className="cursor-pointer transition-all hover:shadow-md"
-                        onClick={() => openCollegeDetails(college.id)}
-                      >
-                        <CollegeCard
-                          college={college}
-                          isSaved={true}
-                          variant="compact"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          )}
+        </div>
       )}
       
       {/* College Detail Dialog */}
