@@ -45,7 +45,11 @@ const QUOTES = [
   }
 ];
 
-export function DailyQuote() {
+type DailyQuoteProps = {
+  customClasses?: string;
+};
+
+export function DailyQuote({ customClasses }: DailyQuoteProps = {}) {
   const [quote, setQuote] = useState<{text: string, author: string}>();
   
   useEffect(() => {
@@ -61,12 +65,17 @@ export function DailyQuote() {
   
   if (!quote) return null;
   
+  // If custom classes are provided, use those instead of the default blue styling
+  const cardClasses = customClasses ? "" : "bg-blue-50 border-blue-100";
+  const quoteClasses = customClasses ? "" : "text-blue-500";
+  const textClasses = customClasses || "";
+  
   return (
-    <Card className="bg-blue-50 border-blue-100">
+    <Card className={cardClasses}>
       <CardContent className="pt-6 pb-5">
         <div className="flex items-start gap-3">
-          <Quote className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-          <div>
+          <Quote className={`h-5 w-5 ${quoteClasses} flex-shrink-0 mt-0.5`} />
+          <div className={textClasses}>
             <p className="text-sm italic leading-relaxed">{quote.text}</p>
             <p className="text-xs text-muted-foreground mt-1.5">— {quote.author}</p>
           </div>
