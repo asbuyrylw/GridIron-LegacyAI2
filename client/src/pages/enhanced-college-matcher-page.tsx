@@ -82,7 +82,7 @@ interface MatchedCollege {
 export default function EnhancedCollegeMatcherPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  // We're removing the tabs, so we don't need activeTab state anymore
+  const [selectedTab, setSelectedTab] = useState("matches");
   const [selectedCollege, setSelectedCollege] = useState<number | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -432,21 +432,22 @@ export default function EnhancedCollegeMatcherPage() {
                       </ul>
                     </div>
                     
-                    {/* AI Insights Section */}
+                    {/* AI Insights Section (conditionally rendered) */}
                     {collegeMatches.insights && collegeMatches.insights.length > 0 && (
                       <div>
-                        <Separator className="my-4" />
                         <div className="flex items-center gap-2 mb-3">
-                          <div className="bg-primary/10 p-1 rounded-md">
-                            <svg 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              viewBox="0 0 24 24" 
-                              fill="none" 
-                              stroke="currentColor" 
-                              strokeWidth="2" 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round" 
-                              className="h-5 w-5 text-primary"
+                          <div className="rounded-full bg-primary/10 p-1">
+                            <svg
+                              className="h-4 w-4 text-primary"
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
                             >
                               <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9"/>
                             </svg>
@@ -538,240 +539,138 @@ export default function EnhancedCollegeMatcherPage() {
                 ))}
               </div>
             ) : (
-                  <div className="text-center py-12 border rounded-lg bg-muted/20">
-                    <GraduationCap className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium">No matching colleges</h3>
-                    <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-                      {filters.searchQuery 
-                        ? `No colleges match your search for "${filters.searchQuery}". Try a different search term or adjust your filters.`
-                        : "No colleges match your current filters. Try adjusting your criteria or clearing filters."}
-                    </p>
-                    <Button variant="outline" className="mt-4" onClick={clearFilters}>
-                      Clear All Filters
-                    </Button>
-                  </div>
-                )}
+              <div className="text-center py-12 border rounded-lg bg-muted/20">
+                <GraduationCap className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium">No matching colleges</h3>
+                <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+                  {filters.searchQuery 
+                    ? `No colleges match your search for "${filters.searchQuery}". Try a different search term or adjust your filters.`
+                    : "No colleges match your current filters. Try adjusting your criteria or clearing filters."}
+                </p>
+                <Button variant="outline" className="mt-4" onClick={clearFilters}>
+                  Clear All Filters
+                </Button>
               </div>
-            </div>
-          </TabsContent>
+            )}
+          </div>
           
-          {/* Insights & Recommendation Tab */}
-          <TabsContent value="insights">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Division Recommendation */}
-              <Card className="lg:col-span-1">
-                <CardHeader className="pb-3">
-                  <CardTitle>Your Division Fit</CardTitle>
-                  <CardDescription>
-                    Based on your athletic and academic profile
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col items-center">
-                    <Badge 
-                      className={`text-lg py-1.5 px-4 mb-4 ${getDivisionColor(collegeMatches.divisionRecommendation)}`}
-                    >
-                      {collegeMatches.divisionRecommendation}
-                    </Badge>
-                    
-                    <div className="w-full mb-4">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium">Match Score</span>
-                        <span className="text-sm font-semibold">{collegeMatches.matchScore}%</span>
-                      </div>
-                      <Progress value={collegeMatches.matchScore} className="h-2" />
-                    </div>
-                    
-                    {collegeMatches.athleteProfile && (
-                      <div className="w-full space-y-4">
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-medium">Academic Strength</span>
-                            <span className="text-sm font-semibold">{collegeMatches.athleteProfile.academicStrength}/10</span>
-                          </div>
-                          <Progress
-                            value={collegeMatches.athleteProfile.academicStrength * 10}
-                            className="h-2"
-                          />
-                        </div>
-                        
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-medium">Athletic Strength</span>
-                            <span className="text-sm font-semibold">{collegeMatches.athleteProfile.athleticStrength}/10</span>
-                          </div>
-                          <Progress
-                            value={collegeMatches.athleteProfile.athleticStrength * 10}
-                            className="h-2"
-                          />
-                        </div>
-                        
-                        {collegeMatches.athleteProfile.positionRanking && (
-                          <div className="flex flex-col items-center pt-4 pb-2">
-                            <span className="text-sm font-medium mb-1">Position Ranking</span>
-                            <span className="text-base font-semibold">
-                              {collegeMatches.athleteProfile.positionRanking}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+          {/* Additional Tabs Section */}
+          <div className="mt-6">
+            <Tabs defaultValue="insights">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="insights">More Insights</TabsTrigger>
+                <TabsTrigger value="saved">Saved Colleges</TabsTrigger>
+              </TabsList>
               
-              {/* Feedback and Insights */}
-              <Card className="lg:col-span-2">
-                <CardHeader className="pb-3">
-                  <CardTitle>Personalized Feedback</CardTitle>
-                  <CardDescription>
-                    College recruiting insights based on your profile
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {/* Feedback Section */}
-                    <div>
-                      <h3 className="text-base font-medium mb-3">Feedback</h3>
-                      <ul className="space-y-3">
-                        {collegeMatches.feedback.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <div className="rounded-full bg-primary/10 p-1 mt-0.5">
-                              <GraduationCap className="h-3.5 w-3.5 text-primary" />
+              {/* More Insights Tab */}
+              <TabsContent value="insights" className="mt-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Additional insights content would go here */}
+                  <Card className="lg:col-span-3">
+                    <CardHeader className="pb-3">
+                      <CardTitle>Recruiting Timeline &amp; Next Steps</CardTitle>
+                      <CardDescription>
+                        Key milestones for your college recruiting journey
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <p className="text-sm">
+                          Based on your profile and recruiting goals, here are the key steps you should focus on in your recruiting journey.
+                        </p>
+                        
+                        <div className="space-y-4">
+                          <div className="flex items-start gap-3">
+                            <div className="rounded-full bg-primary/10 p-1.5 mt-0.5">
+                              <span className="text-xs font-semibold text-primary">1</span>
                             </div>
-                            <span className="text-sm">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    
-                    {/* AI Insights Section */}
-                    {collegeMatches.insights && collegeMatches.insights.length > 0 && (
-                      <div>
-                        <Separator className="my-4" />
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="bg-primary/10 p-1 rounded-md">
-                            <svg 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              viewBox="0 0 24 24" 
-                              fill="none" 
-                              stroke="currentColor" 
-                              strokeWidth="2" 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round" 
-                              className="h-5 w-5 text-primary"
-                            >
-                              <path d="M12 2a10 10 0 1 0 10 10 10 10 0 0 0-10-10Z"/>
-                              <path d="M12 7v5l3 3"/>
-                              <path d="m9 17 2.85-2.8a2.35 2.35 0 0 0 .66-1.2 2.35 2.35 0 0 0-1.3-2.4 2.33 2.33 0 0 0-2.54.4L7.5 12"/>
-                            </svg>
+                            <div>
+                              <h4 className="text-sm font-medium">Create Highlight Film</h4>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Focus on showcasing your key strengths in a 3-5 minute video that highlights your abilities
+                              </p>
+                            </div>
                           </div>
-                          <h3 className="text-base font-medium">AI Recruiting Insights</h3>
-                        </div>
-                        <div className="space-y-3">
-                          {collegeMatches.insights.map((insight, i) => (
-                            <div key={i} className="p-3 bg-muted/50 rounded-md">
-                              <p className="text-sm">{insight}</p>
+                          
+                          <div className="flex items-start gap-3">
+                            <div className="rounded-full bg-primary/10 p-1.5 mt-0.5">
+                              <span className="text-xs font-semibold text-primary">2</span>
                             </div>
-                          ))}
+                            <div>
+                              <h4 className="text-sm font-medium">Register with NCAA Eligibility Center</h4>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Ensure you're academically eligible for NCAA competition by registering at eligibilitycenter.org
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-start gap-3">
+                            <div className="rounded-full bg-primary/10 p-1.5 mt-0.5">
+                              <span className="text-xs font-semibold text-primary">3</span>
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-medium">Attend Summer Camps</h4>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Participate in camps at your target schools to get exposure to college coaches
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-3 italic">
-                          These insights are generated by AI and should be considered as suggestions.
-                          Always consult with your coaches and counselors for personalized advice.
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+              
+              {/* Saved Colleges Tab */}
+              <TabsContent value="saved" className="mt-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle>Saved Colleges</CardTitle>
+                    <CardDescription>
+                      Colleges you've saved for future reference
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {isSavedCollegesLoading ? (
+                      <div className="flex flex-col items-center py-8">
+                        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary mb-2"></div>
+                        <p className="text-sm text-muted-foreground">Loading saved colleges...</p>
+                      </div>
+                    ) : savedColleges && savedColleges.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {savedColleges.map((college) => (
+                          <div 
+                            key={college.id} 
+                            className="cursor-pointer transition-all hover:shadow-md"
+                            onClick={() => openCollegeDetails(college.id)}
+                          >
+                            <CollegeCard college={college} isSaved={true} />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <GraduationCap className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
+                        <h3 className="text-base font-medium">No Saved Colleges</h3>
+                        <p className="mt-1 text-sm text-muted-foreground max-w-md mx-auto">
+                          You haven't saved any colleges yet. When browsing college matches, click the bookmark icon to save colleges you're interested in.
                         </p>
                       </div>
                     )}
-                    
-                    {/* Next steps */}
-                    <div className="mt-6">
-                      <h3 className="text-base font-medium mb-3">Recommended Next Steps</h3>
-                      <div className="space-y-2">
-                        <Button variant="outline" className="w-full justify-between" asChild>
-                          <a href="/recruiting-profile-builder">
-                            Complete your recruiting profile
-                            <ChevronRight className="h-4 w-4 ml-2" />
-                          </a>
-                        </Button>
-                        <Button variant="outline" className="w-full justify-between" asChild>
-                          <a href="/performance">
-                            Update your performance metrics
-                            <ChevronRight className="h-4 w-4 ml-2" />
-                          </a>
-                        </Button>
-                        <Button variant="outline" className="w-full justify-between" asChild>
-                          <a href="/stats">
-                            Add your latest stats
-                            <ChevronRight className="h-4 w-4 ml-2" />
-                          </a>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          {/* Saved Colleges Tab */}
-          <TabsContent value="saved">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>Saved Colleges</CardTitle>
-                <CardDescription>
-                  Colleges you've saved for future reference
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isSavedCollegesLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-                      <p className="text-sm text-muted-foreground">Loading saved colleges...</p>
-                    </div>
-                  </div>
-                ) : savedColleges?.length === 0 ? (
-                  <div className="text-center py-12">
-                    <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium">No saved colleges</h3>
-                    <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-                      You haven't saved any colleges yet. Click the bookmark icon on colleges you're interested in to save them for later comparison.
-                    </p>
-                    <Button 
-                      variant="outline" 
-                      className="mt-4"
-                      onClick={() => setActiveTab("matches")}
-                    >
-                      Browse College Matches
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {savedColleges?.map((college) => (
-                      <div 
-                        key={college.id} 
-                        className="cursor-pointer transition-all hover:shadow-md"
-                        onClick={() => openCollegeDetails(college.id)}
-                      >
-                        <CollegeCard
-                          college={college}
-                          isSaved={true}
-                          variant="compact"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
       )}
       
       {/* College Detail Dialog */}
       {selectedCollege && (
         <CollegeDetailDialog
           collegeId={selectedCollege}
-          isOpen={isDetailOpen}
+          open={isDetailOpen}
           onClose={handleDialogClose}
           isSaved={isCollegeSaved(selectedCollege)}
         />
