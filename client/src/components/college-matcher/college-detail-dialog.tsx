@@ -8,7 +8,43 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { SaveCollegeButton } from "./save-college-button";
-import { ExternalLink, ChevronLeft, Trophy, Star, Award } from "lucide-react";
+import { ExternalLink, ChevronLeft, Trophy, Star, Award, MapPin } from "lucide-react";
+
+// Helper function for division colors - same as in college-card.tsx
+const getDivisionColor = (division: string) => {
+  switch (division) {
+    case 'D1':
+      return 'from-blue-600 to-blue-800';
+    case 'D2':
+      return 'from-red-600 to-red-800';
+    case 'D3':
+      return 'from-green-600 to-green-800';
+    case 'NAIA':
+      return 'from-purple-600 to-purple-800';
+    case 'JUCO':
+      return 'from-orange-600 to-orange-800';
+    default:
+      return 'from-gray-600 to-gray-800';
+  }
+};
+
+// Helper function for division badge colors
+const getDivisionBadgeColor = (division: string) => {
+  switch (division) {
+    case 'D1':
+      return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
+    case 'D2':
+      return 'bg-red-100 text-red-800 hover:bg-red-200';
+    case 'D3':
+      return 'bg-green-100 text-green-800 hover:bg-green-200';
+    case 'NAIA':
+      return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
+    case 'JUCO':
+      return 'bg-orange-100 text-orange-800 hover:bg-orange-200';
+    default:
+      return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+  }
+};
 
 interface MatchedCollege {
   id: number;
