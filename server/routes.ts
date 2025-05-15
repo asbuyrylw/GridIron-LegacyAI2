@@ -19,6 +19,7 @@ import playerBrandingRoutes from "./routes/player-branding-routes";
 import coachEvaluationRoutes from "./routes/coach-evaluation-routes";
 import collegeApplicationRoutes from "./routes/college-application-routes";
 import { setupSkillProgressionRoutes } from "./routes/skill-progression-routes";
+import { setupProfileImageRoutes } from "./routes/profile-image-routes";
 import { Router } from "express";
 
 // Extend the Express Session type to include our onboarding progress
@@ -120,6 +121,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Skill Progression system routes
   setupSkillProgressionRoutes(app);
+  
+  // Profile Image routes
+  setupProfileImageRoutes(app);
   
   // Achievement and Gamification routes
   app.get("/api/athlete/:id/achievements", async (req, res, next) => {

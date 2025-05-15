@@ -1,6 +1,6 @@
 import { Express, Request, Response } from "express";
 import { z } from "zod";
-import { isAuthenticated } from "../middleware/auth-middleware";
+import { storage } from "../storage";
 
 // Validation schema for updating profile image
 const updateImageSchema = z.object({
@@ -11,17 +11,17 @@ const updateImageSchema = z.object({
 // Add file handling if we were using actual file uploads
 export function setupProfileImageRoutes(app: Express) {
   // Update profile or background image
-  app.post("/api/athlete/image", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/athlete/image", async (req: Request, res: Response) => {
     try {
       // Validate request body
       const { imageUrl, imageType } = updateImageSchema.parse(req.body);
       
-      if (!req.user || !req.user.id) {
+      if (!req.isAuthenticated() || !req.user || !req.user.id) {
         return res.status(401).json({ message: "User not authenticated" });
       }
 
       // Get the user's athlete profile
-      const athlete = await req.storage.getAthleteByUserId(req.user.id);
+      const athlete = await storage.getAthleteByUserId(req.user.id);
       
       if (!athlete) {
         return res.status(404).json({ message: "Athlete profile not found" });
@@ -29,13 +29,13 @@ export function setupProfileImageRoutes(app: Express) {
       
       // Update the appropriate field based on image type
       if (imageType === "profile") {
-        await req.storage.updateAthlete(athlete.id, { profileImage: imageUrl });
+        await storage.updateAthlete(athlete.id, { profileImage: imageUrl });
       } else if (imageType === "background") {
-        await req.storage.updateAthlete(athlete.id, { backgroundImage: imageUrl });
+        await storage.updateAthlete(athlete.id, { backgroundImage: imageUrl });
       }
       
       // Get the updated athlete
-      const updatedAthlete = await req.storage.getAthlete(athlete.id);
+      const updatedAthlete = await storage.getAthlete(athlete.id);
       
       res.json({ 
         success: true, 

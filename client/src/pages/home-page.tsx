@@ -4,8 +4,10 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Header } from "@/components/layout/header";
 import { CombineMetric } from "@shared/schema";
 import { Redirect } from "wouter";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLoginStreakUpdate } from "@/hooks/use-login-streak";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 // Dashboard Components
 import { MilestoneTrackers } from "@/components/dashboard/milestone-trackers";
