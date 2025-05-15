@@ -55,21 +55,24 @@ export function AchievementsSummary() {
       name: "Speed Demon",
       level: "bronze",
       type: "performance",
-      dateEarned: new Date()
+      dateEarned: new Date(),
+      achievementId: "speed-demon-bronze"
     },
     {
       id: 2,
       name: "Perfect Attendance",
       level: "silver",
       type: "training",
-      dateEarned: new Date(Date.now() - 86400000) // Yesterday
+      dateEarned: new Date(Date.now() - 86400000), // Yesterday
+      achievementId: "attendance-silver"
     },
     {
       id: 3,
       name: "Networking Pro",
       level: "bronze",
       type: "recruiting",
-      dateEarned: new Date(Date.now() - 172800000) // 2 days ago
+      dateEarned: new Date(Date.now() - 172800000), // 2 days ago
+      achievementId: "networking-bronze"
     }
   ];
   
@@ -77,9 +80,12 @@ export function AchievementsSummary() {
   const displayAchievements = recentAchievements.length > 0 ? recentAchievements : defaultAchievements;
   
   // Format date to display relative time
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | string | null) => {
+    if (!date) return "N/A";
+    
+    const achievementDate = typeof date === 'string' ? new Date(date) : date;
     const now = new Date();
-    const diffTime = Math.abs(now.getTime() - new Date(date).getTime());
+    const diffTime = Math.abs(now.getTime() - achievementDate.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
     if (diffDays === 0) {
@@ -102,7 +108,7 @@ export function AchievementsSummary() {
       <CardContent>
         <div className="space-y-3">
           {displayAchievements.map((achievement) => (
-            <div key={achievement.id} className="flex items-center justify-between">
+            <div key={achievement.achievementId || `achievement-${achievement.id}`} className="flex items-center justify-between">
               <div className="flex items-center">
                 <Badge variant="outline" className={`mr-2 capitalize ${getLevelColor(achievement.level)}`}>
                   {achievement.level}

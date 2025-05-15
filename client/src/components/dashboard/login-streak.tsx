@@ -31,9 +31,12 @@ export function LoginStreak() {
   const data = streakData || defaultData;
   
   // Format the last login date
-  const formatLastLogin = (date: Date) => {
+  const formatLastLogin = (date: Date | string | null) => {
+    if (!date) return 'N/A';
+    
+    const loginDate = typeof date === 'string' ? new Date(date) : date;
     const now = new Date();
-    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    const diffInDays = Math.floor((now.getTime() - loginDate.getTime()) / (1000 * 60 * 60 * 24));
     
     if (diffInDays === 0) {
       return 'Today';
