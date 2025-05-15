@@ -670,7 +670,7 @@ export default function EnhancedCollegeMatcherPage() {
       {selectedCollege && (
         <CollegeDetailDialog
           collegeId={selectedCollege}
-          open={isDetailOpen}
+          isOpen={isDetailOpen}
           onClose={handleDialogClose}
           isSaved={isCollegeSaved(selectedCollege)}
         />
