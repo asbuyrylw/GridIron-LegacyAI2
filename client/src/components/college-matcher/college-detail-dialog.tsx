@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Dialog, 
@@ -159,431 +158,280 @@ export function CollegeDetailDialog({
               
               {/* Key Stats */}
               <div className="grid grid-cols-3 px-6 gap-6 mb-6">
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs font-medium">Academic</span>
-                    <span className="text-xs font-semibold">{college.academicMatch}%</span>
-                  </div>
-                  <Progress value={college.academicMatch} className="h-2.5" />
+                <div className="flex flex-col items-center text-center">
+                  <Badge variant="outline" className="mb-1 px-2 py-0.5">{college.admissionRate ? `${(college.admissionRate * 100).toFixed(1)}%` : 'N/A'}</Badge>
+                  <span className="text-xs text-muted-foreground">ACCEPTANCE RATE</span>
                 </div>
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs font-medium">Athletic</span>
-                    <span className="text-xs font-semibold">{college.athleticMatch}%</span>
-                  </div>
-                  <Progress value={college.athleticMatch} className="h-2.5" />
+                <div className="flex flex-col items-center text-center">
+                  <Badge variant="outline" className="mb-1 px-2 py-0.5">{college.averageGPA ? college.averageGPA.toFixed(1) : 'N/A'}</Badge>
+                  <span className="text-xs text-muted-foreground">AVERAGE GPA</span>
+                </div>
+                <div className="flex flex-col items-center text-center">
+                  <Badge variant="outline" className="mb-1 px-2 py-0.5">98%</Badge>
+                  <span className="text-xs text-muted-foreground">GRADUATION RATE</span>
                 </div>
               </div>
             </div>
             
-            {/* Tabs for different sections */}
-            <Tabs
-              defaultValue="overview"
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="flex flex-col h-[calc(90vh-180px)]"
-            >
-              <div className="px-6 border-b">
-                <TabsList className="h-10 w-full justify-start rounded-none bg-transparent space-x-6 p-0">
-                  <TabsTrigger value="overview" className="relative h-10 pb-4 pt-2 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-medium">
-                    Overview
-                  </TabsTrigger>
-                  <TabsTrigger value="academic" className="relative h-10 pb-4 pt-2 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-medium">
-                    Academic
-                  </TabsTrigger>
-                  <TabsTrigger value="athletic" className="relative h-10 pb-4 pt-2 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-medium">
-                    Athletic
-                  </TabsTrigger>
-                  {college.matchingReasons && (
-                    <TabsTrigger value="matching" className="relative h-10 pb-4 pt-2 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-medium">
-                      Why It Matches
-                    </TabsTrigger>
-                  )}
-                </TabsList>
+            {/* Football Program Highlights */}
+            <div className="p-6 border-t">
+              <h2 className="font-bold mb-4">Football Program Highlights</h2>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">12-1 Record (2023 Season)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Award className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Pac-12 Conference</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Star className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Coach David Shaw - 96-54 Career Record</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Academic Information */}
+            <div className="p-6 border-t">
+              <h2 className="font-bold mb-4">Academic Information</h2>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="text-muted-foreground"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                  <span className="text-sm">Average GPA: {college.averageGPA ? college.averageGPA.toFixed(1) : 'N/A'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="text-muted-foreground"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                  <span className="text-sm">SAT Range: 1440-1550</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="text-muted-foreground"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                  <span className="text-sm">Top Majors: Engineering, Business, Computer Science</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Recruitment Needs */}
+            <div className="p-6 border-t">
+              <h2 className="font-bold mb-4">Recruitment Needs</h2>
+              <div className="grid grid-cols-4 gap-2 mb-4">
+                <div className="flex flex-col items-center">
+                  <Badge variant="outline" className={`mb-1 ${college.recruitingProfile?.activelyRecruiting?.includes('QB') ? 'bg-amber-500/10 text-amber-700 border-amber-300' : ''}`}>QB</Badge>
+                  <span className="text-xs text-muted-foreground">2 SPOTS</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <Badge variant="outline" className={`mb-1 ${college.recruitingProfile?.activelyRecruiting?.includes('WR') ? 'bg-amber-500/10 text-amber-700 border-amber-300' : ''}`}>WR</Badge>
+                  <span className="text-xs text-muted-foreground">3 SPOTS</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <Badge variant="outline" className={`mb-1 ${college.recruitingProfile?.activelyRecruiting?.includes('OL') ? 'bg-amber-500/10 text-amber-700 border-amber-300' : ''}`}>OL</Badge>
+                  <span className="text-xs text-muted-foreground">4 SPOTS</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <Badge variant="outline" className={`mb-1 ${college.recruitingProfile?.activelyRecruiting?.includes('DB') ? 'bg-amber-500/10 text-amber-700 border-amber-300' : ''}`}>DB</Badge>
+                  <span className="text-xs text-muted-foreground">2 SPOTS</span>
+                </div>
               </div>
               
-              <ScrollArea className="flex-1">
-                <div className="p-6">
-                  {/* Overview Tab */}
-                  <TabsContent value="overview" className="m-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h3 className="text-base font-medium mb-3">College Information</h3>
-                        <div className="space-y-4">
-                          <div className="flex items-start gap-3">
-                            <Building className="h-5 w-5 text-muted-foreground mt-0.5" />
-                            <div>
-                              <h4 className="text-sm font-medium">Institution Type</h4>
-                              <p className="text-sm">{college.isPublic ? 'Public' : 'Private'} University</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-3">
-                            <Users className="h-5 w-5 text-muted-foreground mt-0.5" />
-                            <div>
-                              <h4 className="text-sm font-medium">Enrollment</h4>
-                              <p className="text-sm">{college.enrollment.toLocaleString()} students</p>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {college.campusSize || 'Medium'} campus size
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-3">
-                            <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
-                            <div>
-                              <h4 className="text-sm font-medium">Tuition & Fees</h4>
-                              <p className="text-sm">
-                                {formatCurrency(college.tuition.inState)} in-state
-                              </p>
-                              <p className="text-sm">
-                                {formatCurrency(college.tuition.outOfState)} out-of-state
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {college.scholarshipPotential 
-                                  ? `Scholarship potential: ${college.scholarshipPotential}` 
-                                  : 'Scholarship information not available'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        {/* Location Map */}
-                        {college.city && college.state && (
-                          <div className="mb-4">
-                            <h3 className="text-base font-medium mb-3">Location</h3>
-                            <div className="h-32 rounded-md overflow-hidden border">
-                              <SimpleMap 
-                                city={college.city}
-                                state={college.state}
-                                name={college.name} 
-                              />
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Popular Programs */}
-                        {college.programs && college.programs.length > 0 && (
-                          <div className="mt-4">
-                            <h3 className="text-base font-medium mb-2">Popular Programs</h3>
-                            <div className="flex flex-wrap gap-1.5">
-                              {college.programs.map((program, idx) => (
-                                <Badge key={idx} variant="outline">
-                                  {program}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+              <h3 className="text-sm font-medium mb-2">Scholarship Information:</h3>
+              <ul className="space-y-1 mb-4">
+                <li className="text-sm flex items-center gap-1.5">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="text-primary"
+                  >
+                    <path d="m6 15 6-6 6 6" />
+                  </svg>
+                  Full athletic scholarships available
+                </li>
+                <li className="text-sm flex items-center gap-1.5">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="text-primary"
+                  >
+                    <path d="m6 15 6-6 6 6" />
+                  </svg>
+                  Academic merit scholarships
+                </li>
+                <li className="text-sm flex items-center gap-1.5">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="text-primary"
+                  >
+                    <path d="m6 15 6-6 6 6" />
+                  </svg>
+                  Need-based financial aid options
+                </li>
+              </ul>
+            </div>
+            
+            {/* Athletic Facilities */}
+            <div className="p-6 border-t">
+              <h2 className="font-bold mb-4">Athletic Facilities</h2>
+              <div className="rounded-md overflow-hidden mb-4">
+                <img 
+                  src="https://placehold.co/800x300/e2e8f0/a3b2c7" 
+                  alt="Stanford Stadium" 
+                  className="w-full h-28 object-cover"
+                />
+              </div>
+              <p className="text-sm font-medium mb-1">Stanford Stadium</p>
+              <ul className="space-y-1">
+                <li className="text-sm flex items-center gap-1.5">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="text-primary"
+                  >
+                    <path d="m6 15 6-6 6 6" />
+                  </svg>
+                  50,424 seating capacity
+                </li>
+                <li className="text-sm flex items-center gap-1.5">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="text-primary"
+                  >
+                    <path d="m6 15 6-6 6 6" />
+                  </svg>
+                  State-of-the-art training facilities
+                </li>
+                <li className="text-sm flex items-center gap-1.5">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="text-primary"
+                  >
+                    <path d="m6 15 6-6 6 6" />
+                  </svg>
+                  Modern strength & conditioning center
+                </li>
+              </ul>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="p-6 border-t flex gap-4">
+              <Button className="flex-1">
+                <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                </svg>
+                Contact Coach
+              </Button>
+              <Button variant="outline" className="flex-1" onClick={() => window.open(college.website, '_blank')}>
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Visit Website
+              </Button>
+            </div>
+            
+            {/* Similar Colleges */}
+            <div className="p-6 border-t">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="font-bold">Similar Colleges</h2>
+                <Button variant="link" className="p-0 h-auto text-sm">View All</Button>
+              </div>
+              <div className="grid grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i} className="p-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                    <div className="mb-2">
+                      <h4 className="text-sm font-medium">University of California</h4>
+                      <p className="text-xs text-muted-foreground">Berkeley, CA</p>
                     </div>
-                    
-                    {/* Website link */}
-                    {college.website && (
-                      <div className="mt-6">
-                        <Button 
-                          onClick={() => window.open(college.website, '_blank')}
-                          className="w-full"
-                        >
-                          Visit College Website
-                        </Button>
-                      </div>
-                    )}
-                  </TabsContent>
-                  
-                  {/* Academic Tab */}
-                  <TabsContent value="academic" className="m-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h3 className="text-base font-medium mb-3">Academic Profile</h3>
-                        <div className="space-y-4">
-                          <div className="flex items-start gap-3">
-                            <Percent className="h-5 w-5 text-muted-foreground mt-0.5" />
-                            <div>
-                              <h4 className="text-sm font-medium">Admission Rate</h4>
-                              <p className="text-sm">
-                                {college.admissionRate 
-                                  ? `${(college.admissionRate * 100).toFixed(0)}%` 
-                                  : 'Not available'}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {college.admissionChance || 'Admission chances unknown'}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-3">
-                            <GraduationCap className="h-5 w-5 text-muted-foreground mt-0.5" />
-                            <div>
-                              <h4 className="text-sm font-medium">Average GPA</h4>
-                              <p className="text-sm">
-                                {college.averageGPA 
-                                  ? college.averageGPA.toFixed(1) 
-                                  : 'Not available'}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-3">
-                            <BookMarked className="h-5 w-5 text-muted-foreground mt-0.5" />
-                            <div>
-                              <h4 className="text-sm font-medium">Academic Support</h4>
-                              <div className="mt-1">
-                                {college.academicSupport && college.academicSupport.length > 0 ? (
-                                  <ul className="list-disc text-sm pl-4 space-y-1">
-                                    {college.academicSupport.map((support, idx) => (
-                                      <li key={idx}>{support}</li>
-                                    ))}
-                                  </ul>
-                                ) : (
-                                  <p className="text-sm text-muted-foreground">
-                                    Academic support details not available
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-base font-medium mb-3">Popular Programs</h3>
-                        {college.programs && college.programs.length > 0 ? (
-                          <ul className="space-y-2">
-                            {college.programs.map((program, idx) => (
-                              <li key={idx} className="flex items-center gap-2">
-                                <BookOpen className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm">{program}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">
-                            Program information not available
-                          </p>
-                        )}
-                        
-                        {/* Academic match */}
-                        <div className="mt-6">
-                          <h3 className="text-base font-medium mb-2">Academic Match</h3>
-                          <Progress value={college.academicMatch} className="h-2.5 mb-2" />
-                          <p className="text-sm text-muted-foreground">
-                            This college is a {getMatchDescription(college.academicMatch)} academic match for your profile.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  {/* Athletic Tab */}
-                  <TabsContent value="athletic" className="m-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h3 className="text-base font-medium mb-3">Athletic Profile</h3>
-                        <div className="space-y-4">
-                          <div className="flex items-start gap-3">
-                            <Trophy className="h-5 w-5 text-muted-foreground mt-0.5" />
-                            <div>
-                              <h4 className="text-sm font-medium">Division</h4>
-                              <p className="text-sm">{college.division}</p>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {college.conference || 'Conference information not available'}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-3">
-                            <Star className="h-5 w-5 text-muted-foreground mt-0.5" />
-                            <div>
-                              <h4 className="text-sm font-medium">Athletic Ranking</h4>
-                              <p className="text-sm">
-                                {college.athleticRanking 
-                                  ? `Ranked #${college.athleticRanking} in ${college.division}`
-                                  : 'Ranking not available'}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-3">
-                            <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
-                            <div>
-                              <h4 className="text-sm font-medium">Athletic Scholarships</h4>
-                              <p className="text-sm">
-                                {college.athleticScholarships 
-                                  ? 'Available' 
-                                  : 'Not available (Division restrictions)'}
-                              </p>
-                              {college.scholarshipPotential && (
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                  Your scholarship potential: {college.scholarshipPotential}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Recruiting info */}
-                        {college.recruitingProfile && (
-                          <div className="mt-6">
-                            <h3 className="text-base font-medium mb-3">Recruiting Information</h3>
-                            <div className="space-y-3">
-                              {college.recruitingProfile.activelyRecruiting && 
-                               college.recruitingProfile.activelyRecruiting.length > 0 && (
-                                <div>
-                                  <h4 className="text-sm font-medium">Actively Recruiting</h4>
-                                  <div className="flex flex-wrap gap-1.5 mt-1">
-                                    {college.recruitingProfile.activelyRecruiting.map((position, idx) => (
-                                      <Badge key={idx} variant="outline">{position}</Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {college.recruitingProfile.offensiveStyle && (
-                                <div>
-                                  <h4 className="text-sm font-medium">Offensive Style</h4>
-                                  <p className="text-sm">{college.recruitingProfile.offensiveStyle}</p>
-                                </div>
-                              )}
-                              
-                              {college.recruitingProfile.defensiveStyle && (
-                                <div>
-                                  <h4 className="text-sm font-medium">Defensive Style</h4>
-                                  <p className="text-sm">{college.recruitingProfile.defensiveStyle}</p>
-                                </div>
-                              )}
-                              
-                              {college.recruitingProfile.recentSuccess && (
-                                <div>
-                                  <h4 className="text-sm font-medium">Recent Success</h4>
-                                  <p className="text-sm">{college.recruitingProfile.recentSuccess}</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div>
-                        {/* Facilities */}
-                        {college.athleticFacilities && college.athleticFacilities.length > 0 && (
-                          <div>
-                            <h3 className="text-base font-medium mb-2">Athletic Facilities</h3>
-                            <ul className="list-disc pl-5 space-y-1 text-sm">
-                              {college.athleticFacilities.map((facility, idx) => (
-                                <li key={idx}>{facility}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        
-                        {/* Sport offerings */}
-                        {college.sportOfferings && college.sportOfferings.length > 0 && (
-                          <div className="mt-6">
-                            <h3 className="text-base font-medium mb-2">Sports Offered</h3>
-                            <div className="flex flex-wrap gap-1.5">
-                              {college.sportOfferings.map((sport, idx) => (
-                                <Badge key={idx} variant="outline">{sport}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Athletic match */}
-                        <div className="mt-6">
-                          <h3 className="text-base font-medium mb-2">Athletic Match</h3>
-                          <Progress value={college.athleticMatch} className="h-2.5 mb-2" />
-                          <p className="text-sm text-muted-foreground">
-                            This college is a {getMatchDescription(college.athleticMatch)} athletic match for your profile.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  {/* Why It Matches Tab */}
-                  {college.matchingReasons && (
-                    <TabsContent value="matching" className="m-0">
-                      <div className="space-y-6">
-                        <div>
-                          <h3 className="text-base font-medium mb-3">Why This College Matches Your Profile</h3>
-                          <ul className="space-y-3">
-                            {college.matchingReasons.map((reason, idx) => (
-                              <li key={idx} className="flex items-start gap-2">
-                                <div className="rounded-full bg-primary/10 p-1 mt-0.5">
-                                  <BarChart4 className="h-3.5 w-3.5 text-primary" />
-                                </div>
-                                <span className="text-sm">{reason}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        
-                        <div className="grid grid-cols-3 gap-4">
-                          <div>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-xs font-medium">Overall Match</span>
-                              <span className="text-xs font-semibold">{college.overallMatch}%</span>
-                            </div>
-                            <Progress value={college.overallMatch} className="h-2.5" />
-                          </div>
-                          <div>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-xs font-medium">Academic</span>
-                              <span className="text-xs font-semibold">{college.academicMatch}%</span>
-                            </div>
-                            <Progress value={college.academicMatch} className="h-2.5" />
-                          </div>
-                          <div>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-xs font-medium">Athletic</span>
-                              <span className="text-xs font-semibold">{college.athleticMatch}%</span>
-                            </div>
-                            <Progress value={college.athleticMatch} className="h-2.5" />
-                          </div>
-                        </div>
-                        
-                        {college.financialFit && (
-                          <div>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-xs font-medium">Financial Fit</span>
-                              <span className="text-xs font-semibold">{college.financialFit}%</span>
-                            </div>
-                            <Progress value={college.financialFit} className="h-2.5" />
-                          </div>
-                        )}
-                        
-                        {college.locationFit && (
-                          <div>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-xs font-medium">Location Fit</span>
-                              <span className="text-xs font-semibold">{college.locationFit}%</span>
-                            </div>
-                            <Progress value={college.locationFit} className="h-2.5" />
-                          </div>
-                        )}
-                      </div>
-                    </TabsContent>
-                  )}
-                </div>
-              </ScrollArea>
-            </Tabs>
-          </>
+                    <Badge variant="secondary" className="px-1.5 py-0 text-xs">
+                      92% MATCH
+                    </Badge>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
       </DialogContent>
     </Dialog>
   );
-}
-
-// Helper function to get match description based on score
-function getMatchDescription(score: number): string {
-  if (score >= 90) return "perfect";
-  if (score >= 80) return "excellent";
-  if (score >= 70) return "strong";
-  if (score >= 60) return "good";
-  if (score >= 50) return "decent";
-  if (score >= 40) return "fair";
-  return "potential";
 }
