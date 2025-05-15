@@ -16,7 +16,8 @@ export function HeroHeader({ reminderItems = [], onImageChange }: HeroHeaderProp
   const { user } = useAuth();
   const { toast } = useToast();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string>(user?.athlete?.backgroundImage || "/assets/bengals-stadium.jpg");
+  // Using a default stadium image since the backgroundImage property is newly added to the schema
+  const [imageUrl, setImageUrl] = useState<string>("/assets/bengals-stadium.jpg");
   
   // In a real implementation, we would upload this to a server/storage service
   // For now we'll just handle it locally and use a predefined image or one from the user profile

@@ -14,6 +14,7 @@ import { DailyQuote } from "@/components/dashboard/daily-quote";
 import { PlanCalendar } from "@/components/dashboard/plan-calendar";
 import { LoginStreak } from "@/components/dashboard/login-streak";
 import { AchievementsSummary } from "@/components/dashboard/achievements-summary";
+import { HeroHeader } from "@/components/dashboard/hero-header";
 import { Clock, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,41 +78,28 @@ export default function HomePage() {
     { year: "2021", fortyYd: "4.9s", bench: "15 reps", broadJump: "8ft 11in", shuttle: "4.5s", threeCone: "7.4s", height: "6ft 1in", weight: "185 lbs" },
   ];
 
+  // Define reminder items for the hero header
+  const reminderItems = [
+    { 
+      time: "4:00 PM", 
+      title: "Team Practice",
+      icon: <Clock className="h-4 w-4 text-primary" />
+    },
+    { 
+      time: "6:00 PM", 
+      title: "Film Review", 
+      icon: <Clock className="h-4 w-4 text-primary" />
+    }
+  ];
+
   return (
     <div className="min-h-screen pb-16 relative bg-gradient-to-b from-blue-50/50 to-white">
       <Header />
       
-      <main className="container mx-auto px-4 pt-4 pb-20">
-        {/* Hero Section with Welcome and Quote */}
-        <section className="mb-8 relative">
-          <div className="bg-gradient-to-r from-blue-800 to-blue-600 rounded-xl overflow-hidden text-white p-8 relative">
-            <div className="relative z-10">
-              <h1 className="text-2xl font-bold mb-4">Welcome back, {user?.firstName || 'Athlete'}!</h1>
-              
-              <div className="bg-blue-500/50 rounded-lg p-4 backdrop-blur-sm max-w-2xl">
-                <DailyQuote customClasses="text-white" />
-              </div>
-            </div>
-            <div className="absolute inset-0 opacity-20 bg-blue-900"></div>
-          </div>
-          
-          <div className="absolute -bottom-4 right-8 flex space-x-4">
-            <Card className="shadow-md w-auto">
-              <CardContent className="p-3 flex items-center space-x-2 text-sm">
-                <Clock className="h-4 w-4 text-primary" />
-                <span>Team Practice</span>
-                <span className="font-semibold">4:00 PM</span>
-              </CardContent>
-            </Card>
-            <Card className="shadow-md w-auto">
-              <CardContent className="p-3 flex items-center space-x-2 text-sm">
-                <Clock className="h-4 w-4 text-primary" />
-                <span>Film Review</span>
-                <span className="font-semibold">5:30 PM</span>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
+      {/* Full-width Hero Header with Stadium Background */}
+      <HeroHeader reminderItems={reminderItems} />
+      
+      <main className="container mx-auto px-4 pb-20">
         
         {/* Performance Metrics Section */}
         <section className="mb-8">
