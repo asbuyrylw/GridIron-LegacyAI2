@@ -81,8 +81,26 @@ export function CollegeCard({ college, isSaved = false, variant = 'default', ful
     return (
       <Card className="overflow-hidden border border-muted">
         <div className="relative">
-          {/* College header with color gradient based on division */}
-          <div className={`h-20 flex items-center justify-center bg-gradient-to-r ${getDivisionColor(college.division)}`}>
+          {/* College header with background image or color gradient fallback */}
+          <div 
+            className={`h-20 flex items-center justify-center relative overflow-hidden`}
+            style={{
+              background: college.imageUrl 
+                ? `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${college.imageUrl})` 
+                : `linear-gradient(to right, ${getDivisionColor(college.division)})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            {/* College name overlay for image header - only show when image exists */}
+            {college.imageUrl && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <h3 className="text-white font-bold text-sm text-center px-3 drop-shadow-md">
+                  {college.name}
+                </h3>
+              </div>
+            )}
+            
             {/* Actions and division badge */}
             <div className="absolute inset-0 flex justify-between items-start p-2 z-10">
               <SaveCollegeButton 
@@ -146,15 +164,33 @@ export function CollegeCard({ college, isSaved = false, variant = 'default', ful
     return (
       <Card className="overflow-hidden border border-muted">
         <div className="relative">
-          {/* College header with color gradient based on division */}
-          <div className={`h-24 flex items-center justify-center bg-gradient-to-r ${getDivisionColor(college.division)}`}>
+          {/* College header with background image or color gradient fallback */}
+          <div 
+            className={`h-24 flex items-center justify-center relative overflow-hidden`}
+            style={{
+              background: college.imageUrl 
+                ? `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${college.imageUrl})` 
+                : `linear-gradient(to right, ${getDivisionColor(college.division)})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            {/* College name overlay for image header - only show when image exists */}
+            {college.imageUrl && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <h3 className="text-white font-bold text-lg text-center px-4 drop-shadow-md">
+                  {college.name}
+                </h3>
+              </div>
+            )}
+            
             {/* Actions and division badge */}
-            <div className="absolute top-0 right-0 p-2">
+            <div className="absolute top-0 right-0 p-2 z-10">
               <Badge className={getDivisionBadgeColor(college.division)}>
                 {college.division}
               </Badge>
             </div>
-            <div className="absolute top-0 left-0 p-2">
+            <div className="absolute top-0 left-0 p-2 z-10">
               <SaveCollegeButton 
                 collegeId={college.id}
                 initialSaved={isSaved}

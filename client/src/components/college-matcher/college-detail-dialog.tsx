@@ -112,52 +112,72 @@ export function CollegeDetailDialog({
           </div>
         ) : (
           <div className="overflow-auto max-h-[calc(90vh-60px)]">
-            {/* College Header with Image */}
+            {/* College Header with Hero Image */}
             <div className="relative">
-              <div className="p-6 flex items-start justify-between">
-                <div className="flex gap-4">
-                  <div className="h-16 w-16 rounded-md overflow-hidden bg-muted">
-                    {college.imageUrl ? (
-                      <img 
-                        src={college.imageUrl} 
-                        alt={college.name} 
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-muted flex items-center justify-center">
-                        <svg 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          width="24" 
-                          height="24" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          strokeWidth="2" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          className="text-muted-foreground"
-                        >
-                          <path d="M22 8a.76.76 0 0 0 0-.21v0a.75.75 0 0 0-.07-.17L20 4a1 1 0 0 0-.86-.5H4.86A1 1 0 0 0 4 4L2.07 7.62a.75.75 0 0 0-.07.17v0a.76.76 0 0 0 0 .21V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8Z" />
-                          <path d="M2 8h20" />
-                        </svg>
-                      </div>
-                    )}
+              {/* Large header image or color gradient */}
+              <div 
+                className="h-48 w-full relative overflow-hidden"
+                style={{
+                  background: college.imageUrl 
+                    ? `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)), url(${college.imageUrl})` 
+                    : `linear-gradient(to right, ${getDivisionColor(college.division)})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              >
+                {/* Overlay with college info */}
+                <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
+                  <h3 className="text-2xl font-bold drop-shadow-md">{college.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <MapPin className="h-4 w-4" />
+                    <span>{college.city}, {college.state}</span>
                   </div>
-                  <div>
-                    <h1 className="text-2xl font-bold">{college.name}</h1>
-                    <p className="text-sm text-muted-foreground">{college.city}, {college.state}</p>
+                  
+                  {/* Division badge */}
+                  <div className="absolute top-4 right-4">
+                    <Badge className={`px-2 py-1 ${getDivisionColor(college.division)}`}>
+                      {college.division}
+                    </Badge>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Badge className={getDivisionColor(college.division)}>
-                    DIVISION {college.division}
-                  </Badge>
-                  <SaveCollegeButton collegeId={college.id} initialSaved={isSaved} />
+              </div>
+              
+              {/* Action buttons below image */}
+              <div className="px-6 py-3 flex items-center justify-between border-b">
+                <div className="flex items-center gap-2">
+                  <span className={college.isPublic ? 'text-sm' : 'text-sm font-medium'}>
+                    {college.isPublic ? 'Public' : 'Private'} • {college.enrollment.toLocaleString()} students
+                  </span>
+                  
+                  {college.conference && (
+                    <>
+                      <span className="text-muted-foreground">•</span>
+                      <span className="text-sm">{college.conference}</span>
+                    </>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <SaveCollegeButton 
+                    collegeId={college.id}
+                    initialSaved={isSaved}
+                  />
+                  {college.website && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="gap-1"
+                      onClick={() => window.open(college.website, '_blank')}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Website
+                    </Button>
+                  )}
                 </div>
               </div>
               
               {/* Key Stats */}
-              <div className="grid grid-cols-3 px-6 gap-6 mb-6">
+              <div className="grid grid-cols-3 px-6 gap-6 py-4">
                 <div className="flex flex-col items-center text-center">
                   <Badge variant="outline" className="mb-1 px-2 py-0.5">{college.admissionRate ? `${(college.admissionRate * 100).toFixed(1)}%` : 'N/A'}</Badge>
                   <span className="text-xs text-muted-foreground">ACCEPTANCE RATE</span>
