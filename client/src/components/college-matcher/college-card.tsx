@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { BookmarkIcon, GraduationCap, Trophy, MapPin, Globe, DollarSign, School } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { SaveCollegeButton } from "./save-college-button";
+import { CollegeDetailDialog } from "./college-detail-dialog";
 
 interface MatchedCollege {
   id: number;
@@ -55,6 +57,8 @@ interface CollegeCardProps {
 }
 
 export function CollegeCard({ college, isSaved = false, variant = 'default', fullWidth = false }: CollegeCardProps) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   // Division-specific styling
   const getDivisionColor = (division: string) => {
     switch (division) {
@@ -304,6 +308,7 @@ export function CollegeCard({ college, isSaved = false, variant = 'default', ful
                     variant="secondary" 
                     size="sm" 
                     className="flex-1"
+                    onClick={() => setDialogOpen(true)}
                   >
                     View Details
                   </Button>
@@ -417,6 +422,7 @@ export function CollegeCard({ college, isSaved = false, variant = 'default', ful
                   variant="secondary" 
                   size="sm" 
                   className="flex-1"
+                  onClick={() => setDialogOpen(true)}
                 >
                   View Details
                 </Button>
@@ -426,5 +432,13 @@ export function CollegeCard({ college, isSaved = false, variant = 'default', ful
         </div>
       </div>
     </Card>
+    
+    {/* College Detail Dialog */}
+    <CollegeDetailDialog
+      collegeId={college.id}
+      isOpen={dialogOpen}
+      onClose={() => setDialogOpen(false)}
+      isSaved={isSaved}
+    />
   );
 }
