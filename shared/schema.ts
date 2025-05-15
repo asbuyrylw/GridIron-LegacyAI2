@@ -210,6 +210,7 @@ export const athletes = pgTable("athletes", {
   
   // Profile Settings
   profileImage: text("profile_image"),
+  backgroundImage: text("background_image"),
   profileVisibility: boolean("profile_visibility").default(true),
   onboardingCompleted: boolean("onboarding_completed").default(false),
   
