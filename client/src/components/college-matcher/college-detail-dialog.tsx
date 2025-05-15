@@ -2,32 +2,14 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogDescription
+  DialogContent,
+  DialogHeader
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Building, 
-  BookOpen, 
-  Trophy, 
-  MapPin, 
-  DollarSign, 
-  Users, 
-  BarChart4, 
-  Percent,
-  GraduationCap,
-  BookMarked,
-  Star,
-  X
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { SimpleMap } from "./simple-map";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { SaveCollegeButton } from "./save-college-button";
+import { ExternalLink, ChevronLeft, Trophy, Star, Award } from "lucide-react";
 
 interface MatchedCollege {
   id: number;
@@ -84,8 +66,6 @@ export function CollegeDetailDialog({
   onClose,
   isSaved = false
 }: CollegeDetailDialogProps) {
-  const [activeTab, setActiveTab] = useState("overview");
-
   // Fetch college details
   const { data: college, isLoading } = useQuery<MatchedCollege>({
     queryKey: [`/api/colleges/${collegeId}`],
@@ -119,54 +99,66 @@ export function CollegeDetailDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden p-0">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] p-0">
+        <DialogHeader className="p-4 border-b flex flex-row items-center">
+          <Button onClick={onClose} variant="ghost" size="icon" className="mr-2">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="text-xl font-semibold">College Details</h2>
+        </DialogHeader>
+        
         {isLoading || !college ? (
           <div className="flex items-center justify-center h-[500px]">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
           </div>
         ) : (
-          <>
-            {/* Header */}
-            <div className="p-6 border-b relative">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute right-4 top-4" 
-                onClick={onClose}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-              <div className="flex justify-between items-start">
-                <div>
-                  <DialogTitle className="text-2xl mb-1">{college.name}</DialogTitle>
-                  <DialogDescription className="flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5" />
-                    <span>{`${college.city}, ${college.state}`}</span>
-                    {college.conference && (
-                      <>
-                        <span className="mx-1">•</span>
-                        <span>{college.conference}</span>
-                      </>
+          <div className="overflow-auto max-h-[calc(90vh-60px)]">
+            {/* College Header with Image */}
+            <div className="relative">
+              <div className="p-6 flex items-start justify-between">
+                <div className="flex gap-4">
+                  <div className="h-16 w-16 rounded-md overflow-hidden bg-muted">
+                    {college.imageUrl ? (
+                      <img 
+                        src={college.imageUrl} 
+                        alt={college.name} 
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-muted flex items-center justify-center">
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="24" 
+                          height="24" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          className="text-muted-foreground"
+                        >
+                          <path d="M22 8a.76.76 0 0 0 0-.21v0a.75.75 0 0 0-.07-.17L20 4a1 1 0 0 0-.86-.5H4.86A1 1 0 0 0 4 4L2.07 7.62a.75.75 0 0 0-.07.17v0a.76.76 0 0 0 0 .21V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8Z" />
+                          <path d="M2 8h20" />
+                        </svg>
+                      </div>
                     )}
-                  </DialogDescription>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold">{college.name}</h1>
+                    <p className="text-sm text-muted-foreground">{college.city}, {college.state}</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge className={`px-3 py-1 ${getDivisionColor(college.division)}`}>
-                    {college.division}
+                <div className="flex gap-2">
+                  <Badge className={getDivisionColor(college.division)}>
+                    DIVISION {college.division}
                   </Badge>
                   <SaveCollegeButton collegeId={college.id} initialSaved={isSaved} />
                 </div>
               </div>
               
-              {/* Match score indicators */}
-              <div className="grid grid-cols-3 gap-4 mt-6">
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs font-medium">Overall Match</span>
-                    <span className="text-xs font-semibold">{college.overallMatch}%</span>
-                  </div>
-                  <Progress value={college.overallMatch} className="h-2.5" />
-                </div>
+              {/* Key Stats */}
+              <div className="grid grid-cols-3 px-6 gap-6 mb-6">
                 <div>
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-xs font-medium">Academic</span>
