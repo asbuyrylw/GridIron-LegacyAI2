@@ -51,9 +51,10 @@ interface CollegeCardProps {
   college: MatchedCollege;
   isSaved?: boolean;
   variant?: 'default' | 'compact';
+  fullWidth?: boolean;
 }
 
-export function CollegeCard({ college, isSaved = false, variant = 'default' }: CollegeCardProps) {
+export function CollegeCard({ college, isSaved = false, variant = 'default', fullWidth = false }: CollegeCardProps) {
   // Division-specific styling
   const getDivisionColor = (division: string) => {
     switch (division) {
@@ -178,112 +179,250 @@ export function CollegeCard({ college, isSaved = false, variant = 'default' }: C
         </div>
         
         <div className="px-5 py-4">
-          {/* School name and location */}
-          <div className="flex flex-col mb-4">
-            <h3 className="text-xl font-semibold">{college.name}</h3>
-            <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-              <MapPin className="h-4 w-4" />
-              <span>{`${college.city}, ${college.state}`}</span>
-            </div>
-          </div>
+          {fullWidth ? (
+            // Full-width layout
+            <div className="flex flex-col md:flex-row md:gap-6">
+              {/* Left column: School name and basic info */}
+              <div className="flex-shrink-0 md:w-1/3 mb-4 md:mb-0">
+                <div className="flex flex-col mb-4">
+                  <h3 className="text-xl font-semibold">{college.name}</h3>
+                  <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                    <MapPin className="h-4 w-4" />
+                    <span>{`${college.city}, ${college.state}`}</span>
+                  </div>
+                </div>
 
-          {/* Match scores */}
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs font-medium">Overall Match</span>
-                <span className="text-xs">{college.overallMatch}%</span>
+                {/* College type details */}
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <School className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {college.isPublic ? 'Public' : 'Private'} • {college.enrollment.toLocaleString()} students
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <span title={`Out-of-state: ${formatCurrency(college.tuition.outOfState)}`}>
+                      {formatCurrency(college.tuition.inState)}/yr (in-state)
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {college.admissionRate ? `${(college.admissionRate * 100).toFixed(0)}% acceptance` : 'Admission rate N/A'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Trophy className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {college.athleticScholarships ? 'Athletic scholarships available' : 'No athletic scholarships'}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <Progress value={college.overallMatch} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs font-medium">Academic</span>
-                <span className="text-xs">{college.academicMatch}%</span>
-              </div>
-              <Progress value={college.academicMatch} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs font-medium">Athletic</span>
-                <span className="text-xs">{college.athleticMatch}%</span>
-              </div>
-              <Progress value={college.athleticMatch} className="h-2" />
-            </div>
-          </div>
-          
-          {/* College details */}
-          <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
-            <div className="flex items-center gap-2">
-              <School className="h-4 w-4 text-muted-foreground" />
-              <span>
-                {college.isPublic ? 'Public' : 'Private'} • {college.enrollment.toLocaleString()} students
-              </span>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-              <span title={`Out-of-state: ${formatCurrency(college.tuition.outOfState)}`}>
-                {formatCurrency(college.tuition.inState)}/yr (in-state)
-              </span>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4 text-muted-foreground" />
-              <span>
-                {college.admissionRate ? `${(college.admissionRate * 100).toFixed(0)}% acceptance` : 'Admission rate N/A'}
-              </span>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-muted-foreground" />
-              <span>
-                {college.athleticScholarships ? 'Athletic scholarships available' : 'No athletic scholarships'}
-              </span>
-            </div>
-          </div>
-          
-          {/* Matching reasons */}
-          {college.matchingReasons && college.matchingReasons.length > 0 && (
-            <div className="mb-4">
-              <h4 className="text-sm font-medium mb-2">Why it's a good match:</h4>
-              <div className="flex flex-wrap gap-1">
-                {college.matchingReasons.slice(0, 3).map((reason, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {reason}
-                  </Badge>
-                ))}
-                {college.matchingReasons.length > 3 && (
-                  <Badge variant="secondary" className="text-xs">
-                    +{college.matchingReasons.length - 3} more
-                  </Badge>
+              
+              {/* Middle column: Match scores and reasons */}
+              <div className="flex-grow md:w-1/3 mb-4 md:mb-0">
+                {/* Match scores */}
+                <div className="space-y-4 mb-5">
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-medium">Overall Match</span>
+                      <span className="text-sm">{college.overallMatch}%</span>
+                    </div>
+                    <Progress value={college.overallMatch} className="h-2" />
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-medium">Academic</span>
+                      <span className="text-sm">{college.academicMatch}%</span>
+                    </div>
+                    <Progress value={college.academicMatch} className="h-2" />
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-medium">Athletic</span>
+                      <span className="text-sm">{college.athleticMatch}%</span>
+                    </div>
+                    <Progress value={college.athleticMatch} className="h-2" />
+                  </div>
+                </div>
+                
+                {/* Conference info */}
+                {college.conference && (
+                  <div className="mb-3">
+                    <span className="text-sm font-medium">Conference: </span>
+                    <Badge variant="outline">{college.conference}</Badge>
+                  </div>
                 )}
               </div>
+              
+              {/* Right column: Matching reasons and actions */}
+              <div className="flex-shrink-0 md:w-1/3">
+                {/* Matching reasons */}
+                {college.matchingReasons && college.matchingReasons.length > 0 && (
+                  <div className="mb-5">
+                    <h4 className="text-sm font-medium mb-2">Why it's a good match:</h4>
+                    <ul className="space-y-1 text-sm">
+                      {college.matchingReasons.slice(0, 4).map((reason, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <div className="rounded-full bg-primary/10 p-0.5 mt-0.5">
+                            <GraduationCap className="h-3 w-3 text-primary" />
+                          </div>
+                          <span>{reason}</span>
+                        </li>
+                      ))}
+                      {college.matchingReasons.length > 4 && (
+                        <li className="text-sm text-muted-foreground pl-5">
+                          +{college.matchingReasons.length - 4} more reasons
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+                
+                {/* Action buttons */}
+                <div className="flex gap-2 mt-auto">
+                  {college.website && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(college.website, '_blank');
+                      }}
+                    >
+                      <Globe className="h-4 w-4 mr-2" />
+                      Visit Website
+                    </Button>
+                  )}
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className="flex-1"
+                  >
+                    View Details
+                  </Button>
+                </div>
+              </div>
             </div>
+          ) : (
+            // Original layout for standard cards
+            <>
+              {/* School name and location */}
+              <div className="flex flex-col mb-4">
+                <h3 className="text-xl font-semibold">{college.name}</h3>
+                <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                  <MapPin className="h-4 w-4" />
+                  <span>{`${college.city}, ${college.state}`}</span>
+                </div>
+              </div>
+
+              {/* Match scores */}
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs font-medium">Overall Match</span>
+                    <span className="text-xs">{college.overallMatch}%</span>
+                  </div>
+                  <Progress value={college.overallMatch} className="h-2" />
+                </div>
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs font-medium">Academic</span>
+                    <span className="text-xs">{college.academicMatch}%</span>
+                  </div>
+                  <Progress value={college.academicMatch} className="h-2" />
+                </div>
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs font-medium">Athletic</span>
+                    <span className="text-xs">{college.athleticMatch}%</span>
+                  </div>
+                  <Progress value={college.athleticMatch} className="h-2" />
+                </div>
+              </div>
+              
+              {/* College details */}
+              <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <School className="h-4 w-4 text-muted-foreground" />
+                  <span>
+                    {college.isPublic ? 'Public' : 'Private'} • {college.enrollment.toLocaleString()} students
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <span title={`Out-of-state: ${formatCurrency(college.tuition.outOfState)}`}>
+                    {formatCurrency(college.tuition.inState)}/yr (in-state)
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                  <span>
+                    {college.admissionRate ? `${(college.admissionRate * 100).toFixed(0)}% acceptance` : 'Admission rate N/A'}
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-muted-foreground" />
+                  <span>
+                    {college.athleticScholarships ? 'Athletic scholarships available' : 'No athletic scholarships'}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Matching reasons */}
+              {college.matchingReasons && college.matchingReasons.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-medium mb-2">Why it's a good match:</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {college.matchingReasons.slice(0, 3).map((reason, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">
+                        {reason}
+                      </Badge>
+                    ))}
+                    {college.matchingReasons.length > 3 && (
+                      <Badge variant="secondary" className="text-xs">
+                        +{college.matchingReasons.length - 3} more
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Action buttons */}
+              <div className="flex gap-2 mt-2">
+                {college.website && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(college.website, '_blank');
+                    }}
+                  >
+                    <Globe className="h-4 w-4 mr-2" />
+                    Visit Website
+                  </Button>
+                )}
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  className="flex-1"
+                >
+                  View Details
+                </Button>
+              </div>
+            </>
           )}
-          
-          {/* Action buttons */}
-          <div className="flex gap-2 mt-2">
-            {college.website && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex-1"
-                onClick={() => window.open(college.website, '_blank')}
-              >
-                <Globe className="h-4 w-4 mr-2" />
-                Visit Website
-              </Button>
-            )}
-            <Button 
-              variant="secondary" 
-              size="sm" 
-              className="flex-1"
-              onClick={() => window.open(`/college-detail/${college.id}`, '_self')}
-            >
-              View Details
-            </Button>
-          </div>
         </div>
       </div>
     </Card>

@@ -523,7 +523,7 @@ export default function EnhancedCollegeMatcherPage() {
             
             {/* College grid - Now full width */}
             {filteredColleges && filteredColleges.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredColleges.map((college) => (
                   <div 
                     key={college.id} 
@@ -533,7 +533,6 @@ export default function EnhancedCollegeMatcherPage() {
                     <CollegeCard
                       college={college}
                       isSaved={isCollegeSaved(college.id)}
-                      fullWidth={true}
                     />
                   </div>
                 ))}
