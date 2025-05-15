@@ -65,7 +65,25 @@ export function DailyQuote({ customClasses }: DailyQuoteProps = {}) {
   
   if (!quote) return null;
   
-  // If custom classes are provided, use those instead of the default blue styling
+  // If customClasses contains "bg-" we assume it's controlling the background
+  // and we'll apply it to the content directly without the Card wrapper
+  const hasCustomBg = customClasses?.includes("bg-");
+  
+  if (hasCustomBg) {
+    return (
+      <div className={customClasses}>
+        <div className="flex items-start gap-2">
+          <Quote className="h-4 w-4 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-xs italic leading-relaxed">{quote.text}</p>
+            <p className="text-xs opacity-75 mt-1">— {quote.author}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Otherwise use the default Card styling
   const cardClasses = customClasses ? "" : "bg-blue-50 border-blue-100";
   const quoteClasses = customClasses ? "" : "text-blue-500";
   const textClasses = customClasses || "";

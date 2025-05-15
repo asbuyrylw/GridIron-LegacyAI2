@@ -69,12 +69,10 @@ export function HeroHeader({ backgroundImage = "/assets/bengals-stadium.jpg", re
           <div className="relative z-10 max-w-5xl flex flex-col md:flex-row items-start md:items-center justify-between w-full">
             {/* Welcome message */}
             <div className="text-white mb-4 md:mb-0">
-              <h1 className="text-3xl font-bold mb-4">Welcome back, {firstName}!</h1>
+              <h1 className="text-2xl font-bold mb-2">Welcome back, {firstName}!</h1>
               
-              <div className="max-w-md">
-                <div className="bg-blue-100/90 backdrop-blur-sm p-3 rounded-lg shadow-sm max-w-xs">
-                  <DailyQuote customClasses="text-gray-800 text-sm" />
-                </div>
+              <div className="w-40">
+                <DailyQuote customClasses="bg-blue-100/90 text-black text-xs p-3 rounded-lg shadow-sm block" />
               </div>
             </div>
             
@@ -95,15 +93,17 @@ export function HeroHeader({ backgroundImage = "/assets/bengals-stadium.jpg", re
         </div>
         
         {/* Edit/Upload button */}
-        <Button 
-          variant="secondary" 
-          size="xs"
-          className="absolute bottom-3 right-3 opacity-70 hover:opacity-100 transition-opacity text-xs py-1 px-2"
-          onClick={() => setUploadDialogOpen(true)}
-        >
-          <Edit className="h-3 w-3 mr-1" />
-          Change BG
-        </Button>
+        <div className="absolute bottom-3 right-3">
+          <Button 
+            variant="secondary" 
+            size="sm"
+            className="opacity-70 hover:opacity-100 transition-opacity text-xs py-1 px-2 h-6"
+            onClick={() => setUploadDialogOpen(true)}
+          >
+            <Edit className="h-3 w-3 mr-1" />
+            Change BG
+          </Button>
+        </div>
       </div>
       
       {/* Upload dialog */}
