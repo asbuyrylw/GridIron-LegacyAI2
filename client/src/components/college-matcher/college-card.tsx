@@ -82,15 +82,21 @@ export function CollegeCard({ college, isSaved = false, variant = 'default', ful
       <Card className="overflow-hidden border border-muted">
         <div className="relative">
           {/* College header with background image or color gradient fallback */}
-          <div 
-            className={`h-20 flex items-center justify-center relative overflow-hidden`}
-            style={{
-              backgroundImage: college.imageUrl 
-                ? `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('${college.imageUrl}')` 
-                : `linear-gradient(to right, ${getDivisionColor(college.division)})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
+          <div className={`h-20 flex items-center justify-center relative overflow-hidden`}>
+            {/* Background div - either image with overlay or color gradient */}
+            {college.imageUrl ? (
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('${college.imageUrl}')`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }}
+              />
+            ) : (
+              <div className={`absolute inset-0 bg-gradient-to-r ${getDivisionColor(college.division)}`}></div>
+            )}
           >
             {/* College name overlay for image header - always display */}
             <div className="absolute inset-0 flex items-center justify-center">
