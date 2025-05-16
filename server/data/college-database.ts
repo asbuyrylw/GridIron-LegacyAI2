@@ -66,7 +66,7 @@ export const colleges: College[] = [
       recentSuccess: "National championship contender"
     },
     website: "https://www.alabama.edu/",
-    imageUrl: "https://cdn.britannica.com/24/65324-050-34423E2C/view-Denny-Chimes-side-Gorgas-Library-University.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1574634534894-89d7576c8259?q=80&w=1000&auto=format&fit=crop",
     notes: "Elite football program with extensive resources and national visibility"
   },
   {
@@ -98,7 +98,7 @@ export const colleges: College[] = [
       recentSuccess: "Consistent playoff contender"
     },
     website: "https://www.osu.edu/",
-    imageUrl: "https://news.osu.edu/export/sites/news/.galleries/images/2019/fall-campus.jpg_1641333099.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=1000&auto=format&fit=crop"
   },
   {
     id: 3,
