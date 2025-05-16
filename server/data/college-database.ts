@@ -127,7 +127,7 @@ export const colleges: College[] = [
       defensiveStyle: "4-3 base defense"
     },
     website: "https://msu.edu/",
-    imageUrl: "https://admissions.msu.edu/_assets/images/campus-buildings/beaumont-tower.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1580537659466-0a9bfa916a54?q=80&w=1000&auto=format&fit=crop"
   },
   {
     id: 4,
@@ -156,7 +156,7 @@ export const colleges: College[] = [
       defensiveStyle: "4-2-5 defense"
     },
     website: "https://www.fsu.edu/",
-    imageUrl: "https://www.tallahassee.com/gcdn/presto/2021/08/24/PTAL/41f6b43f-ea98-470b-b216-7c1b602d4dad-FSUcampus.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1672395827018-bdb775c62971?q=80&w=1000&auto=format&fit=crop"
   },
   {
     id: 5,
@@ -185,7 +185,7 @@ export const colleges: College[] = [
       defensiveStyle: "3-4 defense"
     },
     website: "https://www.stanford.edu/",
-    imageUrl: "https://wp.stanforddaily.com/wp-content/uploads/2020/01/DJI_0230.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1599231091889-c1860a7a8b80?q=80&w=1000&auto=format&fit=crop",
     notes: "Exceptional academic standards with strong athletic tradition"
   },
   {
@@ -215,7 +215,7 @@ export const colleges: College[] = [
       recentSuccess: "D2 powerhouse program"
     },
     website: "https://www.gvsu.edu/",
-    imageUrl: "https://www.gvsu.edu/cms4/asset/DD30780B-A045-6D02-661A0AD290D316B3/gvsu-allendale-campus.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1000&auto=format&fit=crop"
   },
   {
     id: 7,
@@ -243,7 +243,7 @@ export const colleges: College[] = [
       defensiveStyle: "Multiple fronts"
     },
     website: "https://www.sru.edu/",
-    imageUrl: "https://www.sru.edu/images/news/2021/september/old-main-091621-web.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1554867964-2cbc6c87941a?q=80&w=1000&auto=format&fit=crop"
   },
   {
     id: 8,
