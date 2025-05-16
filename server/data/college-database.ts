@@ -241,7 +241,9 @@ export const colleges: College[] = [
       activelyRecruiting: ["Quarterback (QB)", "Wide Receiver (WR)", "Linebacker (LB)"],
       offensiveStyle: "Spread offense",
       defensiveStyle: "Multiple fronts"
-    }
+    },
+    website: "https://www.sru.edu/",
+    imageUrl: "https://www.sru.edu/images/news/2021/september/old-main-091621-web.jpg"
   },
   {
     id: 8,
@@ -268,7 +270,9 @@ export const colleges: College[] = [
       offensiveStyle: "Spread offense",
       defensiveStyle: "Multiple defenses",
       recentSuccess: "D3 powerhouse, multiple national championships"
-    }
+    },
+    website: "https://www.mountunion.edu/",
+    imageUrl: "https://www.mountunion.edu/sites/default/files/styles/blog_header/public/media/campus-life/chapman-hall-2021-web.jpg"
   },
   {
     id: 9,
@@ -295,7 +299,9 @@ export const colleges: College[] = [
       offensiveStyle: "Multiple offensive schemes",
       defensiveStyle: "4-3 defense",
       recentSuccess: "D3 national championship contender"
-    }
+    },
+    website: "https://www.uww.edu/",
+    imageUrl: "https://www.uww.edu/images/default-source/mar-comm-photos/campus-photos/aerial-4.jpg"
   },
   {
     id: 10,
@@ -322,7 +328,9 @@ export const colleges: College[] = [
       offensiveStyle: "High-powered spread offense",
       defensiveStyle: "4-2-5 defense",
       recentSuccess: "NAIA national champions"
-    }
+    },
+    website: "https://www.morningside.edu/",
+    imageUrl: "https://www.morningside.edu/assets/uploads/general/Campus-Beauty-Shot-2021.jpg"
   },
   {
     id: 11,
@@ -350,6 +358,8 @@ export const colleges: College[] = [
       defensiveStyle: "Multiple defenses",
       recentSuccess: "Top JUCO program, strong transfer success rate to D1"
     },
+    website: "https://www.iwcc.edu/",
+    imageUrl: "https://bloximages.chicago2.vip.townnews.com/nonpareilonline.com/content/tncms/assets/v3/editorial/1/ab/1ab79fe2-1493-11ea-968c-4b03c41a0c7d/5de56eb7de8dd.image.jpg",
     notes: "Excellent pathway to D1 programs with strong placement record"
   },
   {
@@ -379,7 +389,9 @@ export const colleges: College[] = [
       offensiveStyle: "Spread offense with power elements",
       defensiveStyle: "4-3 defense with multiple fronts",
       recentSuccess: "Multiple national championships"
-    }
+    },
+    website: "https://www.clemson.edu/",
+    imageUrl: "https://www.clemson.edu/brand/resources/logos-images/photos/tillman-beauty.jpg"
   },
   {
     id: 13,
@@ -406,7 +418,9 @@ export const colleges: College[] = [
       offensiveStyle: "Pro-style offense",
       defensiveStyle: "4-3 defense",
       recentSuccess: "Multiple D2 national championships"
-    }
+    },
+    website: "https://www.nwmissouri.edu/",
+    imageUrl: "https://www.nwmissouri.edu/media/news/2022/01/images/220119InvestigationFiles-5.jpg"
   },
   {
     id: 14,
@@ -434,6 +448,8 @@ export const colleges: College[] = [
       defensiveStyle: "4-3 defense",
       recentSuccess: "Multiple FCS national championships"
     },
+    website: "https://www.ndsu.edu/",
+    imageUrl: "https://www.ndsu.edu/fileadmin/www.ndsu.edu/compress_resize/resize/communication/images/web_photo/2560x1440_landscape/NDSU_Web_1440x810_210209_0002_51553596742_o_7c47b03b3b.jpg",
     notes: "FCS powerhouse with strong NFL development pipeline"
   },
   {
@@ -461,7 +477,9 @@ export const colleges: College[] = [
       offensiveStyle: "Up-tempo spread offense",
       defensiveStyle: "Multiple defenses",
       recentSuccess: "D2 national champions"
-    }
+    },
+    website: "https://www.ferris.edu/",
+    imageUrl: "https://www.ferris.edu/HTMLS/future/visit/campus-tour/quad.jpg"
   }
 ];
 
