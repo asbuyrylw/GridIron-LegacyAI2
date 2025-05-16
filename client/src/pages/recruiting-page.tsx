@@ -720,208 +720,369 @@ export default function RecruitingPage() {
           </Card>
         </TabsContent>
         
-        {/* Profile Sharing Tab */}
+        {/* My Recruiting Page Tab */}
         <TabsContent value="profile" className="space-y-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Share Your Recruiting Profile</CardTitle>
-                <CardDescription>
-                  Distribute your profile to coaches and recruiters through different platforms
-                </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between p-0 relative overflow-hidden">
+              <div className="absolute inset-0 bg-cover bg-center" style={{ 
+                backgroundImage: "url('https://images.unsplash.com/photo-1566577739112-5180d4bf9390?q=80&w=1000&auto=format&fit=crop')",
+                height: "360px"
+              }}>
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80"></div>
               </div>
-              <Button onClick={() => window.location.href = "/recruiting-profile-builder"} className="flex items-center">
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                Edit Profile
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Your Public Profile</h3>
-                  <div className="border rounded-lg p-4 bg-card/50">
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="h-16 w-16">
-                        <AvatarFallback>
-                          {user?.username?.substring(0, 2).toUpperCase() || "AT"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h4 className="text-lg font-semibold">
-                          {user?.username || "Test User"}
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          Quarterback (QB) • Class of 2025
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-4 grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Height</p>
-                        <p className="font-medium">6'2"</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Weight</p>
-                        <p className="font-medium">195 lbs</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">40-Yard Dash</p>
-                        <p className="font-medium">4.8s</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">GPA</p>
-                        <p className="font-medium">3.7</p>
-                      </div>
-                    </div>
-                    
-                    <p className="mt-4 text-sm">
-                      This is what coaches will see when you share your profile or they discover you.
-                    </p>
-                    
-                    <div className="mt-4">
-                      <Button variant="secondary" size="sm" className="w-full">
-                        <Eye className="mr-2 h-4 w-4" />
-                        Preview Public Profile
-                      </Button>
+              
+              <div className="w-full relative z-10 pt-4 pb-10 px-6 mt-[168px]">
+                <div className="flex items-center">
+                  <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
+                    <AvatarFallback className="text-2xl">
+                      {user?.athlete?.firstName?.[0] || user?.username?.substring(0, 1).toUpperCase() || "M"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="ml-6">
+                    <h1 className="text-3xl font-bold text-white">
+                      {user?.athlete?.firstName || "Marcus"} {user?.athlete?.lastName || "Johnson"}
+                    </h1>
+                    <div className="flex items-center mt-1 text-white/80">
+                      <span>{user?.athlete?.position || "Quarterback"}</span>
+                      <span className="mx-2">•</span>
+                      <span>6'2"</span>
+                      <span className="mx-2">•</span>
+                      <span>185 lbs</span>
                     </div>
                   </div>
-                  
-                  <h3 className="text-lg font-semibold">Profile URL</h3>
-                  <div className="flex">
-                    <Input 
-                      value={`https://gridiron.app/athlete/${athleteId}`} 
-                      readOnly
-                      className="rounded-r-none"
-                    />
-                    <Button className="rounded-l-none" variant="secondary">
-                      Copy
+                  <div className="ml-auto">
+                    <Button className="bg-blue-600 hover:bg-blue-700">
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Contact via X
                     </Button>
                   </div>
-                  
-                  <h3 className="text-lg font-semibold">Share Stats</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="border rounded-lg p-3">
-                      <p className="text-sm text-muted-foreground">Total Shares</p>
-                      <p className="text-xl font-semibold">
-                        {analytics ? analytics.messagesSent + 15 : "0"}
-                      </p>
-                    </div>
-                    <div className="border rounded-lg p-3">
-                      <p className="text-sm text-muted-foreground">Engagement Rate</p>
-                      <p className="text-xl font-semibold">
-                        {analytics ? `${(analytics.interestLevel / 2).toFixed(1)}%` : "0%"}
-                      </p>
+                </div>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="px-0 pt-0">
+              <div className="grid grid-cols-12 gap-6">
+                {/* Performance Stats */}
+                <div className="col-span-12 lg:col-span-8">
+                  <div className="p-6">
+                    <h2 className="text-xl font-semibold mb-4">Performance Stats</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                      <div>
+                        <p className="text-muted-foreground text-sm">Passing Yards</p>
+                        <p className="text-2xl font-bold">2850</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-sm">Touchdowns</p>
+                        <p className="text-2xl font-bold">32</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-sm">Completion %</p>
+                        <p className="text-2xl font-bold">68%</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-sm">Rushing Yards</p>
+                        <p className="text-2xl font-bold">450</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-                
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Share Options</h3>
-                  
-                  <Form {...shareForm}>
-                    <form onSubmit={shareForm.handleSubmit(onShareProfile)} className="space-y-4">
-                      <FormField
-                        control={shareForm.control}
-                        name="platform"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Platform</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select a platform" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {SOCIAL_PLATFORMS.map((platform) => (
-                                  <SelectItem key={platform.id} value={platform.id}>
-                                    {platform.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={shareForm.control}
-                        name="message"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Personalized Message (Optional)</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                {...field} 
-                                placeholder="Add a personal note with your profile link..." 
-                                className="min-h-[150px]"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <Button type="submit" className="w-full" disabled={shareProfile.isPending}>
-                        {shareProfile.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Sharing...
-                          </>
-                        ) : (
-                          <>
-                            <Share2 className="mr-2 h-4 w-4" />
-                            Share Profile
-                          </>
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                  
-                  <div className="mt-6 space-y-3">
-                    <h3 className="text-lg font-semibold">Quick Share</h3>
-                    <div className="grid grid-cols-3 gap-2">
-                      {SOCIAL_PLATFORMS.slice(0, 3).map((platform) => (
-                        <Button
-                          key={platform.id}
-                          variant="outline"
-                          className="py-6"
-                          onClick={() => {
-                            shareForm.setValue("platform", platform.id);
-                            shareForm.handleSubmit(onShareProfile)();
-                          }}
-                        >
-                          {platform.name}
-                        </Button>
-                      ))}
+
+                {/* Academic Performance */}
+                <div className="col-span-12 lg:col-span-4">
+                  <div className="p-6">
+                    <h2 className="text-xl font-semibold mb-4">Academic Performance</h2>
+                    <div className="flex items-center justify-center">
+                      <div className="relative h-32 w-32">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-3xl font-bold">3.8</div>
+                        </div>
+                        <svg className="h-full w-full" viewBox="0 0 100 100">
+                          <circle 
+                            cx="50" 
+                            cy="50" 
+                            r="40" 
+                            fill="none" 
+                            stroke="#e5e7eb" 
+                            strokeWidth="10" 
+                          />
+                          <circle 
+                            cx="50" 
+                            cy="50" 
+                            r="40" 
+                            fill="none" 
+                            stroke="#4ade80" 
+                            strokeWidth="10" 
+                            strokeDasharray="251.2" 
+                            strokeDashoffset="50.24" 
+                            strokeLinecap="round"
+                            transform="rotate(-90 50 50)" 
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <p className="text-center mt-2 text-muted-foreground">GPA</p>
+                  </div>
+                </div>
+
+                {/* Combine Performance */}
+                <div className="col-span-12">
+                  <div className="p-6 border-t">
+                    <h2 className="text-xl font-semibold mb-4">Combine Performance</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                      <div>
+                        <p className="text-muted-foreground text-sm">40-Yard Dash</p>
+                        <p className="text-2xl font-bold">4.5s</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-sm">Vertical Jump</p>
+                        <p className="text-2xl font-bold">36 in</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-sm">Broad Jump</p>
+                        <p className="text-2xl font-bold">10'2"</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-sm">3-Cone Drill</p>
+                        <p className="text-2xl font-bold">6.8s</p>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <div className="flex items-center space-x-2">
+                        <div className="text-xs text-green-600">Top 10% in class</div>
+                        <div className="text-xs text-green-600">Top 15% in position</div>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="mt-6 border rounded-lg p-4 bg-amber-50 dark:bg-amber-950/30">
-                    <h3 className="flex items-center text-amber-800 dark:text-amber-300 font-medium">
-                      <AlertCircle className="h-4 w-4 mr-2" />
-                      Recruiting Tips
-                    </h3>
-                    <ul className="mt-2 space-y-2 text-sm">
-                      <li className="flex items-start">
-                        <CheckCircle2 className="h-4 w-4 mr-2 text-green-600 mt-0.5" />
-                        Share your profile early and often to maximize exposure
+                </div>
+
+                {/* Position Specific Drills */}
+                <div className="col-span-12">
+                  <div className="p-6 border-t">
+                    <h2 className="text-xl font-semibold mb-4">Position Specific Drills</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                      <div>
+                        <p className="text-muted-foreground text-sm">Passing Accuracy</p>
+                        <p className="text-2xl font-bold">85%</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-sm">Release Time</p>
+                        <p className="text-2xl font-bold">0.4s</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-sm">Pocket Mobility</p>
+                        <p className="text-2xl font-bold">8/10</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-sm">Deep Ball Accuracy</p>
+                        <p className="text-2xl font-bold">75%</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-sm">Play Action Efficiency</p>
+                        <p className="text-2xl font-bold">90%</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-sm">Scrambling Speed</p>
+                        <p className="text-2xl font-bold">4.8s</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Awards and Recognition */}
+                <div className="col-span-12">
+                  <div className="p-6 border-t">
+                    <h2 className="text-xl font-semibold mb-4">Awards and Recognition</h2>
+                    <ul className="space-y-2">
+                      <li className="flex items-center">
+                        <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+                        All-Conference 1st Team 2023
                       </li>
-                      <li className="flex items-start">
-                        <CheckCircle2 className="h-4 w-4 mr-2 text-green-600 mt-0.5" />
-                        Personalize messages when contacting specific schools
+                      <li className="flex items-center">
+                        <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+                        Team MVP 2023
                       </li>
-                      <li className="flex items-start">
-                        <CheckCircle2 className="h-4 w-4 mr-2 text-green-600 mt-0.5" />
-                        Follow up within 2 weeks if you don't hear back
+                      <li className="flex items-center">
+                        <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+                        Academic All-Star 2022, 2023
                       </li>
                     </ul>
                   </div>
+                </div>
+
+                {/* Community Work */}
+                <div className="col-span-12">
+                  <div className="p-6 border-t">
+                    <h2 className="text-xl font-semibold mb-4">Community Work</h2>
+                    <ul className="space-y-2">
+                      <li className="flex items-center">
+                        <span className="h-2 w-2 rounded-full bg-blue-500 mr-2"></span>
+                        Youth Football Camp Volunteer
+                      </li>
+                      <li className="flex items-center">
+                        <span className="h-2 w-2 rounded-full bg-blue-500 mr-2"></span>
+                        Local Food Bank Helper
+                      </li>
+                      <li className="flex items-center">
+                        <span className="h-2 w-2 rounded-full bg-blue-500 mr-2"></span>
+                        Reading Program for Kids
+                      </li>
+                    </ul>
+                    <div className="mt-4">
+                      <h3 className="font-medium mb-2">Featured Community Project:</h3>
+                      <div className="border rounded-md p-4">
+                        <p className="font-medium">Youth Football Camp - Summer 2023</p>
+                        <p className="text-sm mt-2">
+                          Organized and led a 3-day football camp for underprivileged youth, teaching fundamental 
+                          skills and teamwork to over 50 children aged 8-14.
+                        </p>
+                        <p className="text-sm mt-2 text-muted-foreground">
+                          Total Volunteer Hours: 120
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Video Highlights */}
+                <div className="col-span-12">
+                  <div className="p-6 border-t">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-semibold">Video Highlights</h2>
+                      <Button variant="outline" size="sm">See All</Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="rounded-md overflow-hidden border bg-muted/40">
+                        <div className="aspect-video bg-muted relative">
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="h-12 w-12 rounded-full bg-black/50 flex items-center justify-center">
+                              <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[16px] border-l-white border-b-[8px] border-b-transparent ml-1"></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-3">
+                          <p className="font-medium">Season Highlights 2023</p>
+                        </div>
+                      </div>
+                      <div className="rounded-md overflow-hidden border bg-muted/40">
+                        <div className="aspect-video bg-muted relative">
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="h-12 w-12 rounded-full bg-black/50 flex items-center justify-center">
+                              <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[16px] border-l-white border-b-[8px] border-b-transparent ml-1"></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-3">
+                          <p className="font-medium">Best Plays Quarter</p>
+                        </div>
+                      </div>
+                      <div className="rounded-md overflow-hidden border bg-muted/40">
+                        <div className="aspect-video bg-muted relative">
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="h-12 w-12 rounded-full bg-black/50 flex items-center justify-center">
+                              <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[16px] border-l-white border-b-[8px] border-b-transparent ml-1"></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-3">
+                          <p className="font-medium">Training Highlights</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Share Options Card (kept from the original) */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Share Options</CardTitle>
+              <CardDescription>
+                Distribute your profile to coaches and recruiters through different platforms
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...shareForm}>
+                <form onSubmit={shareForm.handleSubmit(onShareProfile)} className="space-y-4">
+                  <FormField
+                    control={shareForm.control}
+                    name="platform"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Platform</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a platform" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {SOCIAL_PLATFORMS.map((platform) => (
+                              <SelectItem key={platform.id} value={platform.id}>
+                                {platform.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={shareForm.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Personalized Message (Optional)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="Add a personal note with your profile link..." 
+                            className="min-h-[150px]"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <Button type="submit" className="w-full" disabled={shareProfile.isPending}>
+                    {shareProfile.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sharing...
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Share Profile
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </Form>
+              
+              <div className="mt-6 space-y-3">
+                <h3 className="text-lg font-semibold">Quick Share</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {SOCIAL_PLATFORMS.slice(0, 3).map((platform) => (
+                    <Button
+                      key={platform.id}
+                      variant="outline"
+                      className="py-6"
+                      onClick={() => {
+                        shareForm.setValue("platform", platform.id);
+                        shareForm.handleSubmit(onShareProfile)();
+                      }}
+                    >
+                      {platform.name}
+                    </Button>
+                  ))}
                 </div>
               </div>
             </CardContent>
