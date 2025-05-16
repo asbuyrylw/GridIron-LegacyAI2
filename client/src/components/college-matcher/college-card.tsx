@@ -92,14 +92,12 @@ export function CollegeCard({ college, isSaved = false, variant = 'default', ful
               backgroundPosition: 'center'
             }}
           >
-            {/* College name overlay for image header - only show when image exists */}
-            {college.imageUrl && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <h3 className="text-white font-bold text-sm text-center px-3 drop-shadow-md">
-                  {college.name}
-                </h3>
-              </div>
-            )}
+            {/* College name overlay for image header - always display */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <h3 className="text-white font-bold text-sm text-center px-3 drop-shadow-md">
+                {college.name}
+              </h3>
+            </div>
             
             {/* Actions and division badge */}
             <div className="absolute inset-0 flex justify-between items-start p-2 z-10">
@@ -175,14 +173,12 @@ export function CollegeCard({ college, isSaved = false, variant = 'default', ful
               backgroundPosition: 'center'
             }}
           >
-            {/* College name overlay for image header - only show when image exists */}
-            {college.imageUrl && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <h3 className="text-white font-bold text-lg text-center px-4 drop-shadow-md">
-                  {college.name}
-                </h3>
-              </div>
-            )}
+            {/* College name overlay for image header - always display */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <h3 className="text-white font-bold text-lg text-center px-4 drop-shadow-md">
+                {college.name}
+              </h3>
+            </div>
             
             {/* Actions and division badge */}
             <div className="absolute top-0 right-0 p-2 z-10">
