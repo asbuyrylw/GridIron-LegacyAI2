@@ -66,6 +66,7 @@ export const colleges: College[] = [
       recentSuccess: "National championship contender"
     },
     website: "https://www.alabama.edu/",
+    imageUrl: "https://cdn.britannica.com/24/65324-050-34423E2C/view-Denny-Chimes-side-Gorgas-Library-University.jpg",
     notes: "Elite football program with extensive resources and national visibility"
   },
   {
@@ -95,7 +96,9 @@ export const colleges: College[] = [
       offensiveStyle: "Spread offense with power elements",
       defensiveStyle: "4-3 base with multiple fronts",
       recentSuccess: "Consistent playoff contender"
-    }
+    },
+    website: "https://www.osu.edu/",
+    imageUrl: "https://news.osu.edu/export/sites/news/.galleries/images/2019/fall-campus.jpg_1641333099.jpg"
   },
   {
     id: 3,
@@ -122,7 +125,9 @@ export const colleges: College[] = [
       activelyRecruiting: ["Running Back (RB)", "Linebacker (LB)", "Offensive Line (OL)"],
       offensiveStyle: "Pro-style with power running",
       defensiveStyle: "4-3 base defense"
-    }
+    },
+    website: "https://msu.edu/",
+    imageUrl: "https://admissions.msu.edu/_assets/images/campus-buildings/beaumont-tower.jpg"
   },
   {
     id: 4,
@@ -149,7 +154,9 @@ export const colleges: College[] = [
       activelyRecruiting: ["Quarterback (QB)", "Defensive Back (DB)", "Wide Receiver (WR)"],
       offensiveStyle: "Spread offense",
       defensiveStyle: "4-2-5 defense"
-    }
+    },
+    website: "https://www.fsu.edu/",
+    imageUrl: "https://www.tallahassee.com/gcdn/presto/2021/08/24/PTAL/41f6b43f-ea98-470b-b216-7c1b602d4dad-FSUcampus.jpg"
   },
   {
     id: 5,
@@ -177,6 +184,8 @@ export const colleges: College[] = [
       offensiveStyle: "Pro-style offense",
       defensiveStyle: "3-4 defense"
     },
+    website: "https://www.stanford.edu/",
+    imageUrl: "https://wp.stanforddaily.com/wp-content/uploads/2020/01/DJI_0230.jpg",
     notes: "Exceptional academic standards with strong athletic tradition"
   },
   {
@@ -204,7 +213,9 @@ export const colleges: College[] = [
       offensiveStyle: "Multiple offensive schemes",
       defensiveStyle: "4-3 defense",
       recentSuccess: "D2 powerhouse program"
-    }
+    },
+    website: "https://www.gvsu.edu/",
+    imageUrl: "https://www.gvsu.edu/cms4/asset/DD30780B-A045-6D02-661A0AD290D316B3/gvsu-allendale-campus.jpg"
   },
   {
     id: 7,
