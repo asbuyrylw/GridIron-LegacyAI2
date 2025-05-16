@@ -154,8 +154,8 @@ export function CollegeDetailDialog({
               <div 
                 className="h-48 w-full relative overflow-hidden"
                 style={{
-                  background: college.imageUrl 
-                    ? `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)), url(${college.imageUrl})` 
+                  backgroundImage: college.imageUrl 
+                    ? `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)), url('${college.imageUrl}')` 
                     : `linear-gradient(to right, ${getDivisionColor(college.division)})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center'
