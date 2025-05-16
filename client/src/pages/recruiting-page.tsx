@@ -70,11 +70,11 @@ const shareSchema = z.object({
 
 // Sample school data (would come from API in production)
 const SCHOOLS = [
-  { id: "1", name: "UCLA", division: "Division I" },
-  { id: "2", name: "Stanford University", division: "Division I" },
-  { id: "3", name: "Ohio State", division: "Division I" },
-  { id: "4", name: "Michigan State", division: "Division I" },
-  { id: "5", name: "Notre Dame", division: "Division I" }
+  { id: 1, name: "UCLA", division: "Division I" },
+  { id: 2, name: "Stanford University", division: "Division I" },
+  { id: 3, name: "Ohio State", division: "Division I" },
+  { id: 4, name: "Michigan State", division: "Division I" },
+  { id: 5, name: "Notre Dame", division: "Division I" }
 ];
 
 // Sample social platforms
@@ -201,7 +201,7 @@ export default function RecruitingPage() {
           </TabsTrigger>
           <TabsTrigger value="profile">
             <Share2 className="h-4 w-4 mr-2" />
-            Profile Sharing
+            My Recruiting Page
           </TabsTrigger>
           <TabsTrigger value="college-matcher">
             <School className="h-4 w-4 mr-2" />
@@ -650,7 +650,7 @@ export default function RecruitingPage() {
                           <FormLabel>School</FormLabel>
                           <Select 
                             onValueChange={field.onChange} 
-                            defaultValue={field.value}
+                            defaultValue={field.value.toString()}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -659,7 +659,7 @@ export default function RecruitingPage() {
                             </FormControl>
                             <SelectContent>
                               {SCHOOLS.map((school) => (
-                                <SelectItem key={school.id} value={school.id}>
+                                <SelectItem key={school.id} value={school.id.toString()}>
                                   {school.name} ({school.division})
                                 </SelectItem>
                               ))}
