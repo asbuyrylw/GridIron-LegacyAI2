@@ -300,13 +300,13 @@ export default function ProfilePage() {
                     <Card className="bg-primary/5">
                       <CardContent className="p-4 text-center">
                         <p className="text-sm text-muted-foreground">Bench Press</p>
-                        <p className="text-2xl font-bold">{user?.athlete?.metrics?.benchPress || "--"}</p>
+                        <p className="text-2xl font-bold">{(user?.athlete as any)?.metrics?.benchPress || "--"}</p>
                       </CardContent>
                     </Card>
                     <Card className="bg-primary/5">
                       <CardContent className="p-4 text-center">
                         <p className="text-sm text-muted-foreground">Squat</p>
-                        <p className="text-2xl font-bold">{user?.athlete?.metrics?.squat || "--"}</p>
+                        <p className="text-2xl font-bold">{(user?.athlete as any)?.metrics?.squat || "--"}</p>
                       </CardContent>
                     </Card>
                   </div>
