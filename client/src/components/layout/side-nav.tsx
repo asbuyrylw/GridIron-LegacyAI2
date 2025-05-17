@@ -52,7 +52,7 @@ export function SideNav() {
       label: "Training & Nutrition",
       href: "/training-nutrition",
       icon: Dumbbell,
-      active: location === "/training-nutrition" || location === "/training" || location === "/nutrition"
+      active: location === "/training-nutrition"
     },
     {
       label: "Stats",
@@ -72,12 +72,7 @@ export function SideNav() {
       icon: School,
       active: location === "/college-matcher"
     },
-    {
-      label: "Nutrition",
-      href: "/nutrition",
-      icon: CandlestickChart,
-      active: location === "/nutrition"
-    },
+
     {
       label: "Growth Prediction",
       href: "/growth-prediction",

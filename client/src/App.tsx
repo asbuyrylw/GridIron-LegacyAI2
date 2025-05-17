@@ -21,6 +21,7 @@ import StatsPage from "@/pages/stats-page";
 import ProfilePage from "@/pages/profile-page";
 import SettingsPage from "@/pages/settings-page";
 import NutritionPage from "@/pages/nutrition-page";
+import TrainingNutritionPage from "@/pages/training-nutrition-page";
 import SocialAchievementsPage from "@/pages/social-achievements-page";
 import AchievementsPage from "@/pages/achievements-page";
 import SocialFeedPage from "@/pages/social-feed-page";
