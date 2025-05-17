@@ -28,10 +28,10 @@ export function BottomNav() {
       active: location === "/"
     },
     {
-      label: "Training",
-      href: "/training",
+      label: "Training & Nutrition",
+      href: "/training-nutrition",
       icon: Dumbbell,
-      active: location === "/training"
+      active: location === "/training-nutrition" || location === "/training" || location === "/nutrition"
     },
     {
       label: "Stats",
@@ -50,12 +50,6 @@ export function BottomNav() {
       href: "/profile",
       icon: User,
       active: location === "/profile"
-    },
-    {
-      label: "Nutrition",
-      href: "/nutrition",
-      icon: CandlestickChart,
-      active: location === "/nutrition"
     },
     {
       label: "Social",
