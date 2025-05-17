@@ -49,10 +49,10 @@ export function SideNav() {
       active: location === "/"
     },
     {
-      label: "Training",
-      href: "/training",
+      label: "Training & Nutrition",
+      href: "/training-nutrition",
       icon: Dumbbell,
-      active: location === "/training"
+      active: location === "/training-nutrition" || location === "/training" || location === "/nutrition"
     },
     {
       label: "Stats",
