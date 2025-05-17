@@ -243,11 +243,13 @@ export default function TrainingNutritionPage() {
   
   return (
     <div className="container px-4 py-6 max-w-7xl mx-auto">
-      <PageHeader
-        title="Training & Nutrition"
-        description="Manage your training schedule and nutrition in one place"
-        icon={<Dumbbell className="h-6 w-6" />}
-      />
+      <div className="flex items-center gap-2 mb-6">
+        <Dumbbell className="h-6 w-6" />
+        <div>
+          <h1 className="text-2xl font-bold">Training & Nutrition</h1>
+          <p className="text-muted-foreground">Manage your training schedule and nutrition in one place</p>
+        </div>
+      </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6">
         <TabsList className="grid grid-cols-4 w-full mb-6">
@@ -280,7 +282,7 @@ export default function TrainingNutritionPage() {
                   Today's Training
                 </CardTitle>
                 <CardDescription>
-                  {activePlan ? activePlan.title : "No workout scheduled for today"}
+                  {activePlan ? (activePlan as any).title : "No workout scheduled for today"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -294,16 +296,16 @@ export default function TrainingNutritionPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Focus:</span>
-                      <span className="font-medium">{activePlan.focus}</span>
+                      <span className="font-medium">{(activePlan as any).focus}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Exercises:</span>
-                      <span className="font-medium">{activePlan.exercises?.length || 0}</span>
+                      <span className="font-medium">{(activePlan as any).exercises ? Object.keys((activePlan as any).exercises).length : 0}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Status:</span>
-                      <Badge variant={activePlan.completed ? "success" : "outline"}>
-                        {activePlan.completed ? "Completed" : "Pending"}
+                      <Badge variant={(activePlan as any).completed ? "success" as const : "outline"}>
+                        {(activePlan as any).completed ? "Completed" : "Pending"}
                       </Badge>
                     </div>
                     <Separator className="my-3" />
@@ -475,9 +477,9 @@ export default function TrainingNutritionPage() {
                           <Skeleton className="h-6 w-full" />
                           <Skeleton className="h-6 w-full" />
                         </div>
-                      ) : mealLogs && mealLogs.length > 0 ? (
+                      ) : mealLogs && (mealLogs as any[]).length > 0 ? (
                         <ul className="space-y-1">
-                          {mealLogs.slice(0, 5).map((meal: any, index: number) => (
+                          {(mealLogs as any[] || []).slice(0, 5).map((meal: any, index: number) => (
                             <li key={index} className="flex items-center justify-between text-sm py-1">
                               <div className="flex items-center">
                                 <span className="font-medium">{meal.name}</span>
@@ -517,7 +519,7 @@ export default function TrainingNutritionPage() {
                     <Skeleton className="h-20 w-full" />
                   </div>
                 ) : groupedSessions && (
-                  groupedSessions.today.length === 0 && 
+                  groupedSessions.today && groupedSessions.today.length === 0 && 
                   groupedSessions.yesterday.length === 0 &&
                   groupedSessions.thisWeek.length === 0
                 ) ? (
