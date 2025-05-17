@@ -840,9 +840,10 @@ export default function TrainingNutritionPage() {
                     <CardContent>
                       <MealSuggestions 
                         nutritionPlan={(nutritionPlan as any)}
-                        onGetSuggestions={(preferences) => 
-                          getMealSuggestionsMutation.mutate(preferences)
-                        }
+                        onGetSuggestions={(preferences) => {
+                          getMealSuggestionsMutation.mutate(preferences);
+                          return Promise.resolve();
+                        }}
                         isLoading={getMealSuggestionsMutation.isPending}
                       />
                     </CardContent>
@@ -886,7 +887,7 @@ export default function TrainingNutritionPage() {
                             // Prepare data for meal log
                             const mealData = {
                               athleteId,
-                              nutritionPlanId: nutritionPlan.id,
+                              nutritionPlanId: (nutritionPlan as any)?.id,
                               name: food.food_name,
                               mealType: "snack", // Default to snack
                               calories: food.nf_calories,
