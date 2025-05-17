@@ -67,28 +67,30 @@ export default function TrainingNutritionPage() {
   const [activeMealTab, setActiveMealTab] = useState("meal-plan");
   const [activeTrainingTab, setActiveTrainingTab] = useState("plan");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
   
   // Reference for completed workouts
   const workoutCompletedRef = { current: false };
   
-  // Fetch nutrition plan
+  // Use nutrition hooks
   const { 
-    data: nutritionPlan,
-    isLoading: isLoadingNutritionPlan 
-  } = useQuery({
-    queryKey: [`/api/athlete/${athleteId}/nutrition-plan`],
-    enabled: !!athleteId,
-  });
+    nutritionPlan,
+    isLoadingNutritionPlan,
+    createPlanMutation,
+    updatePlanMutation
+  } = useNutritionPlan(athleteId);
   
-  // Fetch meal logs
-  const { 
-    data: mealLogs,
-    isLoading: isLoadingMealLogs 
-  } = useQuery({
-    queryKey: [`/api/athlete/${athleteId}/meal-logs`],
-    enabled: !!athleteId,
-  });
+  const {
+    mealLogs,
+    isLoadingMealLogs,
+    logMealMutation,
+    deleteMealMutation
+  } = useMealLogging(athleteId);
+  
+  const {
+    searchFoods,
+    getNutrients,
+    isSearching
+  } = useNutritionSearch();
   
   // Fetch workout sessions
   const { 
@@ -129,29 +131,27 @@ export default function TrainingNutritionPage() {
     },
   });
   
-  // Create a meal log
-  const logMealMutation = useMutation({
-    mutationFn: async (mealData: any) => {
-      return apiRequest(`/api/athlete/${athleteId}/meal-logs`, {
-        method: 'POST',
-        data: mealData
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/athlete/${athleteId}/meal-logs`] });
-      toast({
-        title: "Meal Logged",
-        description: "Your meal has been logged successfully.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Failed to Log Meal",
-        description: "There was an error logging your meal. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+  // Create a meal log - now using our hook
+  // Adding success and error toasts to our mutation
+  logMealMutation.mutate = ((variables) => {
+    const originalMutate = logMealMutation.mutate;
+    
+    return originalMutate(variables, {
+      onSuccess: () => {
+        toast({
+          title: "Meal Logged",
+          description: "Your meal has been logged successfully.",
+        });
+      },
+      onError: () => {
+        toast({
+          title: "Failed to Log Meal",
+          description: "There was an error logging your meal. Please try again.",
+          variant: "destructive",
+        });
+      }
+    });
+  }) as typeof logMealMutation.mutate;
   
   // Get meal suggestions
   const getMealSuggestionsMutation = useMutation({
@@ -192,18 +192,15 @@ export default function TrainingNutritionPage() {
   };
   
   // Handle food search
+  // Food search handler using our nutrition hooks
   const handleFoodSearch = async (query: string) => {
     if (!query.trim()) {
       return;
     }
     
-    setIsSearching(true);
     try {
-      const results = await apiRequest(`/api/nutrition/search`, {
-        method: 'GET',
-        params: { query }
-      });
-      
+      // Using our hook to search foods - handles loading state internally
+      const results = await searchFoods(query);
       return results;
     } catch (error) {
       toast({
@@ -211,8 +208,7 @@ export default function TrainingNutritionPage() {
         description: "There was an error searching for food items.",
         variant: "destructive",
       });
-    } finally {
-      setIsSearching(false);
+      return { common: [], branded: [] };
     }
   };
   

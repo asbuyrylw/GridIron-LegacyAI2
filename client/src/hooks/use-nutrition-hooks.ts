@@ -24,7 +24,7 @@ export function useNutritionSearch() {
     try {
       const response = await apiRequest('/api/nutrition/nutrients', {
         method: 'POST',
-        body: { query }
+        body: { query } as any
       });
       return response;
     } catch (error) {
@@ -155,7 +155,7 @@ export function useShoppingList(athleteId: number | undefined) {
     mutationFn: async (days: number) => {
       return await apiRequest(`/api/athlete/${athleteId}/shopping-list/generate`, {
         method: 'POST',
-        body: { days }
+        body: { days } as any
       });
     },
     onSuccess: () => {
