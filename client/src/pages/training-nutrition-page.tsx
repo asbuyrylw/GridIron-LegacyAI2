@@ -107,29 +107,26 @@ export default function TrainingNutritionPage() {
     enabled: !!athleteId,
   });
   
-  // Create a nutrition plan
-  const createPlanMutation = useMutation({
-    mutationFn: async (planData: any) => {
-      return apiRequest(`/api/athlete/${athleteId}/nutrition-plan`, {
-        method: 'POST',
-        data: planData
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/athlete/${athleteId}/nutrition-plan`] });
-      toast({
-        title: "Nutrition Plan Created",
-        description: "Your new nutrition plan has been created successfully.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Failed to Create Plan",
-        description: "There was an error creating your nutrition plan. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+  // Enhance createPlanMutation from our hook with toasts
+  createPlanMutation.mutate = ((variables) => {
+    const originalMutate = createPlanMutation.mutate;
+    
+    return originalMutate(variables, {
+      onSuccess: () => {
+        toast({
+          title: "Nutrition Plan Created",
+          description: "Your new nutrition plan has been created successfully.",
+        });
+      },
+      onError: () => {
+        toast({
+          title: "Failed to Create Plan",
+          description: "There was an error creating your nutrition plan. Please try again.",
+          variant: "destructive",
+        });
+      }
+    });
+  }) as typeof createPlanMutation.mutate;
   
   // Create a meal log - now using our hook
   // Adding success and error toasts to our mutation
@@ -158,13 +155,13 @@ export default function TrainingNutritionPage() {
     mutationFn: async (preferences: any) => {
       return apiRequest(`/api/nutrition/suggest-meal-plan`, {
         method: 'POST',
-        data: {
+        body: {
           calories: nutritionPlan?.dailyCalories || 2500,
           proteinTarget: nutritionPlan?.proteinTarget || 150,
           carbTarget: nutritionPlan?.carbTarget || 300,
           fatTarget: nutritionPlan?.fatTarget || 80,
           dietaryPreferences: preferences
-        }
+        } as any
       });
     },
     onSuccess: (data) => {
