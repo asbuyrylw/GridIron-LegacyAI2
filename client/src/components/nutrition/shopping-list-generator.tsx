@@ -101,7 +101,7 @@ export function ShoppingListGenerator({
       
       return apiRequest("/api/nutrition/shopping-list", {
         method: "POST",
-        data: { mealPlanItems }
+        body: { mealPlanItems }
       });
     },
     onSuccess: (data) => {

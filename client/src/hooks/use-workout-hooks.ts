@@ -29,7 +29,7 @@ export function useCreateWorkoutSession(athleteId: number) {
     mutationFn: async (workout: any) => {
       return apiRequest(`/api/athlete/${athleteId}/workout-sessions`, {
         method: 'POST',
-        data: workout
+        body: workout
       });
     },
     onSuccess: () => {
@@ -46,7 +46,7 @@ export function useUpdateWorkoutSession(athleteId: number, sessionId: number) {
     mutationFn: async (updates: any) => {
       return apiRequest(`/api/athlete/${athleteId}/workout-sessions/${sessionId}`, {
         method: 'PATCH',
-        data: updates
+        body: updates
       });
     },
     onSuccess: () => {
@@ -64,7 +64,7 @@ export function useCompleteWorkoutSession(athleteId: number, sessionId: number) 
     mutationFn: async (completionData: any) => {
       return apiRequest(`/api/athlete/${athleteId}/workout-sessions/${sessionId}/complete`, {
         method: 'POST',
-        data: completionData
+        body: completionData
       });
     },
     onSuccess: () => {

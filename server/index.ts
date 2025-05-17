@@ -9,10 +9,14 @@ import { storage } from "./storage";
 import { extendMemStorageWithFootballIq } from "./football-iq-storage";
 import { extendMemStorageWithCoachEvaluations, seedEvaluationTemplates } from "./coach-evaluation-storage";
 import { extendMemStorageWithSkillProgression } from "./skill-progression-storage";
+import nutritionApiRoutes from "./routes/nutrition-api";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Register Nutrition API routes
+app.use('/api/nutrition', nutritionApiRoutes);
 
 app.use((req, res, next) => {
   const start = Date.now();
