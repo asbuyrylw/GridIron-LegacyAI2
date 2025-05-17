@@ -125,7 +125,7 @@ export function ShoppingListGenerator({
     mutationFn: async (email: string) => {
       return apiRequest(`/api/athlete/${athleteId}/email/shopping-list`, {
         method: "POST",
-        data: { 
+        body: { 
           email,
           shoppingList: shoppingList?.items || []
         }
