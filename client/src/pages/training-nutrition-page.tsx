@@ -615,8 +615,8 @@ export default function TrainingNutritionPage() {
                   </div>
                 ) : (
                   <DailyNutritionSummary 
-                    mealLogs={mealLogs || []}
-                    nutritionPlan={nutritionPlan}
+                    mealLogs={(mealLogs as any[] || [])}
+                    nutritionPlan={(nutritionPlan as any)}
                     onLogMeal={() => {
                       setActiveTab("nutrition");
                       setActiveMealTab("meal-log");
@@ -647,7 +647,7 @@ export default function TrainingNutritionPage() {
                   <Separator className="my-6" />
                   <WorkoutSession 
                     athleteId={athleteId} 
-                    activePlan={activePlan}
+                    activePlan={(activePlan as any)}
                     onComplete={handleWorkoutComplete}
                   />
                 </>
@@ -788,8 +788,8 @@ export default function TrainingNutritionPage() {
                 </Card>
               ) : (
                 <NutritionOverview 
-                  nutritionPlan={nutritionPlan} 
-                  mealLogs={mealLogs || []} 
+                  nutritionPlan={(nutritionPlan as any)} 
+                  mealLogs={(mealLogs as any[] || [])} 
                   onCreateNewPlan={() => setIsCreatingNutritionPlan(true)}
                 />
               )}
@@ -824,7 +824,7 @@ export default function TrainingNutritionPage() {
                     </CardHeader>
                     <CardContent>
                       <MealPlanCalendar 
-                        mealLogs={mealLogs || []} 
+                        mealLogs={(mealLogs as any[] || [])} 
                         onAddMeal={() => setActiveMealTab("meal-log")}
                       />
                     </CardContent>
