@@ -304,7 +304,7 @@ export default function TrainingNutritionPage() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Status:</span>
-                      <Badge variant={(activePlan as any).completed ? "success" as const : "outline"}>
+                      <Badge variant={(activePlan as any).completed ? "default" : "outline"}>
                         {(activePlan as any).completed ? "Completed" : "Pending"}
                       </Badge>
                     </div>
@@ -839,7 +839,7 @@ export default function TrainingNutritionPage() {
                     </CardHeader>
                     <CardContent>
                       <MealSuggestions 
-                        nutritionPlan={nutritionPlan}
+                        nutritionPlan={(nutritionPlan as any)}
                         onGetSuggestions={(preferences) => 
                           getMealSuggestionsMutation.mutate(preferences)
                         }
@@ -908,7 +908,7 @@ export default function TrainingNutritionPage() {
                       <Separator />
                       <MealLogForm 
                         onSubmit={(data) => logMealMutation.mutate(data)}
-                        nutritionPlanId={nutritionPlan.id}
+                        nutritionPlanId={(nutritionPlan as any).id}
                         athleteId={athleteId || 0}
                         isLoading={logMealMutation.isPending}
                       />
@@ -938,8 +938,8 @@ export default function TrainingNutritionPage() {
                 </Card>
               ) : (
                 <ShoppingListGenerator 
-                  mealLogs={mealLogs || []}
-                  nutritionPlan={nutritionPlan}
+                  mealLogs={(mealLogs as any[] || [])}
+                  nutritionPlan={(nutritionPlan as any)}
                   athleteId={athleteId || 0}
                 />
               )}
