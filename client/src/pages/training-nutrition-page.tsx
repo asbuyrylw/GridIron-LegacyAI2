@@ -153,13 +153,14 @@ export default function TrainingNutritionPage() {
   // Get meal suggestions
   const getMealSuggestionsMutation = useMutation({
     mutationFn: async (preferences: any) => {
+      const np = nutritionPlan as any || {};
       return apiRequest(`/api/nutrition/suggest-meal-plan`, {
         method: 'POST',
         body: {
-          calories: nutritionPlan?.dailyCalories || 2500,
-          proteinTarget: nutritionPlan?.proteinTarget || 150,
-          carbTarget: nutritionPlan?.carbTarget || 300,
-          fatTarget: nutritionPlan?.fatTarget || 80,
+          calories: np.dailyCalories || 2500,
+          proteinTarget: np.proteinTarget || 150,
+          carbTarget: np.carbTarget || 300,
+          fatTarget: np.fatTarget || 80,
           dietaryPreferences: preferences
         } as any
       });
@@ -210,13 +211,13 @@ export default function TrainingNutritionPage() {
   };
   
   // Group workout sessions by recency
-  const groupedSessions = workoutSessions ? workoutSessions.reduce<{
+  const groupedSessions = workoutSessions ? (workoutSessions as any[]).reduce<{
     today: WorkoutSessionType[];
     yesterday: WorkoutSessionType[];
     thisWeek: WorkoutSessionType[];
     thisMonth: WorkoutSessionType[];
     older: WorkoutSessionType[];
-  }>((acc, session) => {
+  }>((acc: any, session: any) => {
     const date = parseISO(session.date);
     if (isToday(date)) {
       acc.today.push(session);
@@ -357,20 +358,20 @@ export default function TrainingNutritionPage() {
                   <div className="space-y-3">
                     <MacroProgress 
                       calories={{
-                        current: mealLogs?.reduce((sum, meal) => sum + (meal.calories || 0), 0) || 0,
-                        target: nutritionPlan.dailyCalories
+                        current: (mealLogs as any[] || []).reduce((sum: number, meal: any) => sum + (meal.calories || 0), 0),
+                        target: (nutritionPlan as any)?.dailyCalories || 2000
                       }}
                       protein={{
-                        current: mealLogs?.reduce((sum, meal) => sum + (meal.protein || 0), 0) || 0,
-                        target: nutritionPlan.proteinTarget
+                        current: (mealLogs as any[] || []).reduce((sum: number, meal: any) => sum + (meal.protein || 0), 0),
+                        target: (nutritionPlan as any)?.proteinTarget || 150
                       }}
                       carbs={{
-                        current: mealLogs?.reduce((sum, meal) => sum + (meal.carbs || 0), 0) || 0,
-                        target: nutritionPlan.carbTarget
+                        current: (mealLogs as any[] || []).reduce((sum: number, meal: any) => sum + (meal.carbs || 0), 0),
+                        target: (nutritionPlan as any)?.carbTarget || 250
                       }}
                       fat={{
-                        current: mealLogs?.reduce((sum, meal) => sum + (meal.fat || 0), 0) || 0,
-                        target: nutritionPlan.fatTarget
+                        current: (mealLogs as any[] || []).reduce((sum: number, meal: any) => sum + (meal.fat || 0), 0),
+                        target: (nutritionPlan as any)?.fatTarget || 70
                       }}
                     />
                     <Separator className="my-3" />
@@ -434,7 +435,7 @@ export default function TrainingNutritionPage() {
                         // Prepare data for meal log
                         const mealData = {
                           athleteId,
-                          nutritionPlanId: nutritionPlan.id,
+                          nutritionPlanId: (nutritionPlan as any).id,
                           name: food.food_name,
                           mealType: "snack", // Default to snack
                           calories: food.nf_calories,
