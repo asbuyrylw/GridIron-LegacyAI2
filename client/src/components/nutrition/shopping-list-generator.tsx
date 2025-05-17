@@ -99,16 +99,19 @@ export function ShoppingListGenerator({
         servings: meal.servingSize
       }));
       
-      return apiRequest("/api/nutrition/shopping-list", {
+      const response = await apiRequest("/api/nutrition/shopping-list", {
         method: "POST",
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ mealPlanItems })
       });
+      
+      // Parse the response
+      return await response.json();
     },
     onSuccess: (data) => {
-      setShoppingList(data as { items: ShoppingItem[]; categories: Record<string, ShoppingItem[]> });
+      setShoppingList(data);
       setActiveTab("list");
       toast({
         title: "Shopping List Generated",
@@ -126,7 +129,7 @@ export function ShoppingListGenerator({
   
   const sendEmailMutation = useMutation({
     mutationFn: async (email: string) => {
-      return apiRequest(`/api/athlete/${athleteId}/email/shopping-list`, {
+      const response = await apiRequest(`/api/athlete/${athleteId}/email/shopping-list`, {
         method: "POST",
         headers: {
           'Content-Type': 'application/json'
@@ -136,6 +139,8 @@ export function ShoppingListGenerator({
           shoppingList: shoppingList?.items || []
         })
       });
+      
+      return await response.json();
     },
     onSuccess: () => {
       toast({
