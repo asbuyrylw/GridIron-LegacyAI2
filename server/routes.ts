@@ -18,9 +18,9 @@ import footballIqRoutes from "./routes/football-iq-routes";
 import playerBrandingRoutes from "./routes/player-branding-routes";
 import coachEvaluationRoutes from "./routes/coach-evaluation-routes";
 import collegeApplicationRoutes from "./routes/college-application-routes";
+import nutritionApiRoutes from "./routes/nutrition-api";
 import { setupSkillProgressionRoutes } from "./routes/skill-progression-routes";
 import { setupProfileImageRoutes } from "./routes/profile-image-routes";
-import nutritionApiRoutes from "./routes/nutrition-api";
 import { Router } from "express";
 
 // Extend the Express Session type to include our onboarding progress
