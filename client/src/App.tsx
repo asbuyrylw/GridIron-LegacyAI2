@@ -103,6 +103,7 @@ function Router() {
         <ProtectedRoute path="/onboarding" component={OnboardingPage} />
         <ProtectedRoute path="/training" component={TrainingPage} />
         <ProtectedRoute path="/nutrition" component={NutritionPage} />
+        <ProtectedRoute path="/training-nutrition" component={TrainingNutritionPage} />
         <ProtectedRoute path="/stats" component={StatsPage} />
         <ProtectedRoute path="/profile" component={ProfilePage} />
         <ProtectedRoute path="/settings" component={SettingsPage} />

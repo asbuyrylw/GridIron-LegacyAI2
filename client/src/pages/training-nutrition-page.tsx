@@ -45,6 +45,9 @@ import { MealSuggestions } from "@/components/nutrition/meal-suggestions";
 // Import training hooks
 import { useWorkoutSessions } from "@/hooks/use-workout-hooks";
 
+// Import nutrition hooks
+import { useNutritionSearch, useNutritionPlan, useMealLogging, useShoppingList } from "@/hooks/use-nutrition-hooks";
+
 // Newly created components for combined dashboard
 import { FoodSearchBox } from "@/components/nutrition/food-search-box";
 import { MacroProgress } from "@/components/nutrition/macro-progress";
