@@ -72,30 +72,11 @@ export function SideNav() {
       icon: School,
       active: location === "/college-matcher"
     },
-
-    {
-      label: "Growth Prediction",
-      href: "/growth-prediction",
-      icon: Ruler,
-      active: location === "/growth-prediction"
-    },
-    {
-      label: "Player Branding",
-      href: "/player-branding",
-      icon: Camera,
-      active: location === "/player-branding"
-    },
     {
       label: "College Applications",
       href: "/college-application-hub",
       icon: GraduationCap,
       active: location === "/college-application-hub"
-    },
-    {
-      label: "Social",
-      href: "/social-feed",
-      icon: Share2,
-      active: location.includes("/social")
     },
     {
       label: "Achievements",
@@ -104,16 +85,14 @@ export function SideNav() {
       active: location === "/achievements"
     },
     {
-      label: "Teams",
-      href: "/teams",
-      icon: Users,
-      active: location.includes("/teams")
-    },
-    {
       label: "Profile",
       href: "/profile",
       icon: User,
-      active: location === "/profile"
+      active: location === "/profile" || 
+              location === "/growth-prediction" || 
+              location === "/player-branding" || 
+              location.includes("/teams") || 
+              location.includes("/social")
     },
     {
       label: "Settings",

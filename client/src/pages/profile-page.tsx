@@ -35,7 +35,10 @@ import {
   Building,
   GraduationCap,
   BookOpen,
-  Loader2
+  Loader2,
+  Ruler,
+  Users,
+  LineChart
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -189,19 +192,465 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
         
-        <Tabs defaultValue="edit">
-          <TabsList className="w-full mb-6">
-            <TabsTrigger value="edit" className="flex-1">
+        <Tabs defaultValue="overview">
+          <TabsList className="w-full mb-6 grid grid-cols-2 md:grid-cols-5">
+            <TabsTrigger value="overview">
+              <UserCircle className="h-4 w-4 mr-2" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="development">
+              <Ruler className="h-4 w-4 mr-2" />
+              Development
+            </TabsTrigger>
+            <TabsTrigger value="teamsocial">
+              <Users className="h-4 w-4 mr-2" />
+              Teams & Social
+            </TabsTrigger>
+            <TabsTrigger value="branding">
+              <Camera className="h-4 w-4 mr-2" />
+              Branding
+            </TabsTrigger>
+            <TabsTrigger value="settings">
               <Edit className="h-4 w-4 mr-2" />
               Edit Profile
             </TabsTrigger>
-            <TabsTrigger value="preview" className="flex-1">
-              <UserCircle className="h-4 w-4 mr-2" />
-              Preview
-            </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="edit">
+          <TabsContent value="overview">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <UserCircle className="h-5 w-5 mr-2" />
+                  Athlete Profile
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-semibold text-lg mb-3">Personal Information</h3>
+                      <dl className="space-y-2">
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">Name:</dt>
+                          <dd className="font-medium">{user?.athlete?.firstName} {user?.athlete?.lastName}</dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">Position:</dt>
+                          <dd className="font-medium">{user?.athlete?.position}</dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">Height:</dt>
+                          <dd className="font-medium">{user?.athlete?.height || "Not specified"}</dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">Weight:</dt>
+                          <dd className="font-medium">{user?.athlete?.weight ? `${user.athlete.weight} lbs` : "Not specified"}</dd>
+                        </div>
+                      </dl>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-3">Academic Information</h3>
+                      <dl className="space-y-2">
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">School:</dt>
+                          <dd className="font-medium">{user?.athlete?.school || "Not specified"}</dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">Graduation Year:</dt>
+                          <dd className="font-medium">{user?.athlete?.graduationYear || "Not specified"}</dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">GPA:</dt>
+                          <dd className="font-medium">{user?.athlete?.gpa || "Not specified"}</dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">ACT Score:</dt>
+                          <dd className="font-medium">{user?.athlete?.actScore || "Not specified"}</dd>
+                        </div>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Trophy className="h-5 w-5 mr-2" />
+                  Performance Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-muted-foreground">View your latest performance metrics and achievements.</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card className="bg-primary/5">
+                      <CardContent className="p-4 text-center">
+                        <p className="text-sm text-muted-foreground">40-Yard Dash</p>
+                        <p className="text-2xl font-bold">{(user?.athlete as any)?.metrics?.fortyYard || "--"}</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-primary/5">
+                      <CardContent className="p-4 text-center">
+                        <p className="text-sm text-muted-foreground">Vertical Jump</p>
+                        <p className="text-2xl font-bold">{(user?.athlete as any)?.metrics?.verticalJump || "--"}</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-primary/5">
+                      <CardContent className="p-4 text-center">
+                        <p className="text-sm text-muted-foreground">Bench Press</p>
+                        <p className="text-2xl font-bold">{user?.athlete?.metrics?.benchPress || "--"}</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-primary/5">
+                      <CardContent className="p-4 text-center">
+                        <p className="text-sm text-muted-foreground">Squat</p>
+                        <p className="text-2xl font-bold">{user?.athlete?.metrics?.squat || "--"}</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <Button className="w-full sm:w-auto mt-4" variant="outline">
+                    <LineChart className="h-4 w-4 mr-2" />
+                    View Full Stats
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="development">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Ruler className="h-5 w-5 mr-2" />
+                  Growth Prediction
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-muted-foreground">
+                    Our AI-powered growth prediction model uses your current metrics, family history, and development patterns to estimate your future physical attributes.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <Card className="bg-primary/5">
+                      <CardContent className="p-4 text-center">
+                        <p className="text-sm text-muted-foreground">Current Height</p>
+                        <p className="text-2xl font-bold">{user?.athlete?.height || "--"}</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-green-500/10">
+                      <CardContent className="p-4 text-center">
+                        <p className="text-sm text-muted-foreground">Predicted Height (18 years)</p>
+                        <p className="text-2xl font-bold text-green-600">6'3"</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-green-500/10">
+                      <CardContent className="p-4 text-center">
+                        <p className="text-sm text-muted-foreground">Predicted Weight (18 years)</p>
+                        <p className="text-2xl font-bold text-green-600">195 lbs</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <Button className="w-full sm:w-auto mt-6">
+                    Update Growth Factors
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <LineChart className="h-5 w-5 mr-2" />
+                  Skill Progression
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-muted-foreground">
+                    Track your progress in key skills and abilities over time.
+                  </p>
+                  
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Speed</span>
+                        <span className="text-sm text-muted-foreground">75%</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2.5">
+                        <div className="bg-primary h-2.5 rounded-full" style={{ width: '75%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Strength</span>
+                        <span className="text-sm text-muted-foreground">65%</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2.5">
+                        <div className="bg-primary h-2.5 rounded-full" style={{ width: '65%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Agility</span>
+                        <span className="text-sm text-muted-foreground">80%</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2.5">
+                        <div className="bg-primary h-2.5 rounded-full" style={{ width: '80%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Game IQ</span>
+                        <span className="text-sm text-muted-foreground">70%</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2.5">
+                        <div className="bg-primary h-2.5 rounded-full" style={{ width: '70%' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button className="w-full sm:w-auto mt-6" variant="outline">
+                    View Development Plan
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="teamsocial">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="h-5 w-5 mr-2" />
+                  My Teams
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-muted-foreground">
+                    Manage your team memberships and connections.
+                  </p>
+                  
+                  <div className="mt-4 space-y-4">
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mr-4">
+                              <Users className="h-6 w-6 text-primary" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold">Lincoln High Lions</h4>
+                              <p className="text-sm text-muted-foreground">Varsity Football</p>
+                            </div>
+                          </div>
+                          <Button variant="outline" size="sm">View</Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mr-4">
+                              <Users className="h-6 w-6 text-primary" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold">Elite QB Training</h4>
+                              <p className="text-sm text-muted-foreground">Skills Development</p>
+                            </div>
+                          </div>
+                          <Button variant="outline" size="sm">View</Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <Button className="w-full sm:w-auto mt-4">
+                    Join New Team
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Share2 className="h-5 w-5 mr-2" />
+                  Social Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-muted-foreground">
+                    Connect with teammates, coaches, and follow your network's activity.
+                  </p>
+                  
+                  <div className="mt-4 space-y-4">
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-start space-x-4">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <UserCircle className="h-6 w-6 text-primary" />
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center">
+                              <p className="font-medium">Coach Williams</p>
+                              <span className="text-xs text-muted-foreground ml-2">2 hours ago</span>
+                            </div>
+                            <p className="text-sm">Shared new training videos for the team. Check them out!</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-start space-x-4">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <UserCircle className="h-6 w-6 text-primary" />
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center">
+                              <p className="font-medium">Michael Johnson</p>
+                              <span className="text-xs text-muted-foreground ml-2">1 day ago</span>
+                            </div>
+                            <p className="text-sm">Just set a new personal record in the 40-yard dash! 4.5 seconds!</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <Button className="w-full sm:w-auto mt-6" variant="outline">
+                    View Full Social Feed
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="branding">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Camera className="h-5 w-5 mr-2" />
+                  Media & Highlights
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-muted-foreground">
+                    Upload and manage your game highlights, photos, and media to showcase your talents.
+                  </p>
+                  
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="bg-muted aspect-video flex items-center justify-center">
+                      <div className="text-center p-4">
+                        <Camera className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">Upload Game Highlights</p>
+                      </div>
+                    </Card>
+                    
+                    <Card className="bg-muted aspect-video flex items-center justify-center">
+                      <div className="text-center p-4">
+                        <Camera className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">Upload Photos</p>
+                      </div>
+                    </Card>
+                    
+                    <Card className="bg-muted aspect-video flex items-center justify-center">
+                      <div className="text-center p-4">
+                        <LinkIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">Link External Media</p>
+                      </div>
+                    </Card>
+                  </div>
+                  
+                  <div className="mt-6">
+                    <h3 className="font-semibold mb-3">External Media Links</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <LinkIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span>Hudl Profile</span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">{user?.athlete?.hudlLink || "Not connected"}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <LinkIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span>MaxPreps Profile</span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">{user?.athlete?.maxPrepsLink || "Not connected"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Share2 className="h-5 w-5 mr-2" />
+                  Brand Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-muted-foreground">
+                    Manage your personal brand and social media presence.
+                  </p>
+                  
+                  <div className="mt-4 space-y-4">
+                    <div>
+                      <h3 className="font-semibold mb-2">Bio & Description</h3>
+                      <p className="text-sm text-muted-foreground mb-2">Write a compelling bio that highlights your skills and achievements.</p>
+                      <Card className="bg-muted p-3">
+                        <p className="text-sm italic">
+                          Quarterback with 3 years varsity experience. Strong arm, quick decision-making, and natural leadership abilities. 28 TDs in junior year with 3,200 passing yards.
+                        </p>
+                      </Card>
+                      <Button size="sm" variant="outline" className="mt-2">
+                        <Edit className="h-3.5 w-3.5 mr-1" />
+                        Edit Bio
+                      </Button>
+                    </div>
+                    
+                    <div className="pt-2">
+                      <h3 className="font-semibold mb-2">Social Media Accounts</h3>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span>Twitter/X</span>
+                          <Button variant="outline" size="sm">Connect</Button>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Instagram</span>
+                          <Button variant="outline" size="sm">Connect</Button>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>TikTok</span>
+                          <Button variant="outline" size="sm">Connect</Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="settings">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <Card>
