@@ -1,90 +1,180 @@
-import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 
-const mealLogFormSchema = z.object({
-  name: z.string().min(2, "Meal name is required"),
-  mealType: z.enum(["breakfast", "lunch", "dinner", "snack", "pre_workout", "post_workout"]),
-  calories: z.coerce.number().min(0, "Calories can't be negative").max(5000, "Maximum 5000 calories"),
-  protein: z.coerce.number().min(0, "Protein can't be negative").max(300, "Maximum 300g protein"),
-  carbs: z.coerce.number().min(0, "Carbs can't be negative").max(500, "Maximum 500g carbs"),
-  fat: z.coerce.number().min(0, "Fat can't be negative").max(200, "Maximum 200g fat"),
-  notes: z.string().optional(),
+// Define the form schema
+const mealLogSchema = z.object({
+  name: z.string().min(2, {
+    message: "Food name must be at least 2 characters.",
+  }),
+  servingSize: z.coerce.number().min(0.1, {
+    message: "Serving size must be greater than 0.",
+  }),
+  servingUnit: z.string().min(1, {
+    message: "Please specify a serving unit.",
+  }),
+  calories: z.coerce.number().min(0, {
+    message: "Calories must be a non-negative number.",
+  }),
+  protein: z.coerce.number().min(0, {
+    message: "Protein must be a non-negative number.",
+  }),
+  carbs: z.coerce.number().min(0, {
+    message: "Carbs must be a non-negative number.",
+  }),
+  fat: z.coerce.number().min(0, {
+    message: "Fat must be a non-negative number.",
+  }),
+  mealType: z.enum(["breakfast", "lunch", "dinner", "snack"]),
+  date: z.string(),
 });
 
-type MealLogFormValues = z.infer<typeof mealLogFormSchema>;
+type MealLogFormValues = z.infer<typeof mealLogSchema>;
 
 interface MealLogFormProps {
-  onSubmit: (data: MealLogFormValues) => void;
-  onCancel: () => void;
-  isLoading: boolean;
-  defaultValues?: Partial<MealLogFormValues>;
+  onSubmit: (values: any) => void;
+  nutritionPlanId: number;
+  athleteId: number;
+  isLoading?: boolean;
 }
 
-export function MealLogForm({ onSubmit, onCancel, isLoading, defaultValues }: MealLogFormProps) {
+export function MealLogForm({ 
+  onSubmit, 
+  nutritionPlanId, 
+  athleteId, 
+  isLoading = false 
+}: MealLogFormProps) {
+  // Initialize form with default values
   const form = useForm<MealLogFormValues>({
-    resolver: zodResolver(mealLogFormSchema),
+    resolver: zodResolver(mealLogSchema),
     defaultValues: {
-      name: defaultValues?.name || "",
-      mealType: defaultValues?.mealType || "lunch",
-      calories: defaultValues?.calories || 0,
-      protein: defaultValues?.protein || 0,
-      carbs: defaultValues?.carbs || 0,
-      fat: defaultValues?.fat || 0,
-      notes: defaultValues?.notes || "",
+      name: "",
+      servingSize: 1,
+      servingUnit: "serving",
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      mealType: "snack",
+      date: new Date().toISOString().split('T')[0],
     },
   });
 
+  const handleSubmit = (values: MealLogFormValues) => {
+    // Add the athlete ID and nutrition plan ID to the submitted values
+    onSubmit({
+      ...values,
+      athleteId,
+      nutritionPlanId
+    });
+    
+    // Reset form after submission
+    form.reset();
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Meal Name</FormLabel>
-              <FormControl>
-                <Input placeholder="What did you eat?" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="mealType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Meal Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Food Name</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select meal type" />
-                  </SelectTrigger>
+                  <Input placeholder="e.g., Grilled Chicken Breast" {...field} />
                 </FormControl>
-                <SelectContent>
-                  <SelectItem value="breakfast">Breakfast</SelectItem>
-                  <SelectItem value="lunch">Lunch</SelectItem>
-                  <SelectItem value="dinner">Dinner</SelectItem>
-                  <SelectItem value="snack">Snack</SelectItem>
-                  <SelectItem value="pre_workout">Pre-Workout</SelectItem>
-                  <SelectItem value="post_workout">Post-Workout</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="mealType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Meal Type</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select meal type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="breakfast">Breakfast</SelectItem>
+                    <SelectItem value="lunch">Lunch</SelectItem>
+                    <SelectItem value="dinner">Dinner</SelectItem>
+                    <SelectItem value="snack">Snack</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
         <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="servingSize"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Serving Size</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    step="0.1" 
+                    min="0" 
+                    {...field} 
+                    onChange={e => field.onChange(parseFloat(e.target.value || "0"))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="servingUnit"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Unit</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., oz, cup, piece" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <FormField
             control={form.control}
             name="calories"
@@ -92,9 +182,13 @@ export function MealLogForm({ onSubmit, onCancel, isLoading, defaultValues }: Me
               <FormItem>
                 <FormLabel>Calories</FormLabel>
                 <FormControl>
-                  <Input type="number" min="0" {...field} />
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    {...field} 
+                    onChange={e => field.onChange(parseInt(e.target.value || "0"))}
+                  />
                 </FormControl>
-                <FormDescription>kcal</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -105,11 +199,16 @@ export function MealLogForm({ onSubmit, onCancel, isLoading, defaultValues }: Me
             name="protein"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Protein</FormLabel>
+                <FormLabel>Protein (g)</FormLabel>
                 <FormControl>
-                  <Input type="number" min="0" step="0.1" {...field} />
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    step="0.1" 
+                    {...field} 
+                    onChange={e => field.onChange(parseFloat(e.target.value || "0"))}
+                  />
                 </FormControl>
-                <FormDescription>grams</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -120,11 +219,16 @@ export function MealLogForm({ onSubmit, onCancel, isLoading, defaultValues }: Me
             name="carbs"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Carbs</FormLabel>
+                <FormLabel>Carbs (g)</FormLabel>
                 <FormControl>
-                  <Input type="number" min="0" step="0.1" {...field} />
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    step="0.1" 
+                    {...field} 
+                    onChange={e => field.onChange(parseFloat(e.target.value || "0"))}
+                  />
                 </FormControl>
-                <FormDescription>grams</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -135,47 +239,49 @@ export function MealLogForm({ onSubmit, onCancel, isLoading, defaultValues }: Me
             name="fat"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Fat</FormLabel>
+                <FormLabel>Fat (g)</FormLabel>
                 <FormControl>
-                  <Input type="number" min="0" step="0.1" {...field} />
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    step="0.1" 
+                    {...field} 
+                    onChange={e => field.onChange(parseFloat(e.target.value || "0"))}
+                  />
                 </FormControl>
-                <FormDescription>grams</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-
+        
         <FormField
           control={form.control}
-          name="notes"
+          name="date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notes</FormLabel>
+              <FormLabel>Date</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Additional notes about this meal..."
-                  className="resize-none"
-                  {...field}
+                <Input 
+                  type="date" 
+                  {...field} 
                 />
               </FormControl>
-              <FormDescription>
-                Optional notes about ingredients, preparation, etc.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button variant="outline" onClick={onCancel} type="button">
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Save Meal
-          </Button>
-        </div>
+        
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Logging Meal...
+            </>
+          ) : (
+            "Log Meal"
+          )}
+        </Button>
       </form>
     </Form>
   );
