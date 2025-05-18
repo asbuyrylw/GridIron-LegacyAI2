@@ -127,6 +127,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Profile Image routes
   setupProfileImageRoutes(app);
   
+  // Development Plan routes
+  app.use('/api', developmentPlanRoutes);
+  
   // Achievement and Gamification routes
   app.get("/api/athlete/:id/achievements", async (req, res, next) => {
     try {

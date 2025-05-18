@@ -21,7 +21,8 @@ import {
   Mail,
   GraduationCapIcon as GraduationCap,
   Camera,
-  ClipboardCheck
+  ClipboardCheck,
+  BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,12 @@ export function SideNav() {
       href: "/stats",
       icon: LineChart,
       active: location === "/stats"
+    },
+    {
+      label: "Development Plan",
+      href: "/development-plan",
+      icon: BarChart3,
+      active: location === "/development-plan"
     },
     {
       label: "Recruiting",

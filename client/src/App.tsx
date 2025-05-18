@@ -31,6 +31,7 @@ import TeamDetailsPage from "@/pages/team-details-page";
 import RecruitingPage from "@/pages/recruiting-page";
 import EnhancedCollegeMatcherPage from "@/pages/enhanced-college-matcher-page";
 import RecruitingProfileBuilderPage from "@/pages/recruiting-profile-builder-page";
+import DevelopmentPlanPage from "@/pages/development-plan-page";
 // Removing ParentDashboard import as we're using email-only approach
 import CoachDashboard from "@/pages/coach-dashboard";
 import ParentManagementPage from "@/pages/parent-management";
@@ -126,6 +127,7 @@ function Router() {
         <ProtectedRoute path="/player-branding" component={PlayerBrandingToolkitPage} />
         <ProtectedRoute path="/coach-evaluations" component={CoachEvaluationsPage} />
         <ProtectedRoute path="/college-application-hub" component={CollegeApplicationHubPage} />
+        <ProtectedRoute path="/development-plan" component={DevelopmentPlanPage} />
         {/* Removed parent-dashboard as we're using email-only approach */}
         <ProtectedRoute path="/coach-dashboard" component={CoachDashboard} />
         <ProtectedRoute path="/parent-reports" component={ParentReportsPage} />
