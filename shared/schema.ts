@@ -520,6 +520,16 @@ export const mealLogs = pgTable("meal_logs", {
   notes: text("notes"),
 });
 
+export const recruitingAdvice = pgTable("recruiting_advice", {
+  id: serial("id").primaryKey(),
+  athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
+  recommendations: json("recommendations").notNull(),
+  nextSteps: json("next_steps").notNull(),
+  generatedDate: timestamp("generated_date").defaultNow().notNull(),
+  viewed: boolean("viewed").default(false),
+  archived: boolean("archived").default(false),
+});
+
 export const aiMealSuggestions = pgTable("ai_meal_suggestions", {
   id: serial("id").primaryKey(),
   athleteId: integer("athlete_id").references(() => athletes.id).notNull(),
