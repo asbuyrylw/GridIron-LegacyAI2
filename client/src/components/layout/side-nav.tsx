@@ -55,7 +55,7 @@ export function SideNav() {
       active: location === "/training-nutrition"
     },
     {
-      label: "Stats",
+      label: "Performance",
       href: "/stats",
       icon: LineChart,
       active: location === "/stats"
