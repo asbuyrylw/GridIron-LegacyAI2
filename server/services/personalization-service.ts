@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { athletes, combineMetrics, users } from '@shared/schema';
+import { athletes, combineMetrics, users, nutritionPlans, trainingPlans, performanceInsights, recruitingAdvice } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { 
   generateTrainingPlan, 

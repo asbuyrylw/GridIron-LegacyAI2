@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { personalizationService } from '../services/personalization-service';
 import { db } from '../db';
 import { trainingPlans, nutritionPlans, performanceInsights, recruitingAdvice } from '@shared/schema';
+import { Request, Response } from 'express';
 
 const router = Router();
 
@@ -9,13 +10,13 @@ const router = Router();
  * Generate a complete personalized plan for an athlete
  * This is the main endpoint that will call all the personalization services
  */
-router.post('/athlete/:athleteId/generate-plan', async (req, res) => {
+router.post('/athlete/:athleteId/generate-plan', async (req: Request, res: Response) => {
   try {
     const athleteId = parseInt(req.params.athleteId);
     
     // Check if the authenticated user has access to this athlete's data
-    if (!req.session.authenticated || 
-       (req.session.user.type === 'athlete' && req.session.user.id !== athleteId)) {
+    if (!req.session.user || 
+       (req.session.user.userType === 'athlete' && req.session.user.id !== athleteId)) {
       return res.status(403).json({ message: 'Not authorized to access this athlete data' });
     }
     
@@ -32,13 +33,13 @@ router.post('/athlete/:athleteId/generate-plan', async (req, res) => {
 /**
  * Generate only a training plan for an athlete
  */
-router.post('/athlete/:athleteId/generate-training', async (req, res) => {
+router.post('/athlete/:athleteId/generate-training', async (req: Request, res: Response) => {
   try {
     const athleteId = parseInt(req.params.athleteId);
     
     // Check if the authenticated user has access to this athlete's data
-    if (!req.session.authenticated || 
-       (req.session.user.type === 'athlete' && req.session.user.id !== athleteId)) {
+    if (!req.session.user || 
+       (req.session.user.userType === 'athlete' && req.session.user.id !== athleteId)) {
       return res.status(403).json({ message: 'Not authorized to access this athlete data' });
     }
     
