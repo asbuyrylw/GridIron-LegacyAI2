@@ -19,6 +19,7 @@ import playerBrandingRoutes from "./routes/player-branding-routes";
 import coachEvaluationRoutes from "./routes/coach-evaluation-routes";
 import collegeApplicationRoutes from "./routes/college-application-routes";
 import nutritionApiRoutes from "./routes/nutrition-api";
+import developmentPlanRoutes from "./routes/development-plan-api";
 import { setupSkillProgressionRoutes } from "./routes/skill-progression-routes";
 import { setupProfileImageRoutes } from "./routes/profile-image-routes";
 import { Router } from "express";

@@ -1,0 +1,96 @@
+TEP 2: Long-Term Development Plan (Now → Senior Year)
+Using the profile, generate a year-by-year development strategy that includes:
+
+Combine Metric Progressions (target improvements per year)
+
+Body Development (height, weight, body fat %, position benchmarks)
+
+Academic Goals (GPA, SAT/ACT, NCAA eligibility)
+
+Nutrition Roadmap (macros, calories, body comp changes per year)
+
+Recruiting Milestones (film, camps, contact strategy)
+
+Build yearly goals aligned to athlete’s desired level of play and provide benchmarks needed to reach that level. Update this roadmap dynamically as progress data is submitted.
+
+📅 STEP 3: Current Year Plan → Quarterly Breakdown
+Break the current year’s goals into seasonal goals and quarterly milestones for:
+
+A. Training & Lifting Program (Daily Level):
+
+Pre-season (May–July)
+
+In-season (Aug–Oct/Nov)
+
+Off-season (Nov/Dec–Apr)
+
+For each season, list daily exercises with:
+
+Sets, reps, % of 1-rep max
+
+Rest intervals
+
+Movement purpose (tie each to combine metric: e.g., vertical = power cleans, box jumps)
+
+Recovery and mobility
+
+Include a structured weekly lifting/training schedule.
+
+B. Nutrition Program:
+
+Seasonal caloric and macronutrient targets
+
+Meal ideas and weekly templates (pre-, in-, off-season)
+
+Sample grocery lists for families
+
+Supplement recommendations (if needed)
+
+Macro/carb-cycling adjustments based on training intensity
+
+Ensure the plan adapts to growth, effort, and recovery needs. Nutrition and training should be synchronized.
+
+C. Recruiting Tasks by Month:
+
+Film creation/updates
+
+Social media and outreach calendar
+
+DM/email templates by school/level
+
+Camp and combine participation tracking
+
+Monthly check-ins with actionable goals
+
+🔁 STEP 4: 12-Week Progress Monitoring
+Every 12 weeks, prompt the athlete to submit updated:
+
+Height, weight, BF%
+
+Lifting maxes, combine metrics
+
+Recruiting activities
+
+Highlight film progress
+
+Academic GPA
+
+Compare current performance vs. milestone. Generate a report with:
+
+What they achieved
+
+Where they fell short
+
+Updated recommendations for goals
+
+🔮 STEP 5: Annual Review & College Football Projection
+At year-end, generate a 3-tier projection based on actual progress and time left:
+
+High: Athlete maximizes growth, combine scores, effort
+
+Medium: Meets consistent, realistic goals with moderate growth
+
+Low: Makes below-average progress
+
+Compare this to original goals. Ask if the athlete wants to maintain, lower, or stretch their current targets based on projections. Update training, academic, and recruiting goals accordingly.
+
