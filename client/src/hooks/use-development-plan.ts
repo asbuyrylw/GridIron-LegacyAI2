@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export function useDevelopmentPlan(athleteId: number) {
   // Get the current development plan
