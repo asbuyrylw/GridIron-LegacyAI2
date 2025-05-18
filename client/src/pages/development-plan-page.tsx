@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
-import { useUser } from "@/lib/useUser";
+import { useUser } from "@/hooks/use-user";
 import { useDevelopmentPlan } from "@/hooks/use-development-plan";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";

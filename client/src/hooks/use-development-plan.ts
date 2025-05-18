@@ -5,12 +5,12 @@ export function useDevelopmentPlan(athleteId: number) {
   // Get the current development plan
   const developmentPlanQuery = useQuery({
     queryKey: ['/api/athlete', athleteId, 'development-plan'],
-    queryFn: () => apiRequest.get(`/api/athlete/${athleteId}/development-plan`)
+    queryFn: () => apiRequest(`/api/athlete/${athleteId}/development-plan`).then(res => res.json())
   });
 
   // Generate a new development plan
   const generateDevelopmentPlanMutation = useMutation({
-    mutationFn: () => apiRequest.post(`/api/athlete/${athleteId}/generate-development-plan`),
+    mutationFn: () => apiRequest('POST', `/api/athlete/${athleteId}/generate-development-plan`).then(res => res.json()),
     onSuccess: () => {
       // Invalidate the cache and refetch the development plan
       queryClient.invalidateQueries({
@@ -21,12 +21,12 @@ export function useDevelopmentPlan(athleteId: number) {
 
   // Generate a progress report
   const generateProgressReportMutation = useMutation({
-    mutationFn: () => apiRequest.post(`/api/athlete/${athleteId}/generate-progress-report`),
+    mutationFn: () => apiRequest('POST', `/api/athlete/${athleteId}/generate-progress-report`).then(res => res.json()),
   });
 
   // Generate an annual review
   const generateAnnualReviewMutation = useMutation({
-    mutationFn: () => apiRequest.post(`/api/athlete/${athleteId}/generate-annual-review`),
+    mutationFn: () => apiRequest('POST', `/api/athlete/${athleteId}/generate-annual-review`).then(res => res.json()),
   });
 
   return {
