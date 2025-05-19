@@ -1,129 +1,20 @@
-import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { useUser } from "@/hooks/use-user";
-import { useDevelopmentPlan } from "@/hooks/use-development-plan";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Calendar, CheckCircle, Clock, BarChart } from "lucide-react";
+import { AlertCircle, Calendar, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { apiRequest } from "@/lib/queryClient";
 
 export default function DevelopmentPlanPage() {
-  const { user, isLoading: isUserLoading } = useUser();
   const [activeTab, setActiveTab] = useState("long-term");
-  const [location, setLocation] = useLocation();
-  
-  // Simple state to simulate development plan
-  const [developmentPlan, setDevelopmentPlan] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState(null);
-
-  // Navigate to login page if user is not logged in
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      setLocation("/login");
-    }
-  }, [user, isUserLoading, setLocation]);
-
-  // If user is logged in but not an athlete, redirect to home
-  useEffect(() => {
-    if (user && user.userType !== 'athlete' && !isUserLoading) {
-      setLocation("/");
-    }
-  }, [user, isUserLoading, setLocation]);
-
-  if (isUserLoading) {
-    return (
-      <div className="container mx-auto p-4">
-        <Card className="p-6">
-          <Skeleton className="h-8 w-1/3 mb-4" />
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-4 w-2/3" />
-        </Card>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null; // This will be handled by the useEffect redirects
-  }
-
+  
+  // Simple mock data (this would come from an API in a real implementation)
   const handleGeneratePlan = () => {
-    console.log("Generate plan clicked");
     setIsGenerating(true);
     
-    // Simulate API call with a timeout
+    // Simulate API delay
     setTimeout(() => {
-      // Create example development plan
-      const mockPlan = {
-        athleteId: user?.athlete?.id || 1,
-        longTermPlan: {
-          overview: "Long-term development plan focused on comprehensive growth as a football player from current grade through senior year.",
-          yearByYearPlan: [
-            {
-              year: "2025-2026",
-              grade: "Sophomore",
-              overview: "Focus on mastering fundamentals and building core strength",
-              goals: ["Increase weight by 10lbs", "Improve 40-yard dash time", "Master position fundamentals"],
-              focusAreas: ["Strength training", "Speed development", "Technical skills"],
-              metricTargets: {
-                "40-Yard Dash": { current: "4.8s", target: "4.7s" },
-                "Bench Press": { current: "185 lbs", target: "225 lbs" },
-                "Squat": { current: "300 lbs", target: "350 lbs" }
-              }
-            },
-            {
-              year: "2026-2027",
-              grade: "Junior",
-              overview: "Develop advanced skills and begin college recruitment process",
-              goals: ["Earn starting position", "Create highlight film", "Begin contacting college coaches"],
-              focusAreas: ["Advanced techniques", "Game film analysis", "Recruitment preparations"],
-              metricTargets: {
-                "40-Yard Dash": { current: "4.7s", target: "4.6s" },
-                "Bench Press": { current: "225 lbs", target: "275 lbs" },
-                "Squat": { current: "350 lbs", target: "400 lbs" }
-              }
-            }
-          ]
-        },
-        currentYearPlan: {
-          overview: "Detailed quarterly breakdown focusing on progressive skill development",
-          nextUpdateDate: "2025-08-15",
-          quarters: [
-            {
-              focus: "Off-Season Strength Building",
-              overview: "Focus on building base strength and conditioning",
-              trainingFocus: ["Max strength development", "Core stability", "Injury prevention"],
-              nutritionFocus: ["High protein intake", "Caloric surplus", "Recovery nutrition"],
-              keyActivities: ["Weight training 4x/week", "Position drills 2x/week", "Flexibility work daily"],
-              metrics: {
-                "Weight": "+5 lbs lean mass",
-                "Squat": "+25 lbs",
-                "Bench": "+15 lbs"
-              }
-            },
-            {
-              focus: "Pre-Season Speed & Agility",
-              overview: "Transition to explosive power and sport-specific training",
-              trainingFocus: ["Speed mechanics", "Change of direction", "Positional drills"],
-              nutritionFocus: ["Pre-workout nutrition", "Hydration strategy", "Anti-inflammatory foods"],
-              keyActivities: ["Sprint training 3x/week", "Scrimmages", "Film study"],
-              metrics: {
-                "40-yard dash": "-0.1 seconds",
-                "Vertical jump": "+2 inches"
-              }
-            }
-          ]
-        }
-      };
-      
-      setDevelopmentPlan(mockPlan);
       setIsGenerating(false);
     }, 1500);
   };
@@ -132,311 +23,137 @@ export default function DevelopmentPlanPage() {
     <div className="container mx-auto p-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Development Plan</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Development Plan</h1>
           <p className="text-muted-foreground">
-            Your personalized football development plan based on your profile and metrics
+            Track your long-term development and quarterly training plans
           </p>
         </div>
-        
-        <div className="mt-4 md:mt-0 space-x-2">
-          <Button 
-            variant="default" 
-            onClick={handleGeneratePlan}
-            disabled={isGenerating}
-          >
-            {isGenerating ? "Generating..." : "Generate New Plan"}
-          </Button>
-        </div>
+        <Button 
+          onClick={handleGeneratePlan} 
+          disabled={isGenerating}
+          className="mt-4 md:mt-0"
+        >
+          {isGenerating ? (
+            <>Generating Plan...</>
+          ) : (
+            <>Generate Development Plan</>
+          )}
+        </Button>
       </div>
 
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            Failed to load development plan. Please try again later.
-          </AlertDescription>
-        </Alert>
-      )}
+      <Alert className="mb-6">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Important</AlertTitle>
+        <AlertDescription>
+          This plan is AI-generated based on your profile data and will be updated quarterly. 
+          Focus on the key activities in your current quarter for optimal development.
+        </AlertDescription>
+      </Alert>
 
-      {!developmentPlan && !isLoading && !isGenerating && (
-        <Card className="p-6 mb-6">
-          <div className="text-center py-8">
-            <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No Development Plan Yet</h3>
-            <p className="text-muted-foreground mb-6">
-              Generate your personalized development plan to see a year-by-year roadmap to achieve your football goals.
-            </p>
-            <Button onClick={handleGeneratePlan} disabled={isGenerating}>
-              {isGenerating ? "Generating..." : "Generate Development Plan"}
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {(isLoading || isGenerating) && (
-        <Card className="p-6 mb-6">
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-1/3 mb-2" />
-            <Skeleton className="h-4 w-full mb-2" />
-            <Skeleton className="h-4 w-full mb-2" />
-            <Skeleton className="h-4 w-2/3 mb-4" />
-            <Skeleton className="h-32 w-full" />
-          </div>
-        </Card>
-      )}
-
-      {developmentPlan && (
-        <>
-          <Tabs 
-            value={activeTab} 
-            onValueChange={setActiveTab}
-            className="mb-6"
-          >
-            <TabsList className="grid w-full md:w-auto grid-cols-2 md:grid-cols-3">
-              <TabsTrigger value="long-term">Long-Term Plan</TabsTrigger>
-              <TabsTrigger value="current-year">Current Year</TabsTrigger>
-              <TabsTrigger value="analysis">Analysis & Reports</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="long-term" className="mt-4">
-              <Card className="p-6">
-                <h2 className="text-2xl font-bold mb-4">Long-Term Development Plan</h2>
-                <p className="text-muted-foreground mb-6">
-                  Your comprehensive development roadmap from now until your senior year
-                </p>
-
-                <div className="space-y-6">
-                  {developmentPlan.longTermPlan?.yearByYear?.map((yearPlan, index) => (
-                    <div key={index} className="border rounded-lg p-4">
-                      <h3 className="text-xl font-semibold mb-2">{yearPlan.year}: {yearPlan.grade} Grade</h3>
-                      <p className="mb-4">{yearPlan.overview}</p>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <h4 className="font-medium text-sm uppercase text-muted-foreground mb-2">Key Goals</h4>
-                          <ul className="list-disc pl-5 space-y-1">
-                            {yearPlan.goals?.map((goal, i) => (
-                              <li key={i}>{goal}</li>
-                            ))}
-                          </ul>
-                        </div>
-                        
-                        <div>
-                          <h4 className="font-medium text-sm uppercase text-muted-foreground mb-2">Focus Areas</h4>
-                          <ul className="list-disc pl-5 space-y-1">
-                            {yearPlan.focusAreas?.map((area, i) => (
-                              <li key={i}>{area}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                      
-                      {yearPlan.metricTargets && (
-                        <div className="mt-4">
-                          <h4 className="font-medium text-sm uppercase text-muted-foreground mb-2">Metric Targets</h4>
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Metric</TableHead>
-                                <TableHead>Current</TableHead>
-                                <TableHead>Target</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {Object.entries(yearPlan.metricTargets).map(([metric, values], i) => (
-                                <TableRow key={i}>
-                                  <TableCell className="font-medium">{metric}</TableCell>
-                                  <TableCell>{values.current || 'N/A'}</TableCell>
-                                  <TableCell>{values.target}</TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+      <Tabs 
+        defaultValue={activeTab} 
+        onValueChange={setActiveTab} 
+        className="space-y-4"
+      >
+        <TabsList>
+          <TabsTrigger value="long-term">Long-Term Plan</TabsTrigger>
+          <TabsTrigger value="current-year">Current Year</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="long-term" className="space-y-4">
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Long-Term Development Overview</h2>
+            <p className="mb-6">Long-term development plan focused on comprehensive growth as a football player from current grade through senior year.</p>
+            
+            <h3 className="text-xl font-semibold mb-3">Year-by-Year Plan</h3>
+            
+            <div className="space-y-6">
+              {/* Sophomore Year */}
+              <div className="border rounded-lg p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="text-lg font-medium">2025-2026 (Sophomore)</h4>
+                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">In Progress</span>
                 </div>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="current-year" className="mt-4">
-              <Card className="p-6">
-                <h2 className="text-2xl font-bold mb-4">Current Year Development Plan</h2>
-                <p className="text-muted-foreground mb-4">
-                  Detailed quarterly breakdown of your development for this year
-                </p>
-
-                <div className="flex items-center mb-6">
-                  <Clock className="h-5 w-5 mr-2 text-muted-foreground" />
-                  <span className="text-sm">Next progress check: {developmentPlan.currentYearPlan?.nextUpdateDate || 'Not scheduled'}</span>
-                </div>
-
-                <Accordion type="single" collapsible className="w-full">
-                  {developmentPlan.currentYearPlan?.quarters?.map((quarter, index) => (
-                    <AccordionItem key={index} value={`quarter-${index + 1}`}>
-                      <AccordionTrigger className="text-lg font-semibold">
-                        Q{index + 1}: {quarter.focus}
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-4 pt-2">
-                          <p>{quarter.overview}</p>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <h4 className="font-medium mb-2">Training Focus</h4>
-                              <ul className="list-disc pl-5 space-y-1">
-                                {quarter.trainingFocus?.map((item, i) => (
-                                  <li key={i}>{item}</li>
-                                ))}
-                              </ul>
-                            </div>
-                            
-                            <div>
-                              <h4 className="font-medium mb-2">Nutrition Focus</h4>
-                              <ul className="list-disc pl-5 space-y-1">
-                                {quarter.nutritionFocus?.map((item, i) => (
-                                  <li key={i}>{item}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <h4 className="font-medium mb-2">Key Activities</h4>
-                            <ul className="space-y-2">
-                              {quarter.keyActivities?.map((activity, i) => (
-                                <li key={i} className="flex items-start">
-                                  <CheckCircle className="h-5 w-5 mr-2 text-green-500 shrink-0 mt-0.5" />
-                                  <span>{activity}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          
-                          {quarter.metrics && (
-                            <div>
-                              <h4 className="font-medium mb-2">Target Metrics</h4>
-                              <ul className="list-disc pl-5 space-y-1">
-                                {Object.entries(quarter.metrics).map(([metric, target], i) => (
-                                  <li key={i}><span className="font-medium">{metric}:</span> {target}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="analysis" className="mt-4">
-              <Card className="p-6">
-                <h2 className="text-2xl font-bold mb-6">Analysis & Reports</h2>
+                <p className="mb-3">Focus on mastering fundamentals and building core strength</p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-xl font-semibold">Progress Report</h3>
-                        <p className="text-sm text-muted-foreground">Compare your current metrics to your plan</p>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={handleGenerateProgressReport}
-                        disabled={isGeneratingProgressReport}
-                      >
-                        {isGeneratingProgressReport ? "Generating..." : "Generate Report"}
-                      </Button>
-                    </div>
-                    
-                    {progressReport ? (
-                      <div>
-                        <h4 className="font-medium mb-2">Progress Summary</h4>
-                        <p className="mb-4">{progressReport.summary}</p>
-                        
-                        <h4 className="font-medium mb-2">Key Metrics</h4>
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Metric</TableHead>
-                              <TableHead>Target</TableHead>
-                              <TableHead>Current</TableHead>
-                              <TableHead>Progress</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {progressReport.metrics?.map((metric, i) => (
-                              <TableRow key={i}>
-                                <TableCell className="font-medium">{metric.name}</TableCell>
-                                <TableCell>{metric.target}</TableCell>
-                                <TableCell>{metric.current}</TableCell>
-                                <TableCell>
-                                  <span className={metric.onTrack ? "text-green-500" : "text-yellow-500"}>
-                                    {metric.progress}%
-                                  </span>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <BarChart className="h-12 w-12 mx-auto mb-3" />
-                        <p>Generate a progress report to compare your current metrics with your development plan goals.</p>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-xl font-semibold">Annual Review</h3>
-                        <p className="text-sm text-muted-foreground">Yearly evaluation and college projections</p>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={handleGenerateAnnualReview}
-                        disabled={isGeneratingAnnualReview}
-                      >
-                        {isGeneratingAnnualReview ? "Generating..." : "Generate Review"}
-                      </Button>
-                    </div>
-                    
-                    {annualReview ? (
-                      <div>
-                        <h4 className="font-medium mb-2">Year in Review</h4>
-                        <p className="mb-4">{annualReview.summary}</p>
-                        
-                        <h4 className="font-medium mb-2">Key Accomplishments</h4>
-                        <ul className="list-disc pl-5 space-y-1 mb-4">
-                          {annualReview.accomplishments?.map((item, i) => (
-                            <li key={i}>{item}</li>
-                          ))}
-                        </ul>
-                        
-                        <h4 className="font-medium mb-2">College Projections</h4>
-                        <p>{annualReview.collegeProjection}</p>
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Calendar className="h-12 w-12 mx-auto mb-3" />
-                        <p>Generate an annual review to see your yearly progress and updated college football projections.</p>
-                      </div>
-                    )}
-                  </div>
+                <h5 className="font-medium mb-2">Key Goals:</h5>
+                <ul className="list-disc pl-5 mb-3 space-y-1">
+                  <li>Increase weight by 10lbs</li>
+                  <li>Improve 40-yard dash time</li>
+                  <li>Master position fundamentals</li>
+                </ul>
+              </div>
+              
+              {/* Junior Year */}
+              <div className="border rounded-lg p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="text-lg font-medium">2026-2027 (Junior)</h4>
+                  <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Upcoming</span>
                 </div>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </>
-      )}
+                <p className="mb-3">Develop advanced skills and begin college recruitment process</p>
+                
+                <h5 className="font-medium mb-2">Key Goals:</h5>
+                <ul className="list-disc pl-5 mb-3 space-y-1">
+                  <li>Earn starting position</li>
+                  <li>Create highlight film</li>
+                  <li>Begin contacting college coaches</li>
+                </ul>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="current-year" className="space-y-4">
+          <Card className="p-6">
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-2xl font-bold">Current Year Plan</h2>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span className="text-sm text-muted-foreground">Next update: August 15, 2025</span>
+              </div>
+            </div>
+            
+            <p className="mb-6">Detailed quarterly breakdown focusing on progressive skill development</p>
+            
+            <div className="space-y-6">
+              {/* Q1 */}
+              <div className="border rounded-lg p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="text-lg font-medium">Off-Season Strength Building</h4>
+                  <span className="flex items-center text-green-600 text-sm gap-1">
+                    <CheckCircle className="h-4 w-4" />
+                    Current Quarter
+                  </span>
+                </div>
+                <p className="mb-3">Focus on building base strength and conditioning</p>
+                
+                <h5 className="font-medium mb-2">Key Activities:</h5>
+                <ul className="list-disc pl-5 mb-3 space-y-1">
+                  <li>Weight training 4x/week</li>
+                  <li>Position drills 2x/week</li>
+                  <li>Flexibility work daily</li>
+                </ul>
+              </div>
+              
+              {/* Q2 */}
+              <div className="border rounded-lg p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="text-lg font-medium">Pre-Season Speed & Agility</h4>
+                  <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">Upcoming</span>
+                </div>
+                <p className="mb-3">Transition to explosive power and sport-specific training</p>
+                
+                <h5 className="font-medium mb-2">Key Activities:</h5>
+                <ul className="list-disc pl-5 mb-3 space-y-1">
+                  <li>Sprint training 3x/week</li>
+                  <li>Scrimmages</li>
+                  <li>Film study</li>
+                </ul>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
