@@ -11,11 +11,17 @@ import { AlertCircle, Calendar, CheckCircle, Clock, BarChart } from "lucide-reac
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function DevelopmentPlanPage() {
-  const { user, athlete, isLoading: isUserLoading } = useUser();
+  const { user, isLoading: isUserLoading } = useUser();
   const [activeTab, setActiveTab] = useState("long-term");
   const [location, setLocation] = useLocation();
+  
+  // Simple state to simulate development plan
+  const [developmentPlan, setDevelopmentPlan] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState(null);
 
   // Navigate to login page if user is not logged in
   useEffect(() => {
@@ -26,29 +32,10 @@ export default function DevelopmentPlanPage() {
 
   // If user is logged in but not an athlete, redirect to home
   useEffect(() => {
-    if (user && !athlete && !isUserLoading) {
+    if (user && user.userType !== 'athlete' && !isUserLoading) {
       setLocation("/");
     }
-  }, [user, athlete, isUserLoading, setLocation]);
-
-  // Only use the hook if we have an athlete
-  const athleteId = athlete?.id;
-  const developmentPlanData = useDevelopmentPlan(athleteId);
-  
-  // Destructure values with defaults to prevent errors
-  const {
-    developmentPlan = null,
-    isLoading = false,
-    error = null,
-    generateDevelopmentPlan = () => {},
-    isGenerating = false,
-    generateProgressReport = () => {},
-    progressReport = null,
-    isGeneratingProgressReport = false,
-    generateAnnualReview = () => {},
-    annualReview = null,
-    isGeneratingAnnualReview = false
-  } = athleteId ? developmentPlanData : {};
+  }, [user, isUserLoading, setLocation]);
 
   if (isUserLoading) {
     return (
@@ -63,20 +50,82 @@ export default function DevelopmentPlanPage() {
     );
   }
 
-  if (!user || !athlete) {
+  if (!user) {
     return null; // This will be handled by the useEffect redirects
   }
 
   const handleGeneratePlan = () => {
-    generateDevelopmentPlan();
-  };
-
-  const handleGenerateProgressReport = () => {
-    generateProgressReport();
-  };
-
-  const handleGenerateAnnualReview = () => {
-    generateAnnualReview();
+    console.log("Generate plan clicked");
+    setIsGenerating(true);
+    
+    // Simulate API call with a timeout
+    setTimeout(() => {
+      // Create example development plan
+      const mockPlan = {
+        athleteId: user?.athlete?.id || 1,
+        longTermPlan: {
+          overview: "Long-term development plan focused on comprehensive growth as a football player from current grade through senior year.",
+          yearByYearPlan: [
+            {
+              year: "2025-2026",
+              grade: "Sophomore",
+              overview: "Focus on mastering fundamentals and building core strength",
+              goals: ["Increase weight by 10lbs", "Improve 40-yard dash time", "Master position fundamentals"],
+              focusAreas: ["Strength training", "Speed development", "Technical skills"],
+              metricTargets: {
+                "40-Yard Dash": { current: "4.8s", target: "4.7s" },
+                "Bench Press": { current: "185 lbs", target: "225 lbs" },
+                "Squat": { current: "300 lbs", target: "350 lbs" }
+              }
+            },
+            {
+              year: "2026-2027",
+              grade: "Junior",
+              overview: "Develop advanced skills and begin college recruitment process",
+              goals: ["Earn starting position", "Create highlight film", "Begin contacting college coaches"],
+              focusAreas: ["Advanced techniques", "Game film analysis", "Recruitment preparations"],
+              metricTargets: {
+                "40-Yard Dash": { current: "4.7s", target: "4.6s" },
+                "Bench Press": { current: "225 lbs", target: "275 lbs" },
+                "Squat": { current: "350 lbs", target: "400 lbs" }
+              }
+            }
+          ]
+        },
+        currentYearPlan: {
+          overview: "Detailed quarterly breakdown focusing on progressive skill development",
+          nextUpdateDate: "2025-08-15",
+          quarters: [
+            {
+              focus: "Off-Season Strength Building",
+              overview: "Focus on building base strength and conditioning",
+              trainingFocus: ["Max strength development", "Core stability", "Injury prevention"],
+              nutritionFocus: ["High protein intake", "Caloric surplus", "Recovery nutrition"],
+              keyActivities: ["Weight training 4x/week", "Position drills 2x/week", "Flexibility work daily"],
+              metrics: {
+                "Weight": "+5 lbs lean mass",
+                "Squat": "+25 lbs",
+                "Bench": "+15 lbs"
+              }
+            },
+            {
+              focus: "Pre-Season Speed & Agility",
+              overview: "Transition to explosive power and sport-specific training",
+              trainingFocus: ["Speed mechanics", "Change of direction", "Positional drills"],
+              nutritionFocus: ["Pre-workout nutrition", "Hydration strategy", "Anti-inflammatory foods"],
+              keyActivities: ["Sprint training 3x/week", "Scrimmages", "Film study"],
+              metrics: {
+                "40-yard dash": "-0.1 seconds",
+                "Vertical jump": "+2 inches"
+              }
+            }
+          ]
+        }
+      };
+      
+      setDevelopmentPlan(mockPlan);
+      setIsGenerating(false);
+    }, 1500);
   };
 
   return (
