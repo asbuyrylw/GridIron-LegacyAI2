@@ -8,13 +8,32 @@ export function useDevelopmentPlan(athleteId?: number) {
   // Get the current development plan
   const developmentPlanQuery = useQuery({
     queryKey: ['/api/athlete', athleteId, 'development-plan'],
-    queryFn: () => {
+    queryFn: async () => {
       if (!athleteId) {
         throw new Error("No athlete ID provided");
       }
-      return apiRequest(`/api/athlete/${athleteId}/development-plan`).then(res => res.json());
+      
+      console.log(`Fetching development plan for athlete ID: ${athleteId}`);
+      
+      try {
+        const res = await apiRequest(`/api/athlete/${athleteId}/development-plan`);
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error(`Development plan API error: ${res.status} - ${errorText}`);
+          throw new Error(`Failed to fetch development plan: ${res.status} - ${errorText}`);
+        }
+        
+        const data = await res.json();
+        console.log("Development plan data:", data);
+        return data;
+      } catch (error) {
+        console.error("Error in development plan query:", error);
+        throw error;
+      }
     },
-    enabled
+    enabled,
+    retry: 1
   });
 
   // Generate a new development plan
