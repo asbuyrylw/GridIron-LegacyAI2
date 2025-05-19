@@ -31,20 +31,24 @@ export default function DevelopmentPlanPage() {
     }
   }, [user, athlete, isUserLoading, setLocation]);
 
-  const athleteId = athlete?.id as number;
+  // Only use the hook if we have an athlete
+  const athleteId = athlete?.id;
+  const developmentPlanData = useDevelopmentPlan(athleteId);
+  
+  // Destructure values with defaults to prevent errors
   const {
-    developmentPlan,
-    isLoading,
-    error,
-    generateDevelopmentPlan,
-    isGenerating,
-    generateProgressReport,
-    progressReport,
-    isGeneratingProgressReport,
-    generateAnnualReview,
-    annualReview,
-    isGeneratingAnnualReview
-  } = useDevelopmentPlan(athleteId);
+    developmentPlan = null,
+    isLoading = false,
+    error = null,
+    generateDevelopmentPlan = () => {},
+    isGenerating = false,
+    generateProgressReport = () => {},
+    progressReport = null,
+    isGeneratingProgressReport = false,
+    generateAnnualReview = () => {},
+    annualReview = null,
+    isGeneratingAnnualReview = false
+  } = athleteId ? developmentPlanData : {};
 
   if (isUserLoading) {
     return (
