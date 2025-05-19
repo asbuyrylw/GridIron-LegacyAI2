@@ -24,10 +24,10 @@ export default function DevelopmentPlanPage() {
     }
   }, [user, isUserLoading, setLocation]);
 
-  // If user is logged in but not an athlete, redirect to dashboard
+  // If user is logged in but not an athlete, redirect to home
   useEffect(() => {
     if (user && !athlete && !isUserLoading) {
-      setLocation("/dashboard");
+      setLocation("/");
     }
   }, [user, athlete, isUserLoading, setLocation]);
 
