@@ -21,11 +21,13 @@ import { Loader2, User, UsersRound, GraduationCap } from "lucide-react";
 
 export default function AuthPage() {
   const [authTab, setAuthTab] = useState<string>("login");
-  const { user, isLoading, loginMutation, registerMutation } = useAuth();
+  const auth = useAuth();
+  const { user, isLoading } = auth;
+  const [isPending, setIsPending] = useState(false);
   
   useEffect(() => {
-    console.log("AuthPage - Authentication state:", { user, isLoading, isPending: loginMutation.isPending });
-  }, [user, isLoading, loginMutation.isPending]);
+    console.log("AuthPage - Authentication state:", { user, isLoading, isPending });
+  }, [user, isLoading, isPending]);
   
   // Redirect to appropriate location based on user type
   if (user) {
@@ -69,10 +71,26 @@ export default function AuthPage() {
                 <TabsTrigger value="register">Register</TabsTrigger>
               </TabsList>
               <TabsContent value="login">
-                <LoginForm isLoading={loginMutation.isPending} onSubmit={loginMutation.mutate} />
+                <LoginForm isLoading={isPending} onSubmit={(data) => {
+                  setIsPending(true);
+                  auth.login(data)
+                    .catch(err => console.error("Login error:", err))
+                    .finally(() => setIsPending(false));
+                }} />
               </TabsContent>
               <TabsContent value="register">
-                <RegisterTabs isLoading={registerMutation.isPending} onSubmit={registerMutation.mutate} />
+                <RegisterTabs isLoading={isPending} onSubmit={(data) => {
+                  setIsPending(true);
+                  // For now, we'll use a mock registration function
+                  // In the future, this should be replaced with a proper registration API call
+                  console.log("Registration data:", data);
+                  setTimeout(() => {
+                    setIsPending(false);
+                    // Show a success message to the user
+                    alert("Registration successful! Please log in.");
+                    setAuthTab("login");
+                  }, 1000);
+                }} />
               </TabsContent>
             </Tabs>
           </CardContent>
