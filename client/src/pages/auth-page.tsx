@@ -95,14 +95,19 @@ export default function AuthPage() {
   }, [user, isLoading, isPending]);
   
   // Redirect to appropriate location based on user type
-  if (user) {
-    console.log("AuthPage - User is authenticated, redirecting");
-    if (user.userType === "coach") {
-      return <Redirect to="/coach-dashboard" />;
-    } else {
-      return <Redirect to="/" />;
+  useEffect(() => {
+    if (user) {
+      console.log("AuthPage - User is authenticated, redirecting", user);
+      // Add a slight delay to ensure the redirect happens after state updates
+      setTimeout(() => {
+        if (user.userType === "coach") {
+          window.location.href = "/coach-dashboard";
+        } else {
+          window.location.href = "/";
+        }
+      }, 100);
     }
-  }
+  }, [user]);
   
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
