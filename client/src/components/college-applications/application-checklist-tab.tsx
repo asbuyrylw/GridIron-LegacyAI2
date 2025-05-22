@@ -155,14 +155,16 @@ export default function ApplicationChecklistTab({ athleteId }: ApplicationCheckl
   const items = checklistItems && checklistItems.length > 0 ? checklistItems : defaultItems;
 
   // Group items by category
-  const groupedItems = items.reduce((acc: Record<string, ChecklistItem[]>, item: ChecklistItem) => {
+  const groupedItems: Record<string, ChecklistItem[]> = {};
+  
+  // Group items manually to avoid TypeScript errors
+  items.forEach((item: ChecklistItem) => {
     const category = item.category || 'general';
-    if (!acc[category]) {
-      acc[category] = [];
+    if (!groupedItems[category]) {
+      groupedItems[category] = [];
     }
-    acc[category].push(item);
-    return acc;
-  }, {} as Record<string, ChecklistItem[]>);
+    groupedItems[category].push(item);
+  });
 
   const getCategoryTitle = (category: string) => {
     switch (category) {
