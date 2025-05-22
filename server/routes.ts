@@ -21,6 +21,8 @@ import collegeApplicationRoutes from "./routes/college-application-routes";
 import nutritionApiRoutes from "./routes/nutrition-api";
 import developmentPlanRoutes from "./routes/development-plan-api";
 import academicAchievementsRoutes from "./routes/academic-achievements-routes";
+import documentsRoutes from "./routes/documents-routes";
+import schoolApplicationsRoutes from "./routes/school-applications-routes";
 import { setupSkillProgressionRoutes } from "./routes/skill-progression-routes";
 import { setupProfileImageRoutes } from "./routes/profile-image-routes";
 import { Router } from "express";
@@ -124,6 +126,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Academic Achievements routes
   app.use('/api/academic-achievements', academicAchievementsRoutes);
+  
+  // Document uploads routes
+  app.use('/api/documents', documentsRoutes);
+  
+  // School applications routes
+  app.use('/api/school-applications', schoolApplicationsRoutes);
   
   // Skill Progression system routes
   setupSkillProgressionRoutes(app);
