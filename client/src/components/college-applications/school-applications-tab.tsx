@@ -578,7 +578,7 @@ export default function SchoolApplicationsTab({ athleteId }: SchoolApplicationsT
         </EmptyPlaceholder>
       ) : (
         <div className="grid gap-4">
-          {applicationsList.map((application) => {
+          {applicationsList.map((application: SchoolApplication) => {
             const statusBadge = getStatusBadge(application.applicationStatus);
             const priorityBadge = getPriorityBadge(application.priority);
             const divisionBadge = getDivisionBadge(application.division);
@@ -628,7 +628,7 @@ export default function SchoolApplicationsTab({ athleteId }: SchoolApplicationsT
                             <div className="mt-2">
                               <p className="text-sm font-medium mb-1">Programs of Interest</p>
                               <div className="flex flex-wrap gap-1">
-                                {application.programsOfInterest.map((program) => (
+                                {application.programsOfInterest.map((program: string) => (
                                   <Badge key={program} variant="outline" className="text-xs">
                                     {program}
                                   </Badge>
