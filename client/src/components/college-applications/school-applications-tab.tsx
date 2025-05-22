@@ -254,7 +254,7 @@ export default function SchoolApplicationsTab({ athleteId }: SchoolApplicationsT
       </div>
 
       <div className="grid gap-6">
-        {applicationsToDisplay.map((app) => (
+        {applicationsToDisplay.map((app: SchoolApplication) => (
           <Card key={app.id} className="overflow-hidden">
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">

@@ -125,7 +125,7 @@ export default function DocumentUploadsTab({ athleteId }: DocumentUploadsTabProp
 
   const getFileIcon = (fileType: string) => {
     if (fileType.includes('pdf')) {
-      return <FilePdf className="h-8 w-8 text-red-500" />;
+      return <FileText className="h-8 w-8 text-red-500" />;
     } else if (fileType.includes('image')) {
       return <FileImage className="h-8 w-8 text-blue-500" />;
     } else if (fileType.includes('word') || fileType.includes('document')) {
@@ -211,7 +211,7 @@ export default function DocumentUploadsTab({ athleteId }: DocumentUploadsTabProp
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {documentsToDisplay.map((doc) => (
+        {documentsToDisplay.map((doc: DocumentUpload) => (
           <Card key={doc.id} className="overflow-hidden">
             <CardHeader className="pb-0">
               <div className="flex justify-between items-start">

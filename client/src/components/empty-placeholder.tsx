@@ -5,14 +5,14 @@ export interface EmptyPlaceholderProps extends React.HTMLAttributes<HTMLDivEleme
   title: string;
   description: string;
   icon?: React.ReactNode;
-  action?: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export function EmptyPlaceholder({
   title,
   description,
   icon,
-  action,
+  children,
   className,
   ...props
 }: EmptyPlaceholderProps) {
@@ -29,7 +29,7 @@ export function EmptyPlaceholder({
         <h3 className="text-2xl font-semibold">{title}</h3>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
-      {action && <div className="mt-6">{action}</div>}
+      {children && <div className="mt-6">{children}</div>}
     </div>
   );
 }

@@ -155,14 +155,14 @@ export default function ApplicationChecklistTab({ athleteId }: ApplicationCheckl
   const items = checklistItems && checklistItems.length > 0 ? checklistItems : defaultItems;
 
   // Group items by category
-  const groupedItems = items.reduce((acc, item) => {
+  const groupedItems = items.reduce((acc: Record<string, ChecklistItem[]>, item: ChecklistItem) => {
     const category = item.category || 'general';
     if (!acc[category]) {
       acc[category] = [];
     }
     acc[category].push(item);
     return acc;
-  }, {});
+  }, {} as Record<string, ChecklistItem[]>);
 
   const getCategoryTitle = (category: string) => {
     switch (category) {
@@ -197,7 +197,7 @@ export default function ApplicationChecklistTab({ athleteId }: ApplicationCheckl
             <div key={category} className="space-y-3">
               <h3 className="text-lg font-semibold">{getCategoryTitle(category)}</h3>
               <div className="grid gap-3">
-                {groupedItems[category].map((item) => (
+                {groupedItems[category].map((item: ChecklistItem) => (
                   <Card key={item.id} className="overflow-hidden">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-4">

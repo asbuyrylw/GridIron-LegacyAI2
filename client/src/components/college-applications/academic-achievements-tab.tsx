@@ -275,7 +275,7 @@ export default function AcademicAchievementsTab({ athleteId }: AcademicAchieveme
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {achievementsToDisplay.map((achievement) => (
+        {achievementsToDisplay.map((achievement: AcademicAchievement) => (
           <Card key={achievement.id} className="overflow-hidden">
             <div className="flex p-6">
               <div className="mr-4 flex-shrink-0">
