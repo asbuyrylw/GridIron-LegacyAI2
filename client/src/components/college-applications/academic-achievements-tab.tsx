@@ -413,7 +413,7 @@ export default function AcademicAchievementsTab({ athleteId }: AcademicAchieveme
         </EmptyPlaceholder>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {achievementsList.map((achievement) => {
+          {achievementsList.map((achievement: AcademicAchievement) => {
             const { label, color, icon } = getAchievementTypeLabel(achievement.type);
             return (
               <Card key={achievement.id} className="overflow-hidden">

@@ -322,7 +322,7 @@ export default function DocumentUploadsTab({ athleteId }: DocumentUploadsTabProp
           <EmptyPlaceholder
             title="No documents uploaded"
             description="Upload your first document to get started with your college applications."
-            icon={<FilePdf className="h-12 w-12 text-muted-foreground" />}
+            icon={<AiOutlineFilePdf className="h-12 w-12 text-muted-foreground" />}
           >
             <Button className="mt-4" onClick={() => document.getElementById('document-file')?.click()}>
               <Upload className="mr-2 h-4 w-4" />
@@ -331,7 +331,7 @@ export default function DocumentUploadsTab({ athleteId }: DocumentUploadsTabProp
           </EmptyPlaceholder>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {documentsList.map((doc) => {
+            {documentsList.map((doc: DocumentUpload) => {
               const { label, color } = getCategoryLabel(doc.category);
               return (
                 <Card key={doc.id} className="overflow-hidden group relative">
