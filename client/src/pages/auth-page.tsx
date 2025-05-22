@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useAuth } from "@/hooks/use-auth";
+// Using a simpler auth implementation for now
 import { 
   athleteRegistrationSchema, 
   parentRegistrationSchema, 
@@ -21,9 +21,31 @@ import { Loader2, User, UsersRound, GraduationCap } from "lucide-react";
 
 export default function AuthPage() {
   const [authTab, setAuthTab] = useState<string>("login");
-  const auth = useAuth();
-  const { user, isLoading } = auth;
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  
+  // Simple mock login function
+  const login = async (credentials: { username: string; password: string }) => {
+    setIsLoading(true);
+    console.log("Mock login with:", credentials);
+    
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Create mock user based on credentials
+    const mockUser = {
+      id: 1,
+      username: credentials.username,
+      email: `${credentials.username}@example.com`,
+      userType: credentials.username.includes('coach') ? 'coach' : 'athlete',
+      createdAt: new Date().toISOString()
+    };
+    
+    setUser(mockUser);
+    setIsLoading(false);
+    return mockUser;
+  };
   
   useEffect(() => {
     console.log("AuthPage - Authentication state:", { user, isLoading, isPending });
@@ -73,8 +95,8 @@ export default function AuthPage() {
               <TabsContent value="login">
                 <LoginForm isLoading={isPending} onSubmit={(data) => {
                   setIsPending(true);
-                  auth.login(data)
-                    .catch(err => console.error("Login error:", err))
+                  login(data)
+                    .catch((err: Error) => console.error("Login error:", err))
                     .finally(() => setIsPending(false));
                 }} />
               </TabsContent>

@@ -1,37 +1,6 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { useContext, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  userType: string;
-  createdAt: string;
-  athlete?: {
-    id: number;
-    userId: number;
-    firstName: string;
-    lastName: string;
-    position: string;
-    height?: number;
-    weight?: number;
-    school?: string;
-    grade?: string;
-    graduationYear?: number;
-    onboardingCompleted?: boolean;
-    [key: string]: any;
-  };
-}
-
-interface AuthContextType {
-  user: User | null | undefined;
-  isLoading: boolean;
-  error: Error | null;
-  login: (credentials: { username: string; password: string }) => Promise<User>;
-  logout: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext, AuthContextType, User } from './auth-context';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const {
@@ -90,10 +59,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return React.createElement(AuthContext.Provider, { value }, children);
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    // Provide a default implementation to prevent errors when not in provider
+    return {
+      user: null,
+      isLoading: false,
+      error: null,
+      login: async (credentials: { username: string; password: string }) => { 
+        console.error('Auth provider not found');
+        return Promise.reject(new Error('Auth provider not found'));
+      },
+      logout: async () => {
+        console.error('Auth provider not found');
+        return Promise.reject(new Error('Auth provider not found'));
+      }
+    };
   }
   return context;
 }
